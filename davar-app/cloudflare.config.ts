@@ -29,11 +29,16 @@ export default defineConfig({
       // tient dans les 10 ms du plan gratuit. Aucun hébergement supplémentaire.
       AUTH_KDF_MODE: bindings.text('client'),
       // Ces valeurs sont saisies dans le tableau de bord Cloudflare, pas dans le code.
+      // Une liaison déclarée ici est la SEULE façon dont le secret atteint
+      // process.env dans le Worker : oublier une ligne, c'est un secret inerte.
       TURSO_DATABASE_URL: bindings.secret(),
       TURSO_AUTH_TOKEN: bindings.secret(),
       // Sel factice déterministe (anti-énumération) et poivre du vérificateur.
       AUTH_PARAMS_SECRET: bindings.secret(),
       AUTH_VERIFIER_PEPPER: bindings.secret(),
+      // Diagnostic de quotas (/api/internal/quota). Sans cette ligne, la route
+      // répond 503 « not_ready » même avec le secret saisi dans le tableau de bord.
+      APP_DIAGNOSTIC_TOKEN: bindings.secret(),
     },
   }),
 });

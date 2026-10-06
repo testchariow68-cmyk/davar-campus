@@ -34,6 +34,9 @@ yarn-error.log*
 # (seul le modèle sans secret .env.example est versionné)
 .env*
 !.env.example
+# secrets locaux du runtime Cloudflare (wrangler/vite) — jamais publiés
+.dev.vars
+.dev.vars.*
 *.before-free-staging.bak
 *.db
 *.db-shm

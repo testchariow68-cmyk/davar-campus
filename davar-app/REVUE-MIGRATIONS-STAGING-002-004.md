@@ -105,7 +105,68 @@ Commandes, **à exécuter par vous, sur votre PC** :
   inventaire et un accord séparés.
 - La base Turso de production n'est **pas** concernée par cette revue.
 
-## 5. Décision à obtenir avant toute écriture
+## 5. Répétition locale déjà effectuée (6 octobre 2026)
+
+Avant de vous demander quoi que ce soit, j'ai rejoué la migration **exactement comme elle se
+déroulera sur le staging**, mais dans un fichier SQLite temporaire supprimé aussitôt, en partant
+d'une base qui ne contient que la migration 001 — donc **une copie conforme de
+`davar-campus-staging`**. Le banc d'essai lit le même manifeste et les mêmes fichiers SQL que le
+script réel, et écrit avec la même mécanique (une transaction par migration, suivie du reçu).
+
+Commande : `npm run rehearsal:staging` — résultat : **RÉUSSITE**, 24 contrôles au vert.
+
+| Contrôle | Résultat |
+|---|---|
+| Copie de départ : 9 tables, 3 index, reçu version 1 | ✅ conforme au staging |
+| 3 migrations en attente détectées | ✅ 002, 003, 004 |
+| Nombre exact de DDL par fichier (10, 4, 3) | ✅ |
+| Aucune instruction destructive | ✅ aucun `DROP` / `DELETE` / `TRUNCATE` |
+| Après migration : **16 tables**, **6 index**, **4 reçus** | ✅ |
+| Empreintes des 4 reçus conformes au manifeste revu | ✅ |
+| `users`, `trainings`, `verified_purchases`, `enrollments` | ✅ **zéro ligne** |
+| Colonnes ajoutées présentes (7) | ✅ |
+| Seconde exécution : rien à réécrire, toujours 16 tables | ✅ idempotent |
+
+Vous pouvez relancer cette répétition chez vous, sans aucun accès réseau :
+`npm run rehearsal:staging`.
+
+## 6. Mode opératoire, pas à pas, sur votre PC
+
+**Avant de commencer** : dans le tableau de bord Turso, ouvrez `davar-campus-staging` →
+**Export Database → Download SQLite File**. C'est votre filet de sécurité. Ne l'envoyez à
+personne, pas même dans ce chat.
+
+Dans un terminal, à la racine du projet (`davar-app`) :
+
+```powershell
+# 1. Reproduire l'essai à blanc, chez vous, sans réseau :
+npm run rehearsal:staging      # doit finir par « RÉUSSITE »
+
+# 2. Inspection du vrai staging (lectures seules, aucune écriture) :
+& .\scripts\run-staging-schema.ps1
+#    À vérifier dans la sortie :
+#      « Table(s) déjà présente(s) : » les 9 tables issues de la migration 001
+#      « 002/003/004 … à appliquer »
+#      « Inspection seule : 0 écriture demandée. »
+
+# 3. L'écriture, seulement si l'inspection est conforme :
+& .\scripts\run-staging-schema.ps1 -Apply
+#    Le script demande de taper exactement : APPLIQUER DAVAR STAGING
+```
+
+Le lanceur vous demande l'URL staging et le **jeton d'écriture temporaire** en saisie masquée,
+ne les écrit dans aucun fichier et les efface de sa session ensuite. Utilisez un jeton **créé
+pour l'occasion et supprimé juste après** — jamais le jeton lecture seule déjà installé dans le
+Worker, jamais le jeton de production.
+
+**Sortie attendue à la fin** (la même que la répétition ci-dessus) :
+`16 tables` listées, `4 reçus` conformes, puis
+« Aucune donnée étudiante, formation, paiement ou droit n'a été écrite. »
+
+**Si quoi que ce soit d'autre s'affiche** : ne relancez pas, copiez-moi la sortie (les empreintes
+et les noms de tables, jamais le jeton) et je corrige le plan avant toute autre tentative.
+
+## 7. Décision à obtenir avant toute écriture
 
 > **Accord explicite pour appliquer les migrations 002, 003 et 004 uniquement sur
 > `davar-campus-staging`**, après lecture de ce document.
