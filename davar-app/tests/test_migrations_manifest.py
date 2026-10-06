@@ -4,12 +4,14 @@ Toute modification d'un fichier de migration sans mise à jour du manifeste
 (scripts/staging-schema.mjs) doit casser ici — avant toute écriture hébergée.
 """
 import hashlib
+import json
 import re
+import subprocess
 import unittest
 from pathlib import Path
 
 ROOT = Path(__file__).parents[1]
-MANIFEST = (ROOT / 'scripts' / 'staging-schema.mjs').read_text(encoding='utf-8')
+MANIFEST_SCRIPT = ROOT / 'scripts' / 'staging-schema.mjs' 
 DDL_PATTERNS = {
     'CREATE TABLE': r'^CREATE\s+TABLE\s+([a-z_]+)',
     'CREATE INDEX': r'^CREATE\s+INDEX\s+([a-z_]+)',
@@ -18,19 +20,18 @@ DDL_PATTERNS = {
 FORBIDDEN = ('drop table', 'drop index', 'truncate', 'delete from')
 
 
+def manifest_json():
+    """Le manifeste revu, lu depuis le script lui-même (lecture seule, hors ligne)."""
+    completed = subprocess.run(
+        ['node', str(MANIFEST_SCRIPT), '--manifest'],
+        capture_output=True, text=True, check=True, cwd=ROOT,
+    )
+    return json.loads(completed.stdout)
+
+
 def manifest_entries():
-    """Extrait les entrées {version, file, sha256, ddl, creates} du manifeste."""
-    entries = []
-    for block in re.findall(r'\{\s*version:\s*\d+.*?creates:\s*\[(.*?)\]\s*,\s*\}', MANIFEST, re.S):
-        start = MANIFEST.index(block)
-        header = MANIFEST[:start]
-        version = int(re.findall(r'version:\s*(\d+)', header)[-1])
-        file = re.findall(r"file:\s*'([^']+)'", header)[-1]
-        sha256 = re.findall(r"sha256:\s*'([0-9a-f]{64})'", header)[-1]
-        ddl = int(re.findall(r'ddl:\s*(\d+)', header)[-1])
-        creates = re.findall(r"'([a-z_]+)'", block)
-        entries.append({'version': version, 'file': file, 'sha256': sha256, 'ddl': ddl, 'creates': creates})
-    return entries
+    """Entrées {version, file, sha256, ddl, creates} du manifeste revu."""
+    return manifest_json()['migrations']
 
 
 def statements_of(path):
@@ -52,6 +53,15 @@ class MigrationsManifestTest(unittest.TestCase):
             ddl = [s for s in statements_of(path) if not s.upper().startswith('PRAGMA')]
             self.assertEqual(len(ddl), entry['ddl'],
                              f"{entry['file']} : nombre de DDL différent du manifeste revu")
+
+    def test_later_migrations_never_remove_anything(self):
+        for entry in manifest_entries():
+            path = ROOT / 'turso' / 'migrations' / entry['file']
+            for statement in statements_of(path):
+                lowered = statement.lower()
+                for forbidden in FORBIDDEN:
+                    self.assertNotIn(forbidden, lowered,
+                                     f"{entry['file']} : instruction destructive « {forbidden} »")
 
     def test_migrations_are_additive_and_create_expected_tables(self):
         for entry in manifest_entries():
@@ -75,10 +85,10 @@ class MigrationsManifestTest(unittest.TestCase):
 
     def test_migrations_are_disjoint_and_keep_every_legacy_table(self):
         entries = manifest_entries()
-        self.assertGreaterEqual(len(entries), 3)
+        self.assertGreaterEqual(len(entries), 4)
         created = [table for entry in entries for table in entry['creates']]
         self.assertEqual(len(created), len(set(created)), 'deux migrations créent la même table')
-        self.assertEqual(len(set(created)), 16)
+        self.assertEqual(len(set(created)), manifest_json()['expectedTableCount'])
 
 
 if __name__ == '__main__':

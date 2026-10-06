@@ -36,13 +36,26 @@ const MIGRATIONS = [
     ddl: 4, // 2 tables + 2 index : compteurs de quota et journal d'opérations
     creates: ['ops_counters','ops_events'],
   },
+  {
+    version: 4,
+    file: '004_client_side_kdf.sqlite.sql',
+    sha256: '45a6eec2ca0a0d2e0575c478f7a10be2a80a9fc921e4c5b00ce2266d8305a140',
+    ddl: 3, // 3 colonnes additives sur users : aucun objet détruit
+    creates: [],
+  },
 ];
-const EXPECTED_TABLE_COUNT = 16; // 9 après 001 + 5 après 002 + 2 après 003
+const EXPECTED_TABLE_COUNT = 16; // 9 après 001 + 5 après 002 + 2 après 003 (004 n'ajoute que des colonnes)
 const FORBIDDEN = /\b(drop|truncate|delete\s+from)\b/i;
 
 const mode = process.argv[2];
+// --manifest : lecture seule, sans environnement ni réseau. Permet à l'outillage
+// et aux tests de vérifier que les fichiers correspondent au manifeste revu.
+if (mode === '--manifest' && process.argv.length === 3) {
+  console.log(JSON.stringify({ migrations: MIGRATIONS, expectedTableCount: EXPECTED_TABLE_COUNT }, null, 2));
+  process.exit(0);
+}
 if (!['--inspect','--apply'].includes(mode) || process.argv.length !== 3) {
-  console.error('Usage: node scripts/staging-schema.mjs --inspect|--apply');process.exit(2);
+  console.error('Usage: node scripts/staging-schema.mjs --inspect|--apply|--manifest');process.exit(2);
 }
 const {APP_ENV,TURSO_DATABASE_URL:url,TURSO_EXPECTED_HOST:host,TURSO_AUTH_TOKEN:authToken} = process.env;
 let parsed;

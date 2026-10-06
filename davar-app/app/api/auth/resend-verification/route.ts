@@ -8,6 +8,7 @@ import {
 import { clientIp, isDevelopment, isSameOrigin, jsonNoStore, linkOrigin, readJsonBody } from '@/lib/server/http';
 import { mailerConfigured, sendVerificationEmail } from '@/lib/server/mailer';
 import { openDb } from '@/lib/server/turso';
+import { trackApiRequest } from '@/lib/server/quota';
 
 export const dynamic = 'force-dynamic';
 
@@ -16,6 +17,7 @@ export const dynamic = 'force-dynamic';
  * compte existe ou non (pas d'énumération d'adresses depuis cette route).
  */
 export async function POST(request: Request) {
+  await trackApiRequest();
   if (!isSameOrigin(request)) return jsonNoStore({ error: 'origin_refused' }, 403);
   const body = await readJsonBody(request);
   if (!body) return jsonNoStore({ error: 'invalid_input' }, 400);

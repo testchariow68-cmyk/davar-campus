@@ -14,6 +14,7 @@
  *  - `quotaSnapshot` : lecture agrégée, réservée au diagnostic protégé.
  */
 import type { Db } from './auth-core.ts';
+import { openDb } from './turso.ts';
 
 export type { Db };
 
@@ -200,6 +201,19 @@ export async function trackDynamicRequest(db?: Db, now = Date.now()): Promise<bo
     await flushCounters(db, now);
   }
   return allowed;
+}
+
+/**
+ * À appeler dans les routes API : ce sont elles qui invoquent le Worker (les
+ * pages statiques et les assets sont gratuits et illimités chez Cloudflare,
+ * donc non comptés). N'échoue jamais.
+ */
+export async function trackApiRequest(): Promise<void> {
+  try {
+    await trackDynamicRequest(await openDb());
+  } catch {
+    /* la protection de quota ne doit jamais casser une réponse */
+  }
 }
 
 /** Écrit compteurs et journal avant une réponse de diagnostic (jamais bloquant). */

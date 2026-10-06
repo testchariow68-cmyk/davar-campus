@@ -8,6 +8,7 @@ MIGRATIONS = [
     ROOT / 'turso' / 'migrations' / '001_core.sqlite.sql',
     ROOT / 'turso' / 'migrations' / '002_auth_campus.sqlite.sql',
     ROOT / 'turso' / 'migrations' / '003_quota_counters.sqlite.sql',
+    ROOT / 'turso' / 'migrations' / '004_client_side_kdf.sqlite.sql',
 ]
 
 
@@ -55,6 +56,9 @@ class AuthSchemaTest(unittest.TestCase):
         self.assertIn('buy_url', [r[1] for r in self.db.execute('PRAGMA table_info(trainings)')])
         self.assertIn('last_login_at_ms', [r[1] for r in self.db.execute('PRAGMA table_info(users)')])
         self.assertIn('last_seen_at_ms', [r[1] for r in self.db.execute('PRAGMA table_info(sessions)')])
+        user_columns = [r[1] for r in self.db.execute('PRAGMA table_info(users)')]
+        for column in ('kdf_scheme', 'client_salt', 'client_iterations'):
+            self.assertIn(column, user_columns)
 
     def test_email_token_is_hashed_and_single_use_constraints(self):
         with self.assertRaises(sqlite3.IntegrityError):
@@ -150,6 +154,17 @@ class AuthSchemaTest(unittest.TestCase):
         ).fetchall()
         self.assertEqual(len(allowed), 1)
 
+
+    def test_client_kdf_columns_are_nullable_for_legacy_accounts(self):
+        """Un compte hérité (hachage serveur) doit rester valide sans ces colonnes."""
+        self.db.execute(
+            "INSERT INTO users(id,email_normalized,display_name,password_hash,created_at_ms)"
+            " VALUES ('u-legacy','legacy@example.org','Hérité','pbkdf2-sha256$1$x$y',0)"
+        )
+        row = self.db.execute(
+            "SELECT kdf_scheme, client_salt, client_iterations FROM users WHERE id='u-legacy'"
+        ).fetchone()
+        self.assertEqual(row, (None, None, None))
 
     def test_quota_counters_constraints(self):
         self.db.execute(

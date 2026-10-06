@@ -6,9 +6,10 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createClient } from '@libsql/client';
-import { mkdtempSync, readFileSync } from 'node:fs';
+import { mkdtempSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+import { applyAllMigrations } from './helpers/migrations.mjs';
 import {
   AuthError,
   assertPasswordPolicy,
@@ -29,20 +30,9 @@ import {
 process.env.APP_ENV = 'development';
 process.env.AUTH_PBKDF2_ITERATIONS = '10000';
 
-const root = new URL('..', import.meta.url).pathname;
-const MIGRATIONS = ['001_core.sqlite.sql', '002_auth_campus.sqlite.sql'];
-
-function statementsOf(file) {
-  return readFileSync(join(root, 'turso', 'migrations', file), 'utf8')
-    .split(';')
-    .map((statement) => statement.replace(/^\s*--.*$/gm, '').trim())
-    .filter(Boolean);
-}
-
 async function freshDb() {
   const client = createClient({ url: `file:${join(mkdtempSync(join(tmpdir(), 'davar-test-')), 'test.db')}` });
-  for (const file of MIGRATIONS)
-    for (const statement of statementsOf(file)) await client.execute(statement);
+  await applyAllMigrations(client);
   return client;
 }
 

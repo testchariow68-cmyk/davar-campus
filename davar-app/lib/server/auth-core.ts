@@ -35,6 +35,7 @@ export type AuthErrorCode =
   | 'account_suspended'
   | 'rate_limited'
   | 'invalid_token'
+  | 'kdf_scheme_mismatch'
   | 'not_configured';
 
 export class AuthError extends Error {
@@ -65,6 +66,8 @@ export function httpStatusForAuthError(code: AuthErrorCode): number {
       return 429;
     case 'invalid_token':
       return 400;
+    case 'kdf_scheme_mismatch':
+      return 409;
     case 'not_configured':
       return 503;
   }
@@ -254,6 +257,191 @@ function mapUser(row: DbRow): AuthUser {
   return { id, email, displayName, role: role as AuthUser['role'], emailVerified: int(row.email_verified_at_ms) !== null };
 }
 
+/* ------------------------------------- dérivation côté client (schéma client-v1) */
+
+/**
+ * Le navigateur effectue PBKDF2-SHA256 sur 600 000 itérations (recommandation
+ * OWASP). Le serveur ne reçoit que la clé dérivée de 256 bits, puis la
+ * revérifie à faible coût : c'est ce qui rend la plateforme gratuite tenable
+ * (10 ms de CPU par requête) sans jamais affaiblir la résistance hors ligne.
+ */
+export const CLIENT_KDF_ITERATIONS = 600_000;
+/** Coût de la vérification serveur : quelques millisecondes, jamais le coût client. */
+export const SERVER_VERIFIER_ITERATIONS = 10_000;
+const MIN_SERVER_VERIFIER_ITERATIONS = 1_000;
+const MAX_SERVER_VERIFIER_ITERATIONS = 60_000;
+/** Sel factice pour les adresses inconnues : identique en forme à un vrai sel. */
+const FAKE_SALT_BYTES = 16;
+
+export type KdfScheme = 'server-v1' | 'client-v1';
+
+export function schemeOf(row: DbRow): KdfScheme {
+  return text(row.kdf_scheme) === 'client-v1' ? 'client-v1' : 'server-v1';
+}
+
+function verifierIterations(options: { verifierIterations?: number }): number {
+  const requested = options.verifierIterations ?? Number(process.env.AUTH_VERIFIER_ITERATIONS);
+  const iterations = Number.isFinite(requested) && requested > 0 ? Math.trunc(requested) : SERVER_VERIFIER_ITERATIONS;
+  if (iterations < MIN_SERVER_VERIFIER_ITERATIONS || iterations > MAX_SERVER_VERIFIER_ITERATIONS)
+    throw new AuthError('not_configured', 'AUTH_VERIFIER_ITERATIONS hors bornes');
+  return iterations;
+}
+
+function verifierPepper(options: { verifierPepper?: string } = {}): string {
+  const pepper = options.verifierPepper ?? process.env.AUTH_VERIFIER_PEPPER ?? '';
+  if (pepper.length >= 16) return pepper;
+  if (productionLike() && process.env.AUTH_ALLOW_NO_PEPPER !== 'true')
+    throw new AuthError('not_configured', 'AUTH_VERIFIER_PEPPER absente (16 caractères minimum)');
+  // Développement/tests : poivre constant, jamais utilisé hors développement.
+  return 'pepper-de-developpement-non-secret';
+}
+
+/** Le vérificateur stocké ne permet jamais de remonter au mot de passe ni à la clé client. */
+function verifierMaterial(verifier: string, pepper: string): string {
+  return `${pepper}:${verifier}`;
+}
+
+export async function hashClientVerifier(
+  verifier: string,
+  options: { verifierPepper?: string; verifierIterations?: number } = {}
+): Promise<string> {
+  if (!isClientVerifier(verifier)) throw new AuthError('invalid_input', 'verifier');
+  return hashPassword(verifierMaterial(verifier, verifierPepper(options)), verifierIterations(options));
+}
+
+export async function verifyClientVerifier(
+  verifier: string,
+  stored: string,
+  options: { verifierPepper?: string; verifierIterations?: number } = {}
+): Promise<PasswordCheck> {
+  if (!isClientVerifier(verifier)) return { ok: false, needsRehash: false };
+  const check = await verifyPassword(verifierMaterial(verifier, verifierPepper(options)), stored);
+  const target = verifierIterations(options);
+  const storedIterations = Number(stored.split('$')[1]);
+  return { ok: check.ok, needsRehash: check.ok && storedIterations !== target };
+}
+
+/** Une clé dérivée est un secret de 32 octets en base64url — jamais un mot de passe. */
+export function isClientVerifier(value: unknown): value is string {
+  return typeof value === 'string' && /^[A-Za-z0-9_-]{43}$/.test(value);
+}
+
+/** Empreinte factice de même coût, employée quand l'adresse est inconnue. */
+export const DUMMY_VERIFIER_HASH =
+  `pbkdf2-sha256$${SERVER_VERIFIER_ITERATIONS}$AAAAAAAAAAAAAAAAAAAAAA$AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA`;
+
+/* ---------------------------------------------------- paramètres de dérivation */
+
+export type DerivationParams = {
+  scheme: KdfScheme;
+  /** Sel public du compte (ou sel factice déterministe si l'adresse est inconnue). */
+  salt: string;
+  /** Itérations à appliquer côté navigateur. */
+  iterations: number;
+  /** Version d'algorithme, pour permettre une évolution sans casser l'existant. */
+  algorithm: 'PBKDF2-SHA256';
+};
+
+/**
+ * Paramètres publics de dérivation pour une adresse donnée.
+ *
+ * Anti-énumération : pour une adresse inconnue, le sel est calculé de façon
+ * DÉTERMINISTE à partir d'un secret serveur. Deux appels pour la même adresse
+ * renvoient donc la même valeur — impossible de distinguer « compte existant »
+ * de « adresse inconnue » depuis l'extérieur.
+ */
+export async function derivationParams(
+  db: Db,
+  rawEmail: string,
+  secret: string
+): Promise<DerivationParams> {
+  const email = normalizeEmail(rawEmail);
+  const found = await db.execute({
+    sql: 'SELECT kdf_scheme, client_salt, client_iterations FROM users WHERE email_normalized = ?',
+    args: [email],
+  });
+  const row = found.rows[0];
+  if (row && schemeOf(row) === 'client-v1') {
+    const salt = text(row.client_salt);
+    const iterations = int(row.client_iterations);
+    if (!salt || !iterations) throw new Error('Paramètres de dérivation illisibles');
+    return { scheme: 'client-v1', salt, iterations, algorithm: 'PBKDF2-SHA256' };
+  }
+  if (row) {
+    // Compte hérité : le navigateur envoie le mot de passe, le serveur le hache.
+    return { scheme: 'server-v1', salt: '', iterations: 0, algorithm: 'PBKDF2-SHA256' };
+  }
+  return {
+    scheme: 'client-v1',
+    salt: await deterministicSalt(secret, email),
+    iterations: CLIENT_KDF_ITERATIONS,
+    algorithm: 'PBKDF2-SHA256',
+  };
+}
+
+/** Sel factice stable : HMAC(secret, "davar-salt:" + email), tronqué et encodé. */
+export async function deterministicSalt(secret: string, email: string): Promise<string> {
+  if (!secret || secret.length < 32) throw new AuthError('not_configured', 'secret de dérivation absent');
+  const key = await crypto.subtle.importKey(
+    'raw',
+    te.encode(secret),
+    { name: 'HMAC', hash: 'SHA-256' },
+    false,
+    ['sign']
+  );
+  const digest = await crypto.subtle.sign('HMAC', key, te.encode(`davar-salt:${email}`));
+  return toBase64Url(new Uint8Array(digest).slice(0, FAKE_SALT_BYTES));
+}
+
+/** Sel aléatoire d'un nouveau compte (public, jamais secret). */
+export function randomClientSalt(): string {
+  return toBase64Url(crypto.getRandomValues(new Uint8Array(FAKE_SALT_BYTES)));
+}
+
+/* -------------------------------------------------------- inscription client-v1 */
+
+export type ClientRegistrationInput = {
+  email: string;
+  displayName: string;
+  /** Clé dérivée par le navigateur (base64url, 32 octets). */
+  verifier: string;
+  /** Sel fourni par `derivationParams` : refusé s'il ne correspond pas à l'attendu. */
+  salt: string;
+  iterations: number;
+  now?: number;
+  verificationTtlMs?: number;
+  verifierPepper?: string;
+  verifierIterations?: number;
+};
+
+export async function registerClientUser(
+  db: Db,
+  input: ClientRegistrationInput
+): Promise<RegistrationResult> {
+  const email = normalizeEmail(input.email);
+  const displayName = validateDisplayName(input.displayName);
+  if (!isClientVerifier(input.verifier)) throw new AuthError('invalid_input', 'verifier');
+  if (typeof input.salt !== 'string' || input.salt.length < 16 || input.salt.length > 128)
+    throw new AuthError('invalid_input', 'salt');
+  if (!Number.isInteger(input.iterations) || input.iterations < 100_000 || input.iterations > 2_000_000)
+    throw new AuthError('invalid_input', 'iterations');
+
+  const now = input.now ?? Date.now();
+  const userId = newId('usr');
+  const passwordHash = await hashClientVerifier(input.verifier, input);
+  const inserted = await db.execute({
+    sql: `INSERT INTO users(id, email_normalized, display_name, password_hash, role, status,
+                             created_at_ms, kdf_scheme, client_salt, client_iterations)
+          SELECT ?, ?, ?, ?, 'student', 'active', ?, 'client-v1', ?, ?
+          WHERE NOT EXISTS (SELECT 1 FROM users WHERE email_normalized = ?)`,
+    args: [userId, email, displayName, passwordHash, now, input.salt, input.iterations, email],
+  });
+  if ((inserted.rowsAffected ?? 0) !== 1) throw new AuthError('email_taken');
+
+  const verificationToken = await createEmailToken(db, userId, 'verify_email', now, input.verificationTtlMs);
+  return { userId, email, verificationToken };
+}
+
 /* ------------------------------------------------------- limitation de débit */
 
 export type RateLimitVerdict = { allowed: boolean; attempts: number; retryAfterSeconds: number };
@@ -378,14 +566,39 @@ export async function consumeEmailToken(
 
 export type SessionResult = { token: string; expiresAtMs: number; user: AuthUser };
 
+export type LoginInput = {
+  email: string;
+  /** Mot de passe en clair (compte hérité, haché côté serveur) — jamais journalisé. */
+  password?: string;
+  /** Clé dérivée par le navigateur (schéma client-v1) : 32 octets en base64url. */
+  verifier?: string;
+  now?: number;
+  sessionTtlMs?: number;
+  ipHash?: string;
+};
+
+/**
+ * Connexion, tous schémas confondus.
+ *
+ *  - `client-v1` : le navigateur a dérivé la clé (PBKDF2 600 000 itérations) ;
+ *    le serveur ne fait qu'une vérification bon marché, compatible avec le
+ *    plafond de 10 ms de CPU par requête de Cloudflare Workers Free.
+ *  - `server-v1` (comptes hérités) : le hachage est fait côté serveur, ce qui
+ *    suppose un hôte qui en a le budget CPU.
+ *
+ * Le schéma du compte n'est jamais choisi par le client : il est lu en base et
+ * un écart est refusé (`kdf_scheme_mismatch`).
+ */
 export async function loginUser(
   db: Db,
-  input: { email: string; password: string; now?: number; sessionTtlMs?: number; ipHash?: string },
-  kdf: KdfAdapter = localKdfAdapter
+  input: LoginInput,
+  kdf: KdfAdapter = localKdfAdapter,
+  options: { verifierPepper?: string; verifierIterations?: number } = {}
 ): Promise<SessionResult> {
   const now = input.now ?? Date.now();
   const email = normalizeEmail(input.email);
-  const password = typeof input.password === 'string' ? input.password : '';
+  const hasVerifier = typeof input.verifier === 'string' && input.verifier.length > 0;
+  const credential = hasVerifier ? input.verifier! : typeof input.password === 'string' ? input.password : '';
 
   // Anti-bruteforce par identité ET par origine réseau (compteurs non réversibles).
   const emailBucket = await rateLimitKey('login.email', email);
@@ -398,17 +611,29 @@ export async function loginUser(
   if (blocked) throw new AuthError('rate_limited', undefined, blocked.retryAfterSeconds);
 
   const found = await db.execute({
-    sql: 'SELECT id, email_normalized, display_name, role, status, password_hash, email_verified_at_ms FROM users WHERE email_normalized = ?',
+    sql: `SELECT id, email_normalized, display_name, role, status, password_hash,
+                 email_verified_at_ms, kdf_scheme, client_salt, client_iterations
+          FROM users WHERE email_normalized = ?`,
     args: [email],
   });
   const row = found.rows[0];
   if (!row) {
     // Même coût CPU qu'un compte réel : limite l'énumération par mesure de temps.
-    await kdf.verify(password, DUMMY_PASSWORD_HASH);
+    if (hasVerifier) await verifyClientVerifier(credential, DUMMY_VERIFIER_HASH, options);
+    else await kdf.verify(credential, DUMMY_PASSWORD_HASH);
     throw new AuthError('invalid_credentials');
   }
+
+  const scheme = schemeOf(row);
   const stored = text(row.password_hash) ?? '';
-  const check = await kdf.verify(password, stored);
+  let check: PasswordCheck;
+  if (hasVerifier) {
+    if (scheme !== 'client-v1') throw new AuthError('kdf_scheme_mismatch');
+    check = await verifyClientVerifier(credential, stored, options);
+  } else {
+    if (scheme === 'client-v1') throw new AuthError('kdf_scheme_mismatch');
+    check = await kdf.verify(credential, stored);
+  }
   if (!check.ok) throw new AuthError('invalid_credentials');
 
   const status = text(row.status) ?? 'active';
@@ -417,7 +642,10 @@ export async function loginUser(
   if (!user.emailVerified) throw new AuthError('email_not_verified');
 
   if (check.needsRehash) {
-    const upgraded = await kdf.hash(password);
+    // Mise à niveau du vérificateur, dans le schéma du compte.
+    const upgraded = hasVerifier
+      ? await hashClientVerifier(credential, options)
+      : await kdf.hash(credential);
     await db.execute({ sql: 'UPDATE users SET password_hash = ? WHERE id = ?', args: [upgraded, user.id] });
   }
 

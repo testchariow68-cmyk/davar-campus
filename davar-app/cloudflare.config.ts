@@ -24,15 +24,16 @@ export default defineConfig({
       // Valeurs non secrètes épinglées au staging : ne pas confondre production.
       APP_ENV: bindings.text('staging'),
       TURSO_EXPECTED_HOST: bindings.text('davar-campus-staging-davar-academie.aws-eu-west-1.turso.io'),
-      // Hachage délégué : le Worker gratuit n'a que 10 ms de CPU par requête,
-      // l'opération coûteuse vit sur l'offre gratuite décrite dans
-      // ARCHITECTURE-GRATUITE.md (service auth-kdf-service/).
-      AUTH_KDF_MODE: bindings.text('remote'),
+      // Dérivation côté client : le navigateur paie le coût CPU (PBKDF2 600 000
+      // itérations) et le Worker ne fait qu'une vérification bon marché, ce qui
+      // tient dans les 10 ms du plan gratuit. Aucun hébergement supplémentaire.
+      AUTH_KDF_MODE: bindings.text('client'),
       // Ces valeurs sont saisies dans le tableau de bord Cloudflare, pas dans le code.
       TURSO_DATABASE_URL: bindings.secret(),
       TURSO_AUTH_TOKEN: bindings.secret(),
-      AUTH_KDF_URL: bindings.secret(),
-      AUTH_KDF_TOKEN: bindings.secret(),
+      // Sel factice déterministe (anti-énumération) et poivre du vérificateur.
+      AUTH_PARAMS_SECRET: bindings.secret(),
+      AUTH_VERIFIER_PEPPER: bindings.secret(),
     },
   }),
 });

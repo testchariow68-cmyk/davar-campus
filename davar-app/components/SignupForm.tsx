@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
+import { deriveClientKey, fetchDerivationParameters } from '@/lib/client/derive';
 
 const MESSAGES: Record<string, string> = {
   invalid_input: 'Vérifiez le nom, l’adresse e-mail et le mot de passe (10 caractères minimum).',
@@ -10,6 +11,7 @@ const MESSAGES: Record<string, string> = {
   email_delivery_not_configured:
     'Les inscriptions sont fermées : l’envoi d’e-mails de confirmation n’est pas encore configuré sur ce serveur.',
   origin_refused: 'Requête refusée : origine non reconnue.',
+  not_configured: 'Les inscriptions ne sont pas encore configurées sur ce serveur.',
   unavailable: 'Service momentanément indisponible. Réessayez plus tard.',
 };
 
@@ -20,7 +22,7 @@ export function SignupForm() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmation, setConfirmation] = useState('');
-  const [busy, setBusy] = useState(false);
+  const [busy, setBusy] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<Result | null>(null);
 
@@ -30,13 +32,36 @@ export function SignupForm() {
       setError('Les deux mots de passe ne correspondent pas.');
       return;
     }
-    setBusy(true);
+    setBusy('params');
     setError(null);
     try {
+      // 1. Paramètres publics : sel et nombre d'itérations.
+      const parameters = await fetchDerivationParameters(email);
+      if (!parameters.ok) {
+        setError(MESSAGES[parameters.error] ?? MESSAGES.unavailable);
+        return;
+      }
+      if (parameters.parameters.scheme !== 'client-v1') {
+        setError(MESSAGES.unavailable);
+        return;
+      }
+
+      // 2. Le travail coûteux se fait dans ce navigateur ; le mot de passe ne
+      //    quitte jamais l'appareil, seule la clé dérivée est envoyée.
+      setBusy('deriving');
+      const verifier = await deriveClientKey(password, parameters.parameters);
+
+      setBusy('sending');
       const response = await fetch('/api/auth/register', {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ displayName, email, password }),
+        body: JSON.stringify({
+          displayName,
+          email,
+          verifier,
+          salt: parameters.parameters.salt,
+          iterations: parameters.parameters.iterations,
+        }),
       });
       const payload = (await response.json().catch(() => ({}))) as {
         error?: string;
@@ -51,7 +76,7 @@ export function SignupForm() {
     } catch {
       setError(MESSAGES.unavailable);
     } finally {
-      setBusy(false);
+      setBusy(null);
     }
   }
 
@@ -127,9 +152,18 @@ export function SignupForm() {
         value={confirmation}
         onChange={(event) => setConfirmation(event.target.value)}
       />
-      <button type="submit" disabled={busy}>
-        {busy ? 'Création…' : 'Créer mon compte'}
+      <button type="submit" disabled={busy !== null}>
+        {busy === 'params'
+          ? 'Préparation…'
+          : busy === 'deriving'
+            ? 'Protection de votre mot de passe…'
+            : busy === 'sending'
+              ? 'Création…'
+              : 'Créer mon compte'}
       </button>
+      <p className="xs muted" style={{textAlign:'center',marginTop:8}}>
+        Votre mot de passe est transformé sur votre appareil : il n’est jamais transmis tel quel.
+      </p>
       <p className="small" style={{textAlign:'center',marginTop:14}}>
         Déjà inscrit ? <Link href="/connexion">Se connecter</Link>
       </p>

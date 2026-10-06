@@ -18,7 +18,8 @@ prouvé. Il complète `REAL-LAUNCH-STATUS.md` (état d'ensemble) et
 | Fonctionnalité | État | Preuve locale |
 |---|---|---|
 | Catalogue public (lecture Turso) | ✅ | 4 formations affichées avec prix et lien d'achat |
-| Inscription (nom, e-mail, mot de passe) | ✅ | `POST /api/auth/register` → 201 |
+| Inscription (nom, e-mail, mot de passe) | ✅ | `POST /api/auth/register` → 201 (dérivation dans le navigateur) |
+| Mot de passe jamais transmis | ✅ | PBKDF2 600 000 itérations côté client, clé seule envoyée |
 | Confirmation d'e-mail à usage unique (24 h) | ✅ | lien consommé une fois, rejeu refusé |
 | Connexion / déconnexion par session hachée | ✅ | cookie `HttpOnly`, jeton SHA-256 en base |
 | Campus protégé (cookie + validation base) | ✅ | `/campus` → 307 sans session, contenu avec session |
@@ -202,14 +203,15 @@ revoir avec l'hébergement retenu.
 
 ## 10. Vérifications exécutées (6 octobre 2026)
 
-- `npm test` → **41 tests réussis** : signature Pulse, comparaison Pulse/Get
+- `npm test` → **50 tests réussis** : signature Pulse, comparaison Pulse/Get
   Sale, noyau d'auth (inscription, confirmation, session, suspension, débit,
   expiration), ledger Chariow (produit inconnu et montant divergent refusés,
   accès accordé seulement après confirmation), garde-fous HTTP (origine,
   tolérance d'aperçu limitée au développement, liens d'e-mail, corps borné),
   **service de hachage réel** (signature HMAC, horodatage, plafond, tailles) et
-  **protection des quotas / envoi Brevo** (budgets, verdicts, refus au-delà).
-- `npm run test:sql` → **23 tests réussis** : schéma 001+002, contraintes,
+  **protection des quotas / envoi Brevo** (budgets, verdicts, refus au-delà) et
+  **dérivation côté client** (anti-énumération, poivre, refus croisés de schémas).
+- `npm run test:sql` → **25 tests réussis** : schéma 001+002, contraintes,
   absence de données semées, manifeste de migration staging.
 - `npm run typecheck` → réussi. `npm run build -- --webpack` → réussi (toutes
   les routes listées). `npm run build:vinext` → réussi.
@@ -218,10 +220,12 @@ revoir avec l'hébergement retenu.
   fois, connexion, `/campus` 307 sans cookie, campus avec formation, 404 sur
   formation non achetée, progression « 1 / 5 », leçon hors droit refusée (403),
   achat simulé avant création du compte → « 1 formation activée ».
-- **Preuve du mode gratuit** : serveur de développement lancé avec
-  `AUTH_KDF_MODE=remote` face au vrai service (`auth-kdf-service`) — inscription,
-  confirmation, connexion, campus, puis `/api/internal/quota` affichant
-  `kdf.operations : 3/3000` et `worker.requests : 4/100000`.
+- **Preuve du mode gratuit** : parcours reproduit à l'identique dans le serveur
+  de développement — paramètres publics (600 000 itérations), dérivation locale,
+  inscription, confirmation d'e-mail, connexion, campus : **le mot de passe n'est
+  jamais transmis** et le serveur ne paie qu'une vérification brève. Les comptes
+  hérités (`server-v1`) continuent de fonctionner, et `/api/internal/quota`
+  affiche la consommation réelle (`worker.requests`, `kdf.operations`).
 - **Non testé (et non testable ici)** : Pulse Chariow réel, `GET /v1/sales`,
   envoi d'e-mail réel, transactions Turso hébergées, comportement à chaud sous
   Workers, quotas facturés par les fournisseurs, restauration de sauvegarde. À

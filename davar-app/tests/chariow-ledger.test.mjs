@@ -5,9 +5,10 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createClient } from '@libsql/client';
-import { mkdtempSync, readFileSync } from 'node:fs';
+import { mkdtempSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+import { applyAllMigrations } from './helpers/migrations.mjs';
 import {
   claimPurchasesForVerifiedUser,
   consumeEmailToken,
@@ -22,11 +23,7 @@ const root = new URL('..', import.meta.url).pathname;
 
 async function freshDb() {
   const client = createClient({ url: `file:${join(mkdtempSync(join(tmpdir(), 'davar-ledger-')), 'test.db')}` });
-  for (const file of ['001_core.sqlite.sql', '002_auth_campus.sqlite.sql']) {
-    const sql = readFileSync(join(root, 'turso', 'migrations', file), 'utf8');
-    for (const statement of sql.split(';').map((s) => s.replace(/^\s*--.*$/gm, '').trim()).filter(Boolean))
-      await client.execute(statement);
-  }
+  await applyAllMigrations(client);
   await client.execute(
     "INSERT INTO trainings(id,title,price_cfa,chariow_product_id,published) VALUES ('t-orateur','Devenir un excellent orateur',45000,'prd_6wx1czzp',1)"
   );

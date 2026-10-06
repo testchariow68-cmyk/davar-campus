@@ -6,6 +6,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createClient } from '@libsql/client';
+import { applyAllMigrations } from './helpers/migrations.mjs';
 import { mkdtempSync, readFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
@@ -33,11 +34,7 @@ const root = new URL('..', import.meta.url).pathname;
 
 async function freshDb() {
   const client = createClient({ url: `file:${join(mkdtempSync(join(tmpdir(), 'davar-quota-')), 'q.db')}` });
-  for (const file of ['001_core.sqlite.sql', '002_auth_campus.sqlite.sql', '003_quota_counters.sqlite.sql']) {
-    const sql = readFileSync(join(root, 'turso', 'migrations', file), 'utf8');
-    for (const statement of sql.split(';').map((s) => s.replace(/^\s*--.*$/gm, '').trim()).filter(Boolean))
-      await client.execute(statement);
-  }
+  await applyAllMigrations(client);
   return client;
 }
 

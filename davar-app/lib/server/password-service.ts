@@ -19,10 +19,17 @@
  * HTTPS, sur un corps signé HMAC-SHA256 et horodaté (anti-rejeu). Il n'est
  * jamais journalisé, ni par l'application, ni par le service.
  */
-import { hashPassword, verifyPassword, type KdfAdapter, type PasswordCheck } from './auth-core.ts';
+import {
+  CLIENT_KDF_ITERATIONS,
+  SERVER_VERIFIER_ITERATIONS,
+  hashPassword,
+  verifyPassword,
+  type KdfAdapter,
+  type PasswordCheck,
+} from './auth-core.ts';
 import { budgetFor, countOp, verdictFor, windowTagFor } from './quota.ts';
 
-export type KdfMode = 'local' | 'remote';
+export type KdfMode = 'client' | 'local' | 'remote';
 
 export class PasswordServiceError extends Error {
   constructor(message: string) {
@@ -38,10 +45,16 @@ function productionLike(): boolean {
   return process.env.NODE_ENV === 'production';
 }
 
+/**
+ * Mode de dérivation. `client` est le défaut : le navigateur paie le coût CPU
+ * (voir lib/client/derive.ts) et le serveur ne fait qu'une vérification brève,
+ * ce qui suffit pour l'offre gratuite. `local` et `remote` restent disponibles
+ * pour les outils internes et les comptes hérités.
+ */
 export function kdfMode(): KdfMode {
   const declared = process.env.AUTH_KDF_MODE?.trim();
-  if (declared === 'local' || declared === 'remote') return declared;
-  return productionLike() ? 'remote' : 'local';
+  if (declared === 'client' || declared === 'local' || declared === 'remote') return declared;
+  return 'client';
 }
 
 export function kdfRemoteConfig(): { url: string; token: string } | null {
@@ -125,6 +138,11 @@ async function callRemote(
 
 /** Hache un mot de passe : localement ou via le service selon AUTH_KDF_MODE. */
 export async function derivePasswordHash(password: string): Promise<string> {
+  if (kdfMode() === 'client') {
+    // Le mode client n'hache jamais côté serveur : les nouveaux comptes passent
+    // par registerClientUser, et les comptes hérités restent en « local ».
+    return hashPassword(password);
+  }
   if (kdfMode() === 'local') {
     if (productionLike() && process.env.AUTH_ALLOW_LOCAL_KDF !== 'true')
       throw new PasswordServiceError(
@@ -170,11 +188,21 @@ export function passwordAdapter(): KdfAdapter {
 }
 
 /** État lisible de la configuration, pour le diagnostic protégé (jamais de secret). */
-export function kdfStatus(): { mode: KdfMode; remoteConfigured: boolean; dailyKdfBudget: number } {
+export function kdfStatus(): {
+  mode: KdfMode;
+  remoteConfigured: boolean;
+  dailyKdfBudget: number;
+  clientIterations: number;
+  serverVerifierIterations: number;
+  paramsSecretConfigured: boolean;
+} {
   return {
     mode: kdfMode(),
     remoteConfigured: kdfRemoteConfig() !== null,
     dailyKdfBudget: budgetFor('kdf.operations').limit,
+    clientIterations: CLIENT_KDF_ITERATIONS,
+    serverVerifierIterations: SERVER_VERIFIER_ITERATIONS,
+    paramsSecretConfigured: Boolean((process.env.AUTH_PARAMS_SECRET ?? '').trim().length >= 32),
   };
 }
 

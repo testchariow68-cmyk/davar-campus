@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { deriveClientKey, fetchDerivationParameters } from '@/lib/client/derive';
 
 const MESSAGES: Record<string, string> = {
   invalid_credentials: 'E-mail ou mot de passe incorrect.',
@@ -11,34 +12,57 @@ const MESSAGES: Record<string, string> = {
   account_suspended: 'Ce compte est suspendu. Contactez l’administration.',
   rate_limited: 'Trop de tentatives. Patientez quelques minutes avant de réessayer.',
   origin_refused: 'Requête refusée : origine non reconnue.',
+  kdf_scheme_mismatch: 'Ce compte utilise un autre mode de protection. Rechargez la page et réessayez.',
   unavailable: 'Service momentanément indisponible. Réessayez plus tard.',
+  not_configured: 'La connexion n’est pas encore configurée sur ce serveur.',
 };
+
+type Step = 'idle' | 'deriving' | 'verifying';
 
 export function LoginForm() {
   const router = useRouter();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [busy, setBusy] = useState(false);
+  const [step, setStep] = useState<Step>('idle');
   const [error, setError] = useState<string | null>(null);
   const [unverified, setUnverified] = useState(false);
   const [notice, setNotice] = useState<string | null>(null);
+  const busy = step !== 'idle';
 
   async function onSubmit(event: React.FormEvent) {
     event.preventDefault();
-    setBusy(true);
     setError(null);
     setNotice(null);
     setUnverified(false);
     try {
+      // 1. Paramètres publics du compte : le serveur indique le schéma de protection.
+      const parameters = await fetchDerivationParameters(email);
+      if (!parameters.ok) {
+        setError(MESSAGES[parameters.error] ?? MESSAGES.unavailable);
+        return;
+      }
+
+      // 2. Compte moderne : la dérivation coûteuse se fait ICI, dans le navigateur.
+      let payload: Record<string, unknown> = { email };
+      if (parameters.parameters.scheme === 'client-v1') {
+        setStep('deriving');
+        const verifier = await deriveClientKey(password, parameters.parameters);
+        payload = { email, verifier };
+      } else {
+        // Compte hérité : le serveur procède au hachage (hôte à budget CPU suffisant).
+        payload = { email, password };
+      }
+
+      setStep('verifying');
       const response = await fetch('/api/auth/login', {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ email, password }),
+        body: JSON.stringify(payload),
       });
-      const payload = (await response.json().catch(() => ({}))) as { error?: string };
+      const result = (await response.json().catch(() => ({}))) as { error?: string };
       if (!response.ok) {
-        setError(MESSAGES[payload.error ?? 'unavailable'] ?? 'Connexion refusée.');
-        setUnverified(payload.error === 'email_not_verified');
+        setError(MESSAGES[result.error ?? 'unavailable'] ?? 'Connexion refusée.');
+        setUnverified(result.error === 'email_not_verified');
         return;
       }
       router.replace('/campus');
@@ -46,7 +70,7 @@ export function LoginForm() {
     } catch {
       setError(MESSAGES.unavailable);
     } finally {
-      setBusy(false);
+      setStep('idle');
     }
   }
 
@@ -98,8 +122,11 @@ export function LoginForm() {
         placeholder="Votre mot de passe"
       />
       <button type="submit" disabled={busy}>
-        {busy ? 'Connexion…' : 'Se connecter'}
+        {step === 'deriving' ? 'Protection de votre mot de passe…' : step === 'verifying' ? 'Connexion…' : 'Se connecter'}
       </button>
+      <p className="xs muted" style={{textAlign:'center',marginTop:8}}>
+        Votre mot de passe est transformé sur votre appareil : il n’est jamais transmis tel quel.
+      </p>
       {unverified && (
         <button type="button" className="btn btn-ghost" onClick={resend} disabled={busy}>
           Renvoyer le lien de confirmation

@@ -1,17 +1,20 @@
 # DAVAR Campus — architecture 100 % gratuite (objectif : 0 € jusqu'à 3 000 étudiants actifs)
 
-**Décision du propriétaire (6 octobre 2026) :** aucun budget avant 3 000 étudiants
-actifs. Règle d'ingénierie associée : **« les quotas se protègent, ils ne se
-dépensent pas ».** Ce document dit ce qui est gratuit, jusqu'où, ce qui a été
+**Décisions du propriétaire (6 octobre 2026) :** aucun budget avant 3 000
+étudiants actifs ; **tout ce qui peut s'exécuter côté client s'y exécutera** ;
+**aucun serveur (VPS) à louer**. Règle d'ingénierie associée : **« les quotas se
+protègent, ils ne se dépensent pas ».** Ce document dit ce qui est gratuit, jusqu'où, ce qui a été
 mis en place pour ne jamais dépasser, et à quels signaux chiffrés il faudra
 revoir la question.
 
 > **Conclusion courte :** l'obstacle qui obligeait à payer (~121 ms de CPU pour
 > hacher un mot de passe, contre 10 ms autorisées par requête chez Cloudflare
-> gratuit) **est levé sans affaiblir la sécurité** : le hachage est délégué à un
-> petit service auto-hébergé qui vit sur une offre gratuite mesurée en temps CPU
-> mensuel. Le reste du campus tient dans les offres gratuites de Cloudflare,
-> Turso et Brevo, avec une marge de 3 à 10× à 3 000 étudiants.
+> gratuit) **est levé sans affaiblir la sécurité et sans louer quoi que ce soit** :
+> la dérivation du mot de passe se fait **dans le navigateur de l'étudiant**
+> (PBKDF2 600 000 itérations, Web Crypto natif) et le serveur ne revérifie qu'une
+> clé dérivée, en ~2,6 ms. Le mot de passe ne quitte jamais l'appareil. Le reste
+> du campus tient dans les offres gratuites de Cloudflare, Turso et Brevo, avec
+> une marge de 3 à 10× à 3 000 étudiants.
 
 ## 1. Les briques retenues (toutes gratuites, aucune carte requise sauf mention)
 
@@ -19,7 +22,7 @@ revoir la question.
 |---|---|---|---|
 | Pages, logique, API | **Cloudflare Workers Free** | **100 000 requêtes dynamiques/jour** ; **assets statiques gratuits et illimités** ; 10 ms CPU/requête ; 100 Workers ; Worker ≤ 3 Mo gzip | [limits](https://developers.cloudflare.com/workers/platform/limits/), [pricing](https://developers.cloudflare.com/workers/platform/pricing/) |
 | Base de données | **Turso Free** | 5 Go, **500 M lignes lues/mois**, **10 M lignes écrites/mois**, 100 bases, sans carte bancaire | [turso.tech](https://turso.tech/blog/turso-cloud-debuts-the-new-developer-plan) |
-| Hachage des mots de passe | **`davar-kdf`** (ce dépôt), hébergé sur une offre gratuite en **CPU mensuel** | Oracle Cloud Always Free : 4 vCPU ARM + 24 Go, sans limite de durée (carte de vérification demandée, non débitée) · Google Cloud Run free tier : 180 000 vCPU-s/mois (compte de facturation requis) · ou votre propre machine / Raspberry Pi | [Oracle Free](https://www.oracle.com/cloud/free/), [Cloud Run](https://cloud.google.com/run/pricing) |
+| Hachage des mots de passe | **Le navigateur de l'étudiant** (Web Crypto) | PBKDF2-SHA256 600 000 itérations sur l'appareil ; le serveur ne revérifie qu'une clé dérivée (~2,6 ms CPU). **Aucun hébergement, aucun quota serveur.** | Mesuré dans ce dépôt (`npm test`) |
 | E-mails de confirmation | **Brevo Free** | **300 e-mails/jour**, 100 000 contacts, sans carte, expéditeur à vérifier | [brevo.com/pricing](https://www.brevo.com/pricing/) |
 | Fichiers & vidéos (plus tard) | **Cloudflare R2** | 10 Go de stockage, **sortie de données gratuite** | [R2 pricing](https://developers.cloudflare.com/r2/pricing/) |
 | Nom de domaine | `*.workers.dev` fourni | Domaine propre facultatif, non nécessaire au démarrage | Cloudflare |
@@ -29,42 +32,43 @@ gratuits (le service s'endort après inactivité : inacceptable pour un campus),
 Vercel Hobby (réservé à l'usage non commercial, ce que le campus n'est pas),
 Cloudflare Workers Paid (5 $/mois) — utile seulement en cas de dépassement réel.
 
-## 2. Pourquoi le hachage devait sortir du Worker
+## 2. Le mot de passe est protégé sur l'appareil de l'étudiant
 
-Le mot de passe est haché avec PBKDF2-HMAC-SHA256 à **600 000 itérations**
-(recommandation OWASP). Mesuré sur cette machine : **~121 ms de CPU par
-hachage** — c'est voulu, c'est ce qui ruine une attaque hors ligne. Or Cloudflare
-Workers Free plafonne à **10 ms de CPU par requête** : la connexion et
-l'inscription étaient donc structurellement impossibles sans payer.
+Le mot de passe est dérivé avec **PBKDF2-HMAC-SHA256 à 600 000 itérations**
+(recommandation OWASP) — mesuré à **~121 ms de CPU**. Cloudflare Workers Free
+plafonne à **10 ms de CPU par requête** : impossible de faire ce travail côté
+serveur sans payer. La solution retenue applique la règle « tout ce qui peut
+passer côté client y passe » :
 
-Trois sorties possibles ; la troisième a été retenue :
+1. Le navigateur demande les **paramètres publics** du compte
+   (`POST /api/auth/params` : sel + itérations).
+2. Il dérive la clé **localement** (`lib/client/derive.ts`, Web Crypto natif) :
+   le mot de passe **ne quitte jamais l'appareil**, seul le résultat de 32 octets
+   est envoyé.
+3. Le serveur **revérifie cette clé à faible coût** (~2,6 ms mesurés à 10 000
+   itérations de vérification) et délivre la session.
 
-1. **Payer 5 $/mois** — refusé par le propriétaire, et inutile à ce stade.
-2. **Affaiblir le hachage** — refusé, jamais négociable.
-3. **Déléguer le hachage** à un service qui vit sur une offre gratuite dont le
-   quota est exprimé en **temps CPU mensuel** (des dizaines de milliers de
-   secondes), et non en millisecondes par requête. ✅ **Retenu.**
+Ce que cela garantit :
 
-Le service `auth-kdf-service/` livré ici est volontairement minuscule :
+- **la résistance hors ligne reste entière** : un vol de base donne un
+  vérificateur à casser par PBKDF2 600 000 itérations, pas un mot de passe ;
+- **le coût serveur ne dépend plus de la puissance du client** : un client
+  malveillant qui « sauterait » la dérivation n'affaiblit que son propre compte ;
+- **anti-énumération** : pour une adresse inconnue, le sel renvoyé est calculé
+  de façon déterministe (`HMAC(secret, "davar-salt:" + adresse)`) — une adresse
+  connue et une adresse inconnue sont **indiscernables** depuis l'extérieur
+  (vérifié par test) ;
+- **poivre côté serveur** (`AUTH_VERIFIER_PEPPER`, jamais en base) : même une
+  fuite complète de la base ne suffit pas à lancer une attaque hors ligne ;
+- **impossible de négocier un coût dérisoire** : le serveur refuse toute
+  inscription annonçant moins de 100 000 itérations, et le client refuse
+  lui-même moins de 100 000 (test).
 
-- **zéro dépendance** (Node 22 `node:http` + `node:crypto`), une seule image Docker ;
-- requête **signée HMAC-SHA256 sur `horodatage.corps`** : une fuite du jeton
-  d'accès ne suffit pas à rejouer une requête au-delà de 60 secondes ;
-- **plafond journalier explicite** (`DAVAR_KDF_DAILY_MAX`, 3 000 par défaut) :
-  au-delà, il refuse au lieu de consommer — le quota se protège ;
-- **aucun journal** de mot de passe ni d'empreinte, à aucun niveau ;
-- refus de démarrer sans jeton fort (32 caractères minimum) et refus de s'exposer
-  en réseau sans reconnaissance explicite de terminaison TLS en amont
-  (`DAVAR_KDF_TRUST_PROXY=true`).
-
-Côté application, deux modes pilotés par `AUTH_KDF_MODE` :
-
-- `local` : hachage dans le processus courant (développement, tests, hôte Node) ;
-  **refusé** en staging/production sans dérogation explicite ;
-- `remote` (défaut hors développement) : appel signé au service.
-
-Si le service est injoignable, la connexion échoue proprement : **aucun mot de
-passe n'est jamais accepté sans vérification réelle**.
+**Le service `auth-kdf-service/` reste dans le dépôt** (mode `AUTH_KDF_MODE=remote`)
+pour les comptes hérités d'un hachage serveur, mais **il n'est plus nécessaire** :
+avec la dérivation côté client, **aucun VPS, aucune VM, aucun service tiers
+supplémentaire n'est requis**. Les comptes hérités (`server-v1`) continuent de
+fonctionner ; les nouveaux comptes sont créés en `client-v1`.
 
 ## 3. Le budget de charge à 3 000 étudiants actifs
 
@@ -120,22 +124,21 @@ les ressources à protéger. Décision à prendre au moment de publier les cours
 
 ## 5. Mise en service gratuite — l'ordre des opérations
 
+Aucune carte bancaire, aucun serveur à louer à aucune étape.
+
 1. **Compte Cloudflare (gratuit)** → déployer `davar-app` via `npm run build:vinext`
-   (`cloudflare.config.ts` est déjà préparé : Worker dédié, `previewUrls:false`).
+   (`cloudflare.config.ts` est préparé : Worker dédié, `previewUrls:false`,
+   `AUTH_KDF_MODE=client`).
 2. **Compte Turso (gratuit, sans carte)** → créer la base, appliquer les
    migrations avec `node scripts/staging-schema.mjs --inspect` puis la
    procédure validée (`--apply`, confirmation tapée à la main).
-3. **Service de hachage** → `docker build auth-kdf-service` puis exécution sur
-   Oracle Cloud Always Free (VM ARM) derrière Caddy ou Cloudflare Tunnel pour
-   le HTTPS ; renseigner `AUTH_KDF_URL` (HTTPS) et `AUTH_KDF_TOKEN` (32+
-   caractères) côté Worker, avec `AUTH_KDF_MODE=remote`.
-   *Sans carte bancaire disponible :* ce service peut tourner sur votre propre
-   machine ou un Raspberry Pi à la maison, tant que le volume le permet — le
-   reste de la plateforme reste chez Cloudflare.
-4. **Brevo (gratuit)** → créer la clé API, vérifier l'adresse d'expédition,
+3. **Secrets** → saisir dans le tableau de bord Cloudflare : `TURSO_DATABASE_URL`,
+   `TURSO_AUTH_TOKEN`, `AUTH_PARAMS_SECRET` (32+ caractères), `AUTH_VERIFIER_PEPPER`
+   (16+ caractères), `APP_DIAGNOSTIC_TOKEN` (32+ caractères).
+4. **Brevo (gratuit, sans carte)** → clé API + adresse d'expédition vérifiée,
    puis `MAILER_KIND=brevo`, `BREVO_API_KEY`, `MAIL_FROM_EMAIL`.
-5. **Diagnostic** → poser `APP_DIAGNOSTIC_TOKEN` (32+ caractères) et consulter
-   `/api/internal/quota` après les premiers tests.
+5. **Diagnostic** → `GET /api/internal/quota` : consommation réelle face aux
+   quotas, et confirmation du mode de dérivation (`client`).
 
 Détail des variables : `.env.example`. Ce qui reste **fermé** tant que ce n'est
 pas prouvé : Pulse Chariow (`CHARIOW_ENABLE_PULSE=false`), paiements
@@ -148,7 +151,7 @@ Ordre de priorité si un plafond est atteint, du moins cher au plus cher :
 | Signal observé | Seuil | Action |
 |---|---|---|
 | `email.sent` en `critical` plusieurs jours | > 270/jour | Basculer les annonces de masse hors plateforme (WhatsApp/Telegram), garder l'e-mail pour la vérification |
-| `kdf.operations` en `critical` | > 2 700/jour | Augmenter `DAVAR_KDF_DAILY_MAX` (le quota hôte est en CPU mensuel, la marge est réelle) ou ajouter une seconde instance |
+| `kdf.operations` en `critical` | > 2 700/jour | Concerne uniquement les comptes hérités en hachage serveur ; basculer ces comptes en dérivation client, ou activer `auth-kdf-service` (optionnel) |
 | `worker.requests` en `critical` | > 90 000/jour | Activer le cache de bord, rendre des écrans statiques, puis envisager Workers Paid (5 $) |
 | `turso.rows_written` approché | > 8 M/mois | Vérifier les écritures inutiles, puis Turso Developer (5 $) |
 | Vidéos > 10 Go | — | Externaliser vers un hébergeur vidéo gratuit ou passer au stockage payant |
@@ -158,16 +161,22 @@ aucune raison de payer**, et le tableau de bord le dira avant la panne.
 
 ## 7. Vérifications exécutées (6 octobre 2026)
 
-- **41 tests Node** (`npm test`) dont 7 sur le **vrai service de hachage** lancé
-  en local : signature HMAC invalide et horodatage périmé refusés (401), plafond
-  journalier refusant au-delà de la limite (429), corps trop volumineux refusé
-  (413), santé exposée sans secret, mot de passe en clair absent de la réponse.
+- **50 tests Node** (`npm test`), dont **9 sur la dérivation côté client** :
+  clé de 32 octets déterministe par (mot de passe, sel), mot de passe absent de
+  la clé et du vérificateur stocké, poivre différent invalidant la vérification,
+  sel déterministe pour une adresse inconnue, **adresse connue et inconnue
+  indiscernables**, inscription `client-v1` de bout en bout, refus croisé avec
+  les comptes hérités (`kdf_scheme_mismatch`), refus d'un coût de dérivation
+  dérisoire, et compte toujours inutilisable avant confirmation d'e-mail.
+- **7 tests sur le service de hachage optionnel** : signature forgée (401),
+  horodatage périmé (401), plafond journalier (429), corps trop volumineux (413).
 - **23 tests SQLite** (`npm run test:sql`) dont les contraintes des compteurs de
   quota et l'absence de donnée personnelle dans le journal d'opérations.
-- **Preuve de bout en bout** sur le serveur de développement avec
-  `AUTH_KDF_MODE=remote` : inscription → confirmation → connexion → campus, avec
-  `/api/internal/quota` affichant `kdf.operations : 3 / 3000` et
-  `worker.requests : 4 / 100000`.
+- **Preuve de bout en bout** sur le serveur de développement, en reproduisant
+  exactement le parcours du navigateur : paramètres (600 000 itérations) →
+  dérivation locale → inscription → confirmation → connexion → campus, **le mot
+  de passe n'étant jamais transmis**. Les comptes hérités continuent de se
+  connecter (parcours par mot de passe conservé).
 - **Non vérifié (et non vérifiable sans compte)** : quotas réellement facturés
   par Cloudflare/Turso/Brevo, comportement à chaud sous Workers, latence du
   service de hachage hébergé, délivrabilité réelle des e-mails Brevo. À mesurer
@@ -182,3 +191,4 @@ aucune raison de payer**, et le tableau de bord le dira avant la panne.
 - Oracle Cloud Always Free : https://www.oracle.com/cloud/free/
 - Google Cloud Run — offre gratuite : https://cloud.google.com/run/pricing
 - Cloudflare R2 — tarifs (10 Go gratuits, sortie gratuite) : https://developers.cloudflare.com/r2/pricing/
+- Oracle Cloud Always Free (mentionné uniquement pour mémoire : **non retenu**, aucun serveur à louer) : https://www.oracle.com/cloud/free/

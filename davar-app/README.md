@@ -10,12 +10,13 @@ npm run db:seed    # migrations 001+002 + catalogue + compte de démonstration l
 APP_ENV=development TURSO_DATABASE_URL="file:$PWD/dev-data/davar-dev.db" npm run dev
 ```
 
-Tests : `npm test` (41 tests Node) · `npm run test:sql` (23 tests SQLite) ·
+Tests : `npm test` (50 tests Node) · `npm run test:sql` (25 tests SQLite) ·
 `npm run typecheck` · `npm run build -- --webpack` · `npm run build:vinext`.
 
-Hachage délégué (mode gratuit en production) : `node auth-kdf-service/server.mjs`
-avec `DAVAR_KDF_TOKEN` (voir `auth-kdf-service/README.md`), puis
-`AUTH_KDF_MODE=remote` et `AUTH_KDF_URL` côté application.
+Mot de passe : la dérivation (PBKDF2 600 000 itérations) se fait **dans le
+navigateur** ; le serveur ne revérifie qu'une clé dérivée. Aucun hébergement
+supplémentaire n'est requis (`AUTH_KDF_MODE=client`, valeur par défaut). Le
+service `auth-kdf-service/` reste disponible pour les comptes hérités.
 
 Configuration : copiez `.env.example` en `.env.local` (jamais versionné).
 

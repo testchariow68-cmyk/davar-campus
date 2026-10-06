@@ -1,11 +1,13 @@
 import { isSameOrigin, jsonNoStore, readJsonBody } from '@/lib/server/http';
 import { currentSession } from '@/lib/server/auth';
+import { trackApiRequest } from '@/lib/server/quota';
 import { setLessonCompletion } from '@/lib/server/campus';
 
 export const dynamic = 'force-dynamic';
 
 /** Marque une leçon terminée : session valide ET droit vérifié sur la formation. */
 export async function POST(request: Request) {
+  await trackApiRequest();
   if (!isSameOrigin(request)) return jsonNoStore({ error: 'origin_refused' }, 403);
   const session = await currentSession();
   if (!session) return jsonNoStore({ error: 'unauthenticated' }, 401);

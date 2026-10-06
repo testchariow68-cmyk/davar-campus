@@ -1,13 +1,16 @@
 import {
   AuthError,
   consumeRateLimit,
+  derivationParams,
   httpStatusForAuthError,
   rateLimitKey,
+  registerClientUser,
   registerUser,
 } from '@/lib/server/auth-core';
 import { clientIp, isDevelopment, isSameOrigin, jsonNoStore, linkOrigin, readJsonBody } from '@/lib/server/http';
 import { mailerConfigured, sendVerificationEmail } from '@/lib/server/mailer';
 import { openDb } from '@/lib/server/turso';
+import { trackApiRequest } from '@/lib/server/quota';
 import { passwordAdapter } from '@/lib/server/password-service';
 
 export const dynamic = 'force-dynamic';
@@ -18,6 +21,7 @@ export const dynamic = 'force-dynamic';
  * et la vérification d'e-mail est la preuve exigée pour rattacher un achat.
  */
 export async function POST(request: Request) {
+  await trackApiRequest();
   if (!isSameOrigin(request)) return jsonNoStore({ error: 'origin_refused' }, 403);
   const body = await readJsonBody(request);
   if (!body) return jsonNoStore({ error: 'invalid_input' }, 400);
@@ -34,12 +38,28 @@ export async function POST(request: Request) {
     const verdict = await consumeRateLimit(db, ipBucket, { limit: 10, windowMs: 60 * 60 * 1000 });
     if (!verdict.allowed) throw new AuthError('rate_limited', undefined, verdict.retryAfterSeconds);
 
-    const registration = await registerUser(db, {
-      // (kdf passé en 3e argument ci-dessous)
-      email: body.email as string,
-      displayName: body.displayName as string,
-      password: body.password as string,
-    }, passwordAdapter());
+    // Deux chemins acceptés :
+    //  - client-v1 (défaut) : le navigateur a dérivé la clé, le serveur ne fait
+    //    qu'un contrôle bon marché ;
+    //  - server-v1 (comptes hérités, outils internes) : hachage côté serveur.
+    const usesClientDerivation = typeof body.verifier === 'string';
+    const registration = usesClientDerivation
+      ? await registerClientUser(db, {
+          email: body.email as string,
+          displayName: body.displayName as string,
+          verifier: body.verifier as string,
+          salt: body.salt as string,
+          iterations: Number(body.iterations),
+        })
+      : await registerUser(
+          db,
+          {
+            email: body.email as string,
+            displayName: body.displayName as string,
+            password: body.password as string,
+          },
+          passwordAdapter()
+        );
     const verifyUrl = `${origin}/verifier-email?token=${encodeURIComponent(registration.verificationToken)}`;
 
     let emailSent = false;

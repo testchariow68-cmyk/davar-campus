@@ -12,6 +12,18 @@ import { flushCounters } from './quota.ts';
 export { isDevelopment };
 
 export const SESSION_COOKIE = 'davar_session';
+
+/**
+ * Secret servant de sel factice déterministe : il rend une adresse inconnue
+ * indiscernable d'une adresse existante (anti-énumération des comptes).
+ * Hors développement, aucune valeur de repli : mieux vaut refuser proprement.
+ */
+export function paramsSecret(): string | null {
+  const secret = process.env.AUTH_PARAMS_SECRET?.trim();
+  if (secret && secret.length >= 32) return secret;
+  if (isDevelopment()) return 'secret-de-developpement-pour-le-sel-factice-non-secret';
+  return null;
+}
 const SESSION_MAX_AGE_SECONDS = 30 * 24 * 60 * 60;
 
 /**
