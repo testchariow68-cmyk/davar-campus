@@ -103,7 +103,7 @@ Deux outils pour cela :
 # 0. Récupérer la version à jour du code (branche arena/09f3da07-davar-campus), puis :
 npm ci
 npm run rehearsal:staging        # répétition locale de la migration — doit finir par « RÉUSSITE »
-npm test                         # 53 tests — doivent tous passer
+npm test                         # 63 tests — doivent tous passer
 
 # 1. Schéma de la base de PRODUCTION (inspection d'abord, écriture ensuite)
 & .\scripts\run-production-schema.ps1
@@ -127,11 +127,60 @@ Puis, dans le tableau de bord Cloudflare → Worker `davar-campus-production-202
 | `AUTH_PARAMS_SECRET` | chaîne aléatoire de 32 caractères minimum |
 | `AUTH_VERIFIER_PEPPER` | chaîne aléatoire de 16 caractères minimum |
 | `APP_DIAGNOSTIC_TOKEN` | chaîne aléatoire de 32 caractères minimum |
-| `BREVO_API_KEY` | clé API Brevo |
-| `MAIL_FROM_EMAIL` | adresse d'expédition **vérifiée** dans Brevo |
+| `MAIL_APPS_SCRIPT_URL` | l'URL `/exec` de votre script Google Apps Script (étape 3b) |
+| `MAIL_APPS_SCRIPT_TOKEN` | le secret `DAVAR_MAIL_SECRET` de ce script (16 caractères minimum) |
+
+`DAVAR_MAILER` est facultatif : sans lui, le relais **Google Apps Script** est utilisé. Une valeur
+inconnue fait **échouer la construction** plutôt que d'envoyer un e-mail par un chemin non prévu.
 
 ⚠️ Si vous modifiez un secret dans le tableau de bord, Cloudflare **republie une version** du
 Worker : faites-le avant la recette finale, puis recontrôlez.
+
+## 4 bis. Graver votre compte propriétaire (Super Admin)
+
+Sans ce compte, personne ne peut diriger la plateforme : ni ajouter un cours, ni une leçon, ni
+nommer un membre d'équipe. Il se crée **une fois**, directement dans la base :
+
+```powershell
+# La cible doit être explicite. Pour la production :
+$env:DAVAR_OPS_TARGET = 'production'
+$env:TURSO_DATABASE_URL = '<URL libsql de la base de production>'
+$env:TURSO_AUTH_TOKEN  = '<jeton applicatif>'
+$env:TURSO_EXPECTED_HOST = '<hôte exact de la base>'
+
+node --experimental-strip-types scripts\create-admin.mjs
+```
+
+Le script demande l'e-mail, le nom affiché, puis le mot de passe en **saisie masquée**. Le mot de
+passe ne quitte jamais votre machine : il est dérivé sur place (PBKDF2-SHA256, 600 000 itérations,
+exactement comme le navigateur d'un étudiant) et seule la clé dérivée est écrite. Rien n'est
+journalisé, rien n'est transmis.
+
+Trois garanties : le compte est marqué **admin**, son adresse est **déjà confirmée** (vous êtes le
+propriétaire, il n'y a aucun e-mail à valider), et le script **refuse de créer un second
+propriétaire** — le projet en prévoit un seul. Pour changer le mot de passe plus tard, relancez-le
+avec la **même adresse** : il met à jour au lieu de dupliquer.
+
+## 4 ter. L'Espace Direction : diriger sans ligne de commande
+
+Une fois connecté, l'adresse **`/direction`** (ou le bouton « Direction » en haut du campus) ouvre
+l'espace du propriétaire :
+
+| Écran | Ce que vous y faites |
+|---|---|
+| **Vue d'ensemble** | Chiffres réels : étudiants, adresses confirmées, accès, achats, contenu. Plus la purge du contenu d'essai. |
+| **Formations** | Créer une formation, l'enregistrer, l'ouvrir ou la fermer, la supprimer. |
+| **Construire** | Ajouter vos modules et vos leçons, choisir leur type (vidéo, texte, exercice, séance en direct), leur durée, leur adresse de ressource, et les réordonner. |
+| **Étudiants** | Voir qui est inscrit, ouvrir un accès à la main, le retirer, suspendre ou réactiver un compte. |
+| **Équipe** | Nommer un membre du staff, ou transférer la propriété. |
+
+Deux règles y sont appliquées par le serveur, jamais par le navigateur :
+
+- **une formation vide ne s'ouvre pas** : sans au moins une leçon, l'ouverture est refusée avec le
+  compte exact (« l'étudiant paierait pour une page blanche ») ;
+- **la progression ne se supprime pas en silence** : si un étudiant a déjà terminé une leçon ou un
+  module, la suppression est refusée — vous pouvez en revanche renommer la leçon ou remplacer sa
+  ressource, ce qui ne réinitialise rien.
 
 ## 5. Le catalogue et les accès, sans attendre le webhook
 
@@ -181,6 +230,29 @@ tenir la promesse « acheter → accéder aux cours », à condition d'importer 
 
 Rapportez-moi les messages exacts (captures bienvenues, **vérifiez qu'aucun jeton n'y apparaît**).
 Je corrige immédiatement.
+
+## 7 bis. Vider le contenu d'essai (demande du propriétaire, 6 octobre 2026)
+
+« Purge tout le contenu : leçons, statistiques, livres… la plateforme doit être vide car tout était
+pour tester. » Deux façons, au choix :
+
+```powershell
+# a) depuis l'Espace Direction : onglet Vue d'ensemble → « Vider le contenu d'essai » → tapez VIDER
+# b) en ligne de commande, sur la base visée :
+node --experimental-strip-types scripts\production-ops.mjs purge --confirm VIDER          # aperçu
+node --experimental-strip-types scripts\production-ops.mjs purge --confirm VIDER --apply
+node --experimental-strip-types scripts\production-ops.mjs purge --confirm VIDER --all --apply  # + comptes étudiants
+```
+
+Ce qui part : modules, leçons, progressions, accès, compteurs et journal d'exploitation. Les
+**formations** restent (votre catalogue). Les formations vidées sont **refermées** : une formation
+vide ne doit pas rester ouverte à la vente. Deux refus nets : sans le mot de confirmation `VIDER`,
+et dès qu'un **achat vérifié** existe — une vente est une pièce comptable, elle ne se purge pas.
+
+En local, l'équivalent est `npm run db:dev -- --empty`. Et **`--seed` n'installe plus aucun contenu
+de test** : il n'enregistre que le catalogue, formations **fermées**. L'ancien contenu de
+démonstration (2 modules, 5 leçons, un étudiant fictif) n'existe plus que derrière le drapeau
+explicite `--demo`, réservé aux essais hors ligne.
 
 ## 8. Ce qui reste à faire juste après, dans l'ordre
 

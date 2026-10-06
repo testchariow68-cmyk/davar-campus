@@ -23,6 +23,11 @@ export default async function CampusLayout({ children }: { children: React.React
         <nav className="row" style={{ gap: 8, flexWrap: 'wrap' }}>
           <span className="small muted">{session.user.displayName}</span>
           <Link href="/" className="btn btn-ghost">Catalogue</Link>
+          {session.user.role === 'admin' && (
+            <Link href="/direction" className="btn">
+              Direction
+            </Link>
+          )}
           <LogoutButton />
         </nav>
       </header>

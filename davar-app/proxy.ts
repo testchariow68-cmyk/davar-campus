@@ -1,12 +1,13 @@
 import { type NextRequest, NextResponse } from 'next/server';
 
 /**
- * Verrou d'entrée à coût nul pour /campus : sans cookie de session, inutile
- * d'ouvrir une connexion base. La validation réelle du jeton (haché, expirant)
- * reste faite côté serveur dans app/campus/layout.tsx et dans les routes API.
+ * Verrou d'entrée à coût nul pour /campus et /direction : sans cookie de session,
+ * inutile d'ouvrir une connexion base. La validation réelle du jeton (haché,
+ * expirant) et du rôle reste faite côté serveur dans les layouts et les routes API.
  */
 export default function proxy(request: NextRequest) {
-  if (request.nextUrl.pathname.startsWith('/campus')) {
+  const protege = request.nextUrl.pathname.startsWith('/campus') || request.nextUrl.pathname.startsWith('/direction');
+  if (protege) {
     const hasSessionCookie = Boolean(request.cookies.get('davar_session')?.value);
     if (!hasSessionCookie) {
       const dest = request.nextUrl.clone();
@@ -18,4 +19,4 @@ export default function proxy(request: NextRequest) {
   return NextResponse.next();
 }
 
-export const config = { matcher: ['/campus/:path*'] };
+export const config = { matcher: ['/campus/:path*', '/direction/:path*'] };
