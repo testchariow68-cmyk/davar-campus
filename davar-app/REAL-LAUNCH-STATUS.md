@@ -2,6 +2,38 @@
 
 **Décision utilisateur :** application Next.js `davar-app/`, cible publique progressive, Turso **seule** base applicative ; **paiements dans l'app reportés** jusqu'à ce que le reste fonctionne. Une base Turso de production **distincte** existe selon le propriétaire ; des accès sandbox Flutterwave et MoneyFusion existent, mais le statut LIVE est inconnu, **aucun identifiant/secret n'a été fourni ici**. Le propriétaire **refuse Workers Paid pour l'instant**. **L'accès étudiant après achat Chariow externe doit être automatisé**, avant les paiements intégrés (choix explicite du propriétaire). Le webhook est codé en mode fermé, **pas encore opérationnel ni branché sur le marchand** ; CinetPay est exclu. Aucune création de base ou purge.
 
+## Mise à jour du 6 octobre 2026 — authentification et campus réellement utilisables (en local)
+
+Nouvelle tranche livrée sur la branche `arena/09f3da07-davar-campus` : voir
+[`MISE-EN-SERVICE.md`](MISE-EN-SERVICE.md) pour le détail, les commandes et les
+preuves. En résumé, et sans embellissement :
+
+- **Comptes réels, serveur uniquement** : inscription, confirmation d'e-mail à
+  usage unique, connexion/session hachée, déconnexion, suspension, limitation de
+  débit en base, contrôle d'origine obligatoire. Mot de passe PBKDF2-HMAC-SHA256
+  à 600 000 itérations (plancher 210 000 hors développement), Argon2id non
+  portable sans dépendance native — point à revoir avec l'hébergeur.
+- **Campus réel** : `/campus` et `/campus/formation/<id>` lisent les modules,
+  leçons et la progression ; une formation non achetée renvoie 404 ; la
+  progression exige une inscription vérifiée.
+- **Achat Chariow externe automatisé** : le rattachement de la vente au compte
+  n'a lieu qu'après confirmation de l'e-mail, de façon idempotente. Vérifié en
+  local sur le cas « achat avant création du compte ».
+- **Migration 002 additive** (`turso/migrations/002_auth_campus.sqlite.sql`),
+  jamais appliquée à une base hébergée ; `scripts/staging-schema.mjs` devient un
+  manifeste fermé couvrant 001+002 (empreintes et DDL revus).
+- **Toujours interdit tant que non prouvé** : Pulse Chariow activé
+  (`CHARIOW_ENABLE_PULSE` reste `false` → 503), envoi d'e-mails réel
+  (hors développement, l'inscription est refusée plutôt que de créer un compte
+  invérifiable), paiements Flutterwave/MoneyFusion, reset de mot de passe,
+  déploiement. **Aucune base hébergée n'a été lue ni écrite ; rien n'est en
+  ligne.**
+- **Blocage chiffré sur le plan Cloudflare choisi** : PBKDF2 à 600 000 itérations
+  coûte ~121 ms de CPU, très au-delà des 10 ms par requête du plan Workers
+  gratuit. Les deux builds (Next et vinext/Workers) passent, mais
+  inscription/connexion exigent Workers Paid (~5 $/mois) ou un hôte Node. Aucun
+  affaiblissement du hachage n'a été accepté pour contourner ce plafond.
+
 ## État honnête de ce livrable
 
 - **Pas de mise en ligne ni d'écriture hébergée.** Le diagnostic staging précédent prouve la connectivité à Turso du Worker de diagnostic, pas de cette application Next.js ni de la base Turso de production.

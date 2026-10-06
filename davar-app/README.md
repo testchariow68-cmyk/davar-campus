@@ -1,6 +1,19 @@
-# DAVAR Campus — app Next.js en migration vers Turso
+# DAVAR Campus — app Next.js sur Turso
 
-> **Lisez `REAL-LAUNCH-STATUS.md` avant de démarrer ou déployer.** Comptes, paiements et campus restent verrouillés : la compilation locale ne vaut pas lancement public. Les guides historiques Supabase/CinetPay ne sont plus applicables. Aucun secret ni base réelle ne sont inclus.
+> **Lisez `MISE-EN-SERVICE.md` (état réel de la dernière tranche livrée) puis `REAL-LAUNCH-STATUS.md`.** Comptes, paiements et campus restent sous contrôle : la compilation locale ne vaut pas lancement public. Les guides historiques Supabase/CinetPay ne sont plus applicables. Aucun secret ni base réelle ne sont inclus.
+
+## Démarrage rapide (développement, sans secret)
+
+```bash
+npm ci
+npm run db:seed    # migrations 001+002 + catalogue + compte de démonstration local
+APP_ENV=development TURSO_DATABASE_URL="file:$PWD/dev-data/davar-dev.db" npm run dev
+```
+
+Tests : `npm test` (18 tests Node) · `npm run test:sql` (20 tests SQLite) ·
+`npm run typecheck` · `npm run build -- --webpack` · `npm run build:vinext`.
+
+Configuration : copiez `.env.example` en `.env.local` (jamais versionné).
 
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 

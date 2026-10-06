@@ -9,7 +9,13 @@
     "start": "next start",
     "dev:vinext": "vite dev --host 0.0.0.0 --port 3001",
     "build:vinext": "vite build",
-    "start:vinext": "vite preview --host 0.0.0.0 --port 3001"
+    "start:vinext": "vite preview --host 0.0.0.0 --port 3001",
+    "typecheck": "next typegen && tsc --noEmit",
+    "db:dev": "node --experimental-strip-types scripts/dev-db.mjs --migrate",
+    "db:seed": "node --experimental-strip-types scripts/dev-db.mjs --migrate --seed",
+    "db:reset": "node --experimental-strip-types scripts/dev-db.mjs --reset --migrate --seed",
+    "test": "node --experimental-strip-types --test tests/chariow-signature.test.mjs tests/chariow-validate.test.mjs tests/auth-core.test.mjs tests/chariow-ledger.test.mjs",
+    "test:sql": "python3 -m unittest -q tests/test_turso_core.py tests/test_auth_schema.py tests/test_migrations_manifest.py"
   },
   "dependencies": {
     "@libsql/client": "^0.15.15",
