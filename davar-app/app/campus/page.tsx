@@ -32,8 +32,9 @@ export default async function CampusPage() {
           <h2 style={{ fontSize: 18 }}>Aucune formation active sur ce compte</h2>
           <div className="banner info mt16">
             <span>
-              L’accès est ouvert automatiquement après un achat sur notre boutique Chariow, dès que
-              l’adresse e-mail du compte est confirmée — même adresse que celle utilisée pour l’achat.
+              L’accès se rattache au compte après un achat sur notre boutique Chariow : il faut que
+              l’adresse e-mail du compte soit confirmée et qu’elle soit la même que celle utilisée
+              pour l’achat. Si votre accès n’apparaît pas, écrivez-nous : nous l’ouvrons à la main.
             </span>
           </div>
           <Link href="/" className="btn btn-primary mt16">Voir les formations</Link>

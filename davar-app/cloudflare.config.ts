@@ -19,6 +19,11 @@ if (target !== 'staging' && target !== 'production')
 
 const production = target === 'production';
 
+/** Relais d'e-mail : `apps_script` (choix du propriétaire) ou `brevo`. */
+const mailerKind = (process.env.DAVAR_MAILER ?? 'apps_script').trim();
+if (mailerKind !== 'brevo' && mailerKind !== 'apps_script')
+  throw new Error(`DAVAR_MAILER inconnu : « ${mailerKind} » (valeurs admises : apps_script, brevo)`);
+
 const STAGING_HOST = 'davar-campus-staging-davar-academie.aws-eu-west-1.turso.io';
 const productionHost = (process.env.DAVAR_PRODUCTION_DB_HOST ?? '').trim();
 const STAGING_ORIGIN = 'https://davar-campus-next-staging-2026.davaracademie.workers.dev';
@@ -88,7 +93,7 @@ export default defineConfig({
       CHARIOW_STORE_ID: bindings.secret(),
       // Envoi des e-mails de confirmation. En production, l'inscription REFUSE
       // de créer un compte sans service d'e-mail : aucune fausse promesse.
-      MAILER_KIND: bindings.text('brevo'),
+      MAILER_KIND: bindings.text(mailerKind),
       BREVO_API_KEY: bindings.secret(),
       MAIL_FROM_EMAIL: bindings.secret(),
       MAIL_FROM_NAME: bindings.text('Davar Académie'),
@@ -96,8 +101,10 @@ export default defineConfig({
       CHARIOW_ENABLE_PULSE: bindings.text('false'),
       CHARIOW_PULSE_SECRET: bindings.secret(),
       CHARIOW_API_KEY: bindings.secret(),
-      // Variante d'envoi d'e-mails par Google Apps Script (le projet l'utilise
-      // déjà) : déclarée pour pouvoir basculer MAILER_KIND sans toucher au code.
+      // Relais d'e-mail par Google Apps Script : le script prêt à coller est
+      // dans apps-script/RelaisE-mail.gs. Sans ces deux valeurs, l'inscription
+      // est refusée (503) — volontairement, plutôt que de créer un compte dont
+      // l'adresse ne peut pas être confirmée.
       MAIL_APPS_SCRIPT_URL: bindings.secret(),
       MAIL_APPS_SCRIPT_TOKEN: bindings.secret(),
     },

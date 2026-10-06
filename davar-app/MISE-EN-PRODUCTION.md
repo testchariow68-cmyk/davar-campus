@@ -26,7 +26,29 @@ Worker public. Vos propres documents l'ont identifié comme le piège mortel (li
 authentification : mots de passe dérivés dans le navigateur, sessions signées, quotas et
 limitations de débit.
 
-## 3. Les trois prérequis à obtenir d'abord (rien ne marche sans eux)
+## 2 bis. Parcours réel vérifié de bout en bout (6 octobre 2026)
+
+Avant de vous laisser ouvrir au public, j'ai rejoué le **parcours complet d'un étudiant**, avec un
+simulateur local du relais e-mail qui applique **exactement** le contrat du script fourni.
+**12 contrôles sur 12 réussis :**
+
+| Étape | Résultat |
+|---|---|
+| Paramètres de dérivation (600 000 itérations) | ✅ |
+| Inscription — mot de passe dérivé dans le navigateur | ✅ 201 |
+| Aucun lien de confirmation renvoyé au navigateur (il part par e-mail) | ✅ |
+| Connexion **avant** confirmation | ✅ refusée (403) |
+| E-mail remis au relais, destinataire et lien conformes | ✅ |
+| Lien de confirmation conforme à l'origine publique configurée | ✅ |
+| Adresse confirmée, puis connexion | ✅ 200 |
+| Campus accessible, message honnête sans accès | ✅ |
+| Accès accordé (`grant`), formation visible sur le campus | ✅ |
+| Cours ouvert : 2 modules, 5 leçons, progression 0/5 | ✅ |
+
+Le contenu affiché est exact : les leçons dont la ressource n'est pas encore en ligne annoncent
+« Ressource pas encore publiée » au lieu d'un lecteur vide.
+
+## 3. Les prérequis à obtenir d'abord (rien ne marche sans eux)
 
 ### a) La base Turso de PRODUCTION
 Vos documents indiquent qu'une base de production distincte existe. Il me faut **son hôte exact**
@@ -37,24 +59,43 @@ envoyez pas** : ils se saisissent dans votre terminal et dans le tableau de bord
 Ensuite, créez un **second jeton, lecture-écriture, limité à cette base**, qui servira de secret
 applicatif au Worker. Le jeton de migration, lui, se supprime.
 
-### b) L'envoi des e-mails (Brevo, gratuit — 300 e-mails/jour)
-Sans lui, **l'inscription est refusée en 503** : c'est volontaire, on ne crée pas un compte dont
-on ne peut pas confirmer l'adresse. Il faut :
-- un compte Brevo (gratuit, sans carte) ;
-- une **adresse d'expédition vérifiée** (Brevo refuse d'expédier depuis une adresse non vérifiée) ;
-- la clé API.
+### b) L'envoi des e-mails — votre choix : Google Apps Script
+Sans relais d'e-mail, **l'inscription est refusée en 503** : c'est volontaire, on ne crée pas un
+compte dont on ne peut pas confirmer l'adresse.
 
-*Variante sans Brevo :* vous avez déjà des URL Google Apps Script dans votre projet ; le code
-sait aussi envoyer par Apps Script (`MAILER_KIND=apps_script`) si l'URL et un jeton d'au moins
-16 caractères sont fournis.
+**Le script est prêt à coller : `apps-script/Relais-e-mail.gs`.** Marche à suivre :
 
-### c) Les liens d'achat Chariow des formations
-Le catalogue réel compte 4 formations, et **une seule a aujourd'hui son lien de vente**
-(`Devenir un excellent orateur`, produit `prd_6wx1czzp`). Les trois autres (Marketing Digital,
-Excel & Analyse de données, Créer son entreprise en Côte d'Ivoire) n'ont **aucun lien** dans le
-code : elles resteraient « bientôt disponible » et non achetables — l'outil de catalogue refuse
-de les publier sans lien, pour ne pas afficher une formation qu'on ne peut pas acheter.
-Vos liens sont dans le prototype, sous **Paramètres → Paiement & intégrations externes**.
+1. Ouvrez <https://script.google.com> depuis le compte Google de l'académie → **Nouveau projet**.
+2. Effacez tout et collez le contenu du fichier.
+3. **Projet → Propriétés du script** → ajoutez `DAVAR_MAIL_SECRET` = une longue chaîne aléatoire
+   (32 caractères ou plus). C'est votre jeton.
+4. **Déployer → Nouveau déploiement → Application Web** : exécuter en tant que **moi**, accès
+   **tout le monde** (c'est le jeton, pas la connexion Google, qui protège l'accès).
+   Google affiche un avertissement : c'est votre propre script → *Paramètres avancés* → *Accéder*.
+5. Copiez l'**URL de l'application Web** (elle finit par `/exec`).
+
+Puis, dans le tableau de bord Cloudflare, en **Secret** :
+`MAIL_APPS_SCRIPT_URL` (l'URL `/exec`) et `MAIL_APPS_SCRIPT_TOKEN` (la valeur de l'étape 3).
+Le `MAILER_KIND` est déjà réglé sur `apps_script` dans la configuration.
+
+Le script fourni : refuse tout appel sans le bon jeton (comparaison à durée constante), vérifie
+l'adresse du destinataire, applique un **plafond de 250 envois par jour** pour ne jamais faire
+bloquer votre compte Google, et répond en JSON. Le contrat `{secret, to, subject, text}` est
+**figé par un test** : si un côté change, l'autre casse bruyamment au lieu de casser en silence.
+
+### c) Le catalogue : une seule formation, décision prise
+Votre décision est appliquée : **seule « Devenir un excellent orateur » reste au catalogue**,
+avec son lien Chariow (`prd_6wx1czzp`). Les trois autres ont été retirées du code. Si le lien a
+changé, envoyez-le et je le remplace.
+
+Deux outils pour cela :
+- `catalog` **refuse de publier** une formation sans lien d'achat : une formation visible mais
+  non achetable serait un mensonge ;
+- `catalog --apply --prune` retire du catalogue ce qui n'est plus déclaré — mais une formation
+  **déjà achetée n'est jamais supprimée** : elle est seulement dépubliée, car une vente est une
+  pièce comptable.
+
+
 
 ## 4. La séquence exacte
 
@@ -95,9 +136,11 @@ Worker : faites-le avant la recette finale, puis recontrôlez.
 ## 5. Le catalogue et les accès, sans attendre le webhook
 
 ```powershell
-# Importer le catalogue réel (les formations sans lien restent non publiées)
+# Importer le catalogue (une seule formation ouverte à la vente)
 node --experimental-strip-types scripts\production-ops.mjs catalog            # aperçu
 node --experimental-strip-types scripts\production-ops.mjs catalog --apply
+# …et nettoyer ce qui ne serait plus déclaré, si besoin :
+node --experimental-strip-types scripts\production-ops.mjs catalog --apply --prune
 
 # Servir un acheteur réel : il crée son compte, confirme son e-mail, PUIS vous accordez l'accès
 node --experimental-strip-types scripts\production-ops.mjs whois --email acheteur@exemple.com
@@ -114,11 +157,11 @@ pièce comptable, seul l'accès est retiré).
 
 | Fonction | État à l'ouverture |
 |---|---|
-| Catalogue public et boutons d'achat Chariow | ✅ pour les formations ayant un lien |
-| Création de compte + confirmation par e-mail | ✅ (à condition de faire le 3b) |
+| Catalogue public + bouton d'achat Chariow | ✅ « Devenir un excellent orateur » |
+| Création de compte + confirmation par e-mail | ✅ vérifiée de bout en bout (à condition de faire le 3b) |
 | Connexion, sessions, campus, progression enregistrée | ✅ |
 | Accès après achat Chariow **automatique** | ❌ **fermé** tant que le Pulse n'est pas éprouvé → accès accordé par vous avec `grant` |
-| Contenu des cours | ⚠️ **le contenu réel du prototype (30 vidéos, 7,1 h) n'est pas encore importé** : le campus affichera les formations et les quelques leçons présentes |
+| Contenu des cours | ⚠️ **le contenu du prototype (30 vidéos, 7,1 h) n'est pas importé** : l'étudiant voit 2 modules / 5 leçons, les vidéos annoncent honnêtement « Ressource pas encore publiée » |
 | Exercices, évaluations, certificats, récompenses, avis | ❌ à porter |
 | Paiement dans l'application | ❌ volontairement inactif |
 

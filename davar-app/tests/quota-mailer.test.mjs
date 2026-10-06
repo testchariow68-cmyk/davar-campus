@@ -27,7 +27,7 @@ const {
   verdictFor,
   windowTagFor,
 } = await import('../lib/server/quota.ts');
-const { emailBudget, mailerConfigured, mailerKind, sendEmail, MailQuotaReachedError, MailerNotConfiguredError } =
+const { emailBudget, mailerConfigured, mailerKind, sendEmail, sendVerificationEmail, MailQuotaReachedError, MailerNotConfiguredError } =
   await import('../lib/server/mailer.ts');
 
 const root = new URL('..', import.meta.url).pathname;
@@ -182,6 +182,48 @@ test('appel Brevo : charge utile conforme, secret uniquement en en-tête', async
   assert.equal(captured.body.subject, 'Confirmez');
   assert.match(captured.body.textContent, /exemple\.ci/);
   delete process.env.QUOTA_DAILY_EMAILS;
+});
+
+test('relais Google Apps Script : contrat exact attendu par le script fourni', async () => {
+  // Le script `apps-script/Relais-E-mail.gs` est écrit pour ce contrat précis.
+  // Ce test le fige : si le format change d'un côté, l'autre casse bruyamment.
+  // On restaure l'environnement en sortie : les tests voisins partagent le processus.
+  const avant = { ...process.env };
+  process.env.MAILER_KIND = 'apps_script';
+  process.env.MAIL_APPS_SCRIPT_URL = 'https://script.google.com/macros/s/exemple/exec';
+  process.env.MAIL_APPS_SCRIPT_TOKEN = 'jeton-de-test-de-plus-de-seize-caracteres';
+  process.env.QUOTA_DAILY_EMAILS = '300';
+
+  assert.equal(mailerKind(), 'apps_script');
+  assert.equal(mailerConfigured(), true);
+  assert.equal(emailBudget().kind, 'apps_script');
+
+  let captured;
+  const originalFetch = globalThis.fetch;
+  globalThis.fetch = async (url, init) => {
+    captured = { url, init, body: JSON.parse(init.body) };
+    return new Response('{"ok":true}', { status: 200 });
+  };
+  try {
+    await sendVerificationEmail({ to: 'etudiant@example.com', displayName: 'Awa', verifyUrl: 'https://campus.ci/verifier-email?token=abc' });
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+
+  assert.equal(captured.url, process.env.MAIL_APPS_SCRIPT_URL);
+  assert.deepEqual(Object.keys(captured.body).sort(), ['secret', 'subject', 'text', 'to']);
+  assert.equal(captured.body.secret, process.env.MAIL_APPS_SCRIPT_TOKEN);
+  assert.equal(captured.body.to, 'etudiant@example.com');
+  assert.match(captured.body.subject, /confirm/i);
+  assert.match(captured.body.text, /verifier-email\?token=abc/, 'le lien de confirmation doit être dans le texte');
+  assert.equal(JSON.stringify(captured.body.text).includes('Awa'), true, 'le prénom est utilisé dans le message');
+
+  // Un jeton trop court ne doit jamais être accepté.
+  process.env.MAIL_APPS_SCRIPT_TOKEN = 'trop-court';
+  assert.equal(mailerConfigured(), false, 'un jeton de moins de 16 caractères doit fermer l’envoi');
+
+  for (const cle of Object.keys(process.env)) if (!(cle in avant)) delete process.env[cle];
+  Object.assign(process.env, avant);
 });
 
 test('quota d’e-mails atteint : refus net et journalisation, aucune tentative d’envoi', async () => {

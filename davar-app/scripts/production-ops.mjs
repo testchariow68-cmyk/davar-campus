@@ -18,13 +18,17 @@
  *   - un compte suspendu est refusé ;
  *   - attribution idempotente (`ON CONFLICT DO NOTHING`) et tracée ;
  *   - le catalogue refuse de PUBLIER une formation sans lien d'achat Chariow :
- *     une formation visible mais non achetable serait un mensonge à l'étudiant.
+ *     une formation visible mais non achetable serait un mensonge à l'étudiant ;
+ *   - `--prune` retire du catalogue ce qui n'est plus déclaré dans
+ *     `lib/trainings.ts`. Une formation déjà achetée n'est JAMAIS supprimée :
+ *     elle est seulement dépubliée, car une vente est une pièce comptable.
  *
  * Usage :
  *   node --experimental-strip-types scripts/production-ops.mjs list
  *   node --experimental-strip-types scripts/production-ops.mjs whois --email etudiant@exemple.com
  *   node --experimental-strip-types scripts/production-ops.mjs catalog            (aperçu)
  *   node --experimental-strip-types scripts/production-ops.mjs catalog --apply
+ *   node --experimental-strip-types scripts/production-ops.mjs catalog --apply --prune
  *   node --experimental-strip-types scripts/production-ops.mjs grant --email etudiant@exemple.com --training t-orateur [--apply]
  *   node --experimental-strip-types scripts/production-ops.mjs revoke --email … --training … --apply
  */
@@ -125,7 +129,8 @@ async function catalog() {
   }
   if (!apply) return;
 
-  let created = 0, updated = 0, keptDraft = 0;
+  const declaredIds = rows.map((row) => row.training.id);
+  let created = 0, updated = 0, keptDraft = 0, pruned = 0, unpublished = 0;
   for (const { training, buyUrl, productId, existing } of rows) {
     const publish = buyUrl ? 1 : 0;
     if (!publish) keptDraft += 1;
@@ -140,7 +145,29 @@ async function catalog() {
     });
     existing ? (updated += 1) : (created += 1);
   }
+  if (flag('prune')) {
+    const placeholders = declaredIds.map(() => '?').join(',');
+    const extra = await db.execute({
+      sql: `SELECT id,title FROM trainings WHERE id NOT IN (${placeholders})`,
+      args: declaredIds,
+    });
+    for (const row of extra.rows) {
+      // Une formation achetée reste en base : la vente est une pièce comptable.
+      const bought = await db.execute({ sql: 'SELECT COUNT(*) AS n FROM enrollments WHERE training_id=?', args: [String(row.id)] });
+      if (Number(bought.rows[0].n) > 0) {
+        await db.execute({ sql: 'UPDATE trainings SET published=0 WHERE id=?', args: [String(row.id)] });
+        unpublished += 1;
+        console.log(`   conservée mais dépubliée (accès existants) : ${row.title}`);
+      } else {
+        await db.execute({ sql: 'DELETE FROM trainings WHERE id=?', args: [String(row.id)] });
+        pruned += 1;
+        console.log(`   retirée du catalogue : ${row.title}`);
+      }
+    }
+  }
   console.log(`\nCatalogue importé : ${created} créée(s), ${updated} mise(s) à jour, ${keptDraft} laissée(s) non publiée(s) faute de lien d’achat.`);
+  if (flag('prune')) console.log(`Nettoyage : ${pruned} retirée(s), ${unpublished} dépubliée(s) (car déjà achetée(s)).`);
+  else console.log('Astuce : ajoutez --prune pour retirer du catalogue ce qui n’est plus déclaré dans lib/trainings.ts.');
 }
 
 async function grant(email, trainingId) {
