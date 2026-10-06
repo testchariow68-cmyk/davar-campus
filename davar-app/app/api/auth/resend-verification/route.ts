@@ -56,11 +56,14 @@ export async function POST(request: Request) {
     let emailSent = false;
     if (mailerConfigured()) {
       try {
-        await sendVerificationEmail({
-          to: email,
-          displayName: typeof row?.display_name === 'string' ? row.display_name : 'étudiant',
-          verifyUrl,
-        });
+        await sendVerificationEmail(
+          {
+            to: email,
+            displayName: typeof row?.display_name === 'string' ? row.display_name : 'étudiant',
+            verifyUrl,
+          },
+          db
+        );
         emailSent = true;
       } catch {
         emailSent = false;

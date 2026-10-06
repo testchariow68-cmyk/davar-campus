@@ -32,6 +32,9 @@ prouvé. Il complète `REAL-LAUNCH-STATUS.md` (état d'ensemble) et
 | Envoi d'e-mails de confirmation | ⛔ **non configuré** | hors développement : inscription refusée (503), aucun compte fantôme |
 | Paiements dans l'application (Flutterwave/MoneyFusion) | ⛔ **inactifs** | aucun encaissement possible depuis le site |
 | Réinitialisation de mot de passe | ⛔ **absent** | schéma prêt (`email_tokens.purpose`) |
+| Hachage délégué (mode gratuit) | ✅ | service `auth-kdf-service/` réel testé : signature, plafonds, refus |
+| Comptage et protection des quotas | ✅ | `/api/internal/quota` : `kdf.operations 3/3000`, `worker.requests 4/100000` |
+| E-mails gratuits par Brevo | ✅ | budget 300/jour reconnu, refus au-delà, aucune clé dans le corps |
 
 ## 2. Lancer en local (3 commandes)
 
@@ -140,15 +143,25 @@ Le script Google doit **vérifier ce secret** avant d'envoyer ; il reçoit
 `{secret, to, subject, text}`. Sans configuration : hors développement,
 l'inscription est refusée (503) plutôt que de créer un compte invérifiable.
 
-## 8. Déploiement (cible Cloudflare Workers) — point de blocage chiffré
+## 8. Gratuité : architecture retenue
+
+Voir **[`ARCHITECTURE-GRATUITE.md`](ARCHITECTURE-GRATUITE.md)** : briques
+gratuites retenues (Cloudflare Workers Free, Turso Free, Brevo Free, R2,
+service de hachage auto-hébergé), budget de charge à 3 000 étudiants actifs,
+mécanismes de protection des quotas, ordre de mise en service et signaux de
+révision chiffrés. En résumé : à 3 000 étudiants actifs, le site consomme ~36 %
+des requêtes gratuites, la base ~9 % des écritures et ~2 % des lectures.
+
+## 8bis. Déploiement (cible Cloudflare Workers) — point de blocage levé
 
 Les deux builds passent sur cette branche : `npm run build -- --webpack`
 (Next de production) et `npm run build:vinext` (cible Workers, toutes les
 routes présentes, aucune dépendance Node native embarquée — le client libSQL
 local est chargé par import dynamique non résolu, donc absent du paquet).
 
-**Le coût du hachage de mot de passe dépasse le quota du plan gratuit.**
-Mesuré sur cette machine (`pbkdf2-hmac-sha256`, 32 octets dérivés) :
+**Le hachage ne bloque plus le plan gratuit** : il est délégué au service
+`auth-kdf-service` (voir §8). Mesures de référence sur cette machine
+(`pbkdf2-hmac-sha256`, 32 octets dérivés), qui justifient la délégation :
 
 | Itérations | Coût CPU mesuré | Compatible Workers Free (10 ms CPU/requête) |
 |---|---|---|
@@ -156,16 +169,11 @@ Mesuré sur cette machine (`pbkdf2-hmac-sha256`, 32 octets dérivés) :
 | 210 000 (plancher appliqué) | ~40 ms | ❌ |
 | 600 000 (défaut, recommandation OWASP) | ~121 ms | ❌ |
 
-Conséquence, à trancher par le propriétaire — **aucun compromis sur la sécurité
-du mot de passe n'a été fait** :
-
-- **Cloudflare Workers Paid (~5 $/mois)** : le CPU n'est plus plafonné à 10 ms.
-  C'est la voie la plus proche du choix d'hébergement déjà exprimé.
-- **Ou un hôte Node** (Vercel/Render/Railway/VPS) : cohérent avec les ~121 ms.
-- Le plan gratuit reste utilisable pour les **pages** (lecture Turso), pas pour
-  l'inscription/connexion : le CPU y est insuffisant, même à 210 000 itérations.
-  `AUTH_PBKDF2_ITERATIONS` refuse toute valeur < 210 000 hors développement et
-  l'application signale la configuration dans `/api/internal/turso-readiness`.
+Décision retenue (gratuite, sans compromis sur le hachage) : **Workers Free
+pour le site + service de hachage délégué sur une offre gratuite en CPU
+mensuel**. Alternatives conservées si un jour nécessaire : Workers Paid (5 $) ou
+un hôte Node unique. `AUTH_PBKDF2_ITERATIONS` refuse toute valeur < 210 000 hors
+développement, et `/api/internal/quota` affiche le mode de hachage actif.
 
 Étapes de déploiement (après accord) : `cloudflare.config.ts` (Worker
 `davar-campus-next-staging-2026`, secrets saisis dans le tableau de bord,
@@ -194,12 +202,14 @@ revoir avec l'hébergement retenu.
 
 ## 10. Vérifications exécutées (6 octobre 2026)
 
-- `npm test` → **23 tests réussis** : signature Pulse, comparaison Pulse/Get
+- `npm test` → **41 tests réussis** : signature Pulse, comparaison Pulse/Get
   Sale, noyau d'auth (inscription, confirmation, session, suspension, débit,
   expiration), ledger Chariow (produit inconnu et montant divergent refusés,
-  accès accordé seulement après confirmation) et garde-fous HTTP (origine,
-  tolérance d'aperçu limitée au développement, liens d'e-mail, corps borné).
-- `npm run test:sql` → **20 tests réussis** : schéma 001+002, contraintes,
+  accès accordé seulement après confirmation), garde-fous HTTP (origine,
+  tolérance d'aperçu limitée au développement, liens d'e-mail, corps borné),
+  **service de hachage réel** (signature HMAC, horodatage, plafond, tailles) et
+  **protection des quotas / envoi Brevo** (budgets, verdicts, refus au-delà).
+- `npm run test:sql` → **23 tests réussis** : schéma 001+002, contraintes,
   absence de données semées, manifeste de migration staging.
 - `npm run typecheck` → réussi. `npm run build -- --webpack` → réussi (toutes
   les routes listées). `npm run build:vinext` → réussi.
@@ -208,7 +218,11 @@ revoir avec l'hébergement retenu.
   fois, connexion, `/campus` 307 sans cookie, campus avec formation, 404 sur
   formation non achetée, progression « 1 / 5 », leçon hors droit refusée (403),
   achat simulé avant création du compte → « 1 formation activée ».
+- **Preuve du mode gratuit** : serveur de développement lancé avec
+  `AUTH_KDF_MODE=remote` face au vrai service (`auth-kdf-service`) — inscription,
+  confirmation, connexion, campus, puis `/api/internal/quota` affichant
+  `kdf.operations : 3/3000` et `worker.requests : 4/100000`.
 - **Non testé (et non testable ici)** : Pulse Chariow réel, `GET /v1/sales`,
   envoi d'e-mail réel, transactions Turso hébergées, comportement à chaud sous
-  Workers, restauration de sauvegarde. À faire en environnement privé avant
-  toute ouverture au public.
+  Workers, quotas facturés par les fournisseurs, restauration de sauvegarde. À
+  faire en environnement privé avant toute ouverture au public.

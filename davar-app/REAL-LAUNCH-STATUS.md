@@ -28,11 +28,16 @@ preuves. En résumé, et sans embellissement :
   invérifiable), paiements Flutterwave/MoneyFusion, reset de mot de passe,
   déploiement. **Aucune base hébergée n'a été lue ni écrite ; rien n'est en
   ligne.**
-- **Blocage chiffré sur le plan Cloudflare choisi** : PBKDF2 à 600 000 itérations
-  coûte ~121 ms de CPU, très au-delà des 10 ms par requête du plan Workers
-  gratuit. Les deux builds (Next et vinext/Workers) passent, mais
-  inscription/connexion exigent Workers Paid (~5 $/mois) ou un hôte Node. Aucun
-  affaiblissement du hachage n'a été accepté pour contourner ce plafond.
+- **Blocage du plan Cloudflare gratuit : LEVÉ, sans payer et sans affaiblir le
+  hachage.** PBKDF2 à 600 000 itérations coûte ~121 ms de CPU, au-delà des 10 ms
+  par requête de Workers Free : le hachage est donc **délégué** à un service
+  auto-hébergeable livré dans ce dépôt (`auth-kdf-service/`, zéro dépendance,
+  signature HMAC, plafond journalier), destiné à une offre gratuite mesurée en
+  temps CPU mensuel (Oracle Always Free, Cloud Run free tier, ou la machine de
+  l'opérateur). Le reste tient dans les offres gratuites Cloudflare/Turso/Brevo.
+  Voir **[`ARCHITECTURE-GRATUITE.md`](ARCHITECTURE-GRATUITE.md)** : objectif tenu
+  de 0 € jusqu'à 3 000 étudiants actifs, avec budget de charge chiffré et
+  protection des quotas (`/api/internal/quota`).
 
 ## État honnête de ce livrable
 

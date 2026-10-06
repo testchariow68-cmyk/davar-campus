@@ -73,10 +73,12 @@ class MigrationsManifestTest(unittest.TestCase):
             for table in entry['creates']:
                 self.assertIn(table, created, f"{entry['file']} ne crée pas {table}")
 
-    def test_second_migration_removes_nothing_and_keeps_legacy_tables(self):
-        first, second = manifest_entries()
-        self.assertTrue(set(first['creates']).isdisjoint(set(second['creates'])))
-        self.assertEqual(len(set(first['creates']) | set(second['creates'])), 14)
+    def test_migrations_are_disjoint_and_keep_every_legacy_table(self):
+        entries = manifest_entries()
+        self.assertGreaterEqual(len(entries), 3)
+        created = [table for entry in entries for table in entry['creates']]
+        self.assertEqual(len(created), len(set(created)), 'deux migrations créent la même table')
+        self.assertEqual(len(set(created)), 16)
 
 
 if __name__ == '__main__':

@@ -1,6 +1,6 @@
 # DAVAR Campus — app Next.js sur Turso
 
-> **Lisez `MISE-EN-SERVICE.md` (état réel de la dernière tranche livrée) puis `REAL-LAUNCH-STATUS.md`.** Comptes, paiements et campus restent sous contrôle : la compilation locale ne vaut pas lancement public. Les guides historiques Supabase/CinetPay ne sont plus applicables. Aucun secret ni base réelle ne sont inclus.
+> **Lisez `MISE-EN-SERVICE.md` (état réel de la dernière tranche livrée), `ARCHITECTURE-GRATUITE.md` (objectif 0 € jusqu'à 3 000 étudiants actifs : briques gratuites, protection des quotas, seuils de révision) puis `REAL-LAUNCH-STATUS.md`.** Comptes, paiements et campus restent sous contrôle : la compilation locale ne vaut pas lancement public. Les guides historiques Supabase/CinetPay ne sont plus applicables. Aucun secret ni base réelle ne sont inclus.
 
 ## Démarrage rapide (développement, sans secret)
 
@@ -10,8 +10,12 @@ npm run db:seed    # migrations 001+002 + catalogue + compte de démonstration l
 APP_ENV=development TURSO_DATABASE_URL="file:$PWD/dev-data/davar-dev.db" npm run dev
 ```
 
-Tests : `npm test` (23 tests Node) · `npm run test:sql` (20 tests SQLite) ·
+Tests : `npm test` (41 tests Node) · `npm run test:sql` (23 tests SQLite) ·
 `npm run typecheck` · `npm run build -- --webpack` · `npm run build:vinext`.
+
+Hachage délégué (mode gratuit en production) : `node auth-kdf-service/server.mjs`
+avec `DAVAR_KDF_TOKEN` (voir `auth-kdf-service/README.md`), puis
+`AUTH_KDF_MODE=remote` et `AUTH_KDF_URL` côté application.
 
 Configuration : copiez `.env.example` en `.env.local` (jamais versionné).
 

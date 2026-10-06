@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
 import { Splash } from "@/components/Splash";
+import { trackDynamicRequest } from "@/lib/server/quota";
+import { openDb } from "@/lib/server/turso";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -14,7 +16,21 @@ export const metadata: Metadata = {
 /** Amorce : thème clair/sombre (système par défaut, persistant) + Inter */
 const themeScript = `(function(){try{var t=localStorage.getItem('davar-theme');if(!t)t=window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light';document.documentElement.dataset.theme=t;}catch(e){}})();`;
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+/**
+ * Chaque page dynamique est comptée avant rendu (les assets statiques servis par
+ * Cloudflare sont gratuits et illimités : ils ne consomment aucun quota).
+ * Le comptage est local et vidé par lots : il ne peut jamais faire échouer une page.
+ */
+async function trackPageView(): Promise<void> {
+  try {
+    await trackDynamicRequest(await openDb());
+  } catch {
+    /* la protection de quota ne doit jamais casser l'affichage */
+  }
+}
+
+export default async function RootLayout({ children }: { children: React.ReactNode }) {
+  await trackPageView();
   return (
     <html lang="fr" suppressHydrationWarning>
       <head>

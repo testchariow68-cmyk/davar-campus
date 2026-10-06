@@ -8,6 +8,7 @@ import {
 import { clientIp, isDevelopment, isSameOrigin, jsonNoStore, linkOrigin, readJsonBody } from '@/lib/server/http';
 import { mailerConfigured, sendVerificationEmail } from '@/lib/server/mailer';
 import { openDb } from '@/lib/server/turso';
+import { passwordAdapter } from '@/lib/server/password-service';
 
 export const dynamic = 'force-dynamic';
 
@@ -34,16 +35,20 @@ export async function POST(request: Request) {
     if (!verdict.allowed) throw new AuthError('rate_limited', undefined, verdict.retryAfterSeconds);
 
     const registration = await registerUser(db, {
+      // (kdf passé en 3e argument ci-dessous)
       email: body.email as string,
       displayName: body.displayName as string,
       password: body.password as string,
-    });
+    }, passwordAdapter());
     const verifyUrl = `${origin}/verifier-email?token=${encodeURIComponent(registration.verificationToken)}`;
 
     let emailSent = false;
     if (mailerConfigured()) {
       try {
-        await sendVerificationEmail({ to: registration.email, displayName: String(body.displayName), verifyUrl });
+        await sendVerificationEmail(
+          { to: registration.email, displayName: String(body.displayName), verifyUrl },
+          db
+        );
         emailSent = true;
       } catch {
         emailSent = false;

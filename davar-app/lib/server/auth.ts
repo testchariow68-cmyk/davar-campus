@@ -7,6 +7,7 @@ import { cookies } from 'next/headers';
 import { openDb } from './turso';
 import { resolveSession, revokeSession, type Db, type SessionUser } from './auth-core';
 import { isDevelopment } from './http';
+import { flushCounters } from './quota.ts';
 
 export { isDevelopment };
 
@@ -43,6 +44,8 @@ export async function currentSession(): Promise<ActiveSession | null> {
     const token = jar.get(SESSION_COOKIE)?.value;
     if (!token) return null;
     const db = await openDb();
+    // Vidage des compteurs de quota accumulés (1 écriture Turso pour N requêtes).
+    await flushCounters(db);
     const user = await resolveSession(db, token);
     if (!user) return null;
     return { user, token, db };

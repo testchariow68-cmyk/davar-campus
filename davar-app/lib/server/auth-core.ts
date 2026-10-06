@@ -191,6 +191,26 @@ export function timingSafeEqual(a: Uint8Array, b: Uint8Array): boolean {
   return difference === 0;
 }
 
+/**
+ * Adaptateur de dérivation de mot de passe. L'implémentation locale est le
+ * défaut (développement, tests, hôtes Node). Les routes applicatives peuvent
+ * injecter un adaptateur délégué à un service gratuit lorsque l'hôte impose un
+ * plafond de CPU par requête (Cloudflare Workers Free) — voir password-service.ts.
+ */
+export type KdfAdapter = {
+  hash(password: string): Promise<string>;
+  verify(password: string, stored: string): Promise<PasswordCheck>;
+};
+
+export const localKdfAdapter: KdfAdapter = {
+  hash: (password) => hashPassword(password),
+  verify: (password, stored) => verifyPassword(password, stored),
+};
+
+/** Empreinte factice : garantit le même coût CPU quand le compte n'existe pas. */
+export const DUMMY_PASSWORD_HASH =
+  'pbkdf2-sha256$600000$AAAAAAAAAAAAAAAAAAAAAA$AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA';
+
 /* ----------------------------------------------------------------- jetons */
 
 export function newToken(byteLength = 32): string {
@@ -288,13 +308,16 @@ export type RegistrationResult = { userId: string; email: string; verificationTo
  * Crée un compte NON vérifié et un jeton de vérification (jamais renvoyé par l'API
  * en dehors du lien envoyé par e-mail).
  */
-export async function registerUser(db: Db, input: RegistrationInput): Promise<RegistrationResult> {
+export async function registerUser(
+  db: Db,
+  input: RegistrationInput,
+  kdf: KdfAdapter = localKdfAdapter
+): Promise<RegistrationResult> {
   const email = normalizeEmail(input.email);
   const displayName = validateDisplayName(input.displayName);
   const password = assertPasswordPolicy(input.password, email);
   const now = input.now ?? Date.now();
-  const iterations = pbkdf2Iterations();
-  const passwordHash = await hashPassword(password, iterations);
+  const passwordHash = await kdf.hash(password);
 
   const userId = newId('usr');
   const inserted = await db.execute({
@@ -357,7 +380,8 @@ export type SessionResult = { token: string; expiresAtMs: number; user: AuthUser
 
 export async function loginUser(
   db: Db,
-  input: { email: string; password: string; now?: number; sessionTtlMs?: number; ipHash?: string }
+  input: { email: string; password: string; now?: number; sessionTtlMs?: number; ipHash?: string },
+  kdf: KdfAdapter = localKdfAdapter
 ): Promise<SessionResult> {
   const now = input.now ?? Date.now();
   const email = normalizeEmail(input.email);
@@ -380,15 +404,11 @@ export async function loginUser(
   const row = found.rows[0];
   if (!row) {
     // Même coût CPU qu'un compte réel : limite l'énumération par mesure de temps.
-    const cost = pbkdf2Iterations();
-    await verifyPassword(
-      password,
-      `pbkdf2-sha256$${cost}$AAAAAAAAAAAAAAAAAAAAAA$AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA`
-    );
+    await kdf.verify(password, DUMMY_PASSWORD_HASH);
     throw new AuthError('invalid_credentials');
   }
   const stored = text(row.password_hash) ?? '';
-  const check = await verifyPassword(password, stored);
+  const check = await kdf.verify(password, stored);
   if (!check.ok) throw new AuthError('invalid_credentials');
 
   const status = text(row.status) ?? 'active';
@@ -397,7 +417,7 @@ export async function loginUser(
   if (!user.emailVerified) throw new AuthError('email_not_verified');
 
   if (check.needsRehash) {
-    const upgraded = await hashPassword(password);
+    const upgraded = await kdf.hash(password);
     await db.execute({ sql: 'UPDATE users SET password_hash = ? WHERE id = ?', args: [upgraded, user.id] });
   }
 

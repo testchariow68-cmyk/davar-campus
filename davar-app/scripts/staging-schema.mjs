@@ -29,8 +29,15 @@ const MIGRATIONS = [
     ddl: 10, // 5 tables + 1 index + 4 colonnes additives (aucune suppression)
     creates: ['email_tokens','rate_limits','course_modules','course_lessons','lesson_completions'],
   },
+  {
+    version: 3,
+    file: '003_quota_counters.sqlite.sql',
+    sha256: 'aa766d2f4081ba7dd4450b78db4536510cdd439490ad05d91a4498964acd2c4e',
+    ddl: 4, // 2 tables + 2 index : compteurs de quota et journal d'opérations
+    creates: ['ops_counters','ops_events'],
+  },
 ];
-const EXPECTED_TABLE_COUNT = 14; // 9 après 001 + 5 après 002
+const EXPECTED_TABLE_COUNT = 16; // 9 après 001 + 5 après 002 + 2 après 003
 const FORBIDDEN = /\b(drop|truncate|delete\s+from)\b/i;
 
 const mode = process.argv[2];

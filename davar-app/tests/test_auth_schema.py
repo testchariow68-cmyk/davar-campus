@@ -7,6 +7,7 @@ ROOT = Path(__file__).parents[1]
 MIGRATIONS = [
     ROOT / 'turso' / 'migrations' / '001_core.sqlite.sql',
     ROOT / 'turso' / 'migrations' / '002_auth_campus.sqlite.sql',
+    ROOT / 'turso' / 'migrations' / '003_quota_counters.sqlite.sql',
 ]
 
 
@@ -20,6 +21,16 @@ class AuthSchemaTest(unittest.TestCase):
     def tearDown(self):
         self.db.close()
 
+    def test_later_migrations_are_additive_only(self):
+        for migration in MIGRATIONS[1:]:
+            sql = migration.read_text(encoding='utf-8').lower()
+            statements = '\n'.join(
+                line for line in sql.splitlines() if not line.lstrip().startswith('--')
+            )
+            for forbidden in ('drop table', 'drop index', 'truncate', 'delete from',
+                              'cinetpay', 'supabase', 'pragma writable_schema'):
+                self.assertNotIn(forbidden, statements, f'{migration.name} : {forbidden}')
+
     def test_migration_002_is_additive_only(self):
         sql = MIGRATIONS[1].read_text(encoding='utf-8').lower()
         statements = '\n'.join(
@@ -32,7 +43,8 @@ class AuthSchemaTest(unittest.TestCase):
     def test_no_rows_seeded_by_migrations(self):
         for table in ('users', 'sessions', 'email_tokens', 'rate_limits', 'trainings',
                       'course_modules', 'course_lessons', 'lesson_completions',
-                      'verified_purchases', 'pulse_deliveries', 'enrollments'):
+                      'verified_purchases', 'pulse_deliveries', 'enrollments',
+                      'ops_counters', 'ops_events'):
             self.assertEqual(
                 self.db.execute(f'SELECT COUNT(*) FROM {table}').fetchone()[0], 0,
                 f'{table} ne doit contenir aucune donnée après migration',
@@ -137,6 +149,38 @@ class AuthSchemaTest(unittest.TestCase):
                WHERE l.id = 'l1'"""
         ).fetchall()
         self.assertEqual(len(allowed), 1)
+
+
+    def test_quota_counters_constraints(self):
+        self.db.execute(
+            "INSERT INTO ops_counters(bucket,window_tag,count,updated_at_ms)"
+            " VALUES ('worker.requests','2026-10-06',20,1)"
+        )
+        with self.assertRaises(sqlite3.IntegrityError):
+            self.db.execute(
+                "INSERT INTO ops_counters(bucket,window_tag,count,updated_at_ms)"
+                " VALUES ('worker.requests','2026-10-06',5,2)"
+            )
+        with self.assertRaises(sqlite3.IntegrityError):
+            self.db.execute(
+                "INSERT INTO ops_counters(bucket,window_tag,count,updated_at_ms)"
+                " VALUES ('turso.rows_written','2026-10',-1,2)"
+            )
+        row = self.db.execute(
+            "SELECT count FROM ops_counters WHERE bucket='worker.requests'"
+        ).fetchone()
+        self.assertEqual(row[0], 20)
+
+    def test_ops_events_kind_is_constrained_and_holds_no_personal_data(self):
+        with self.assertRaises(sqlite3.IntegrityError):
+            self.db.execute(
+                "INSERT INTO ops_events(kind,window_tag,occurred_at_ms) VALUES ('mot_de_passe','2026-10-06',1)"
+            )
+        self.db.execute(
+            "INSERT INTO ops_events(kind,window_tag,occurred_at_ms) VALUES ('email_sent','2026-10-06',1)"
+        )
+        columns = [r[1] for r in self.db.execute('PRAGMA table_info(ops_events)')]
+        self.assertEqual(columns, ['id', 'kind', 'window_tag', 'occurred_at_ms'])
 
 
 if __name__ == '__main__':
