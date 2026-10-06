@@ -1,11 +1,6 @@
 import { AuthError, httpStatusForAuthError, loginUser } from '@/lib/server/auth-core';
-import {
-  clientIp,
-  isSameOrigin,
-  jsonNoStore,
-  readJsonBody,
-  setSessionCookie,
-} from '@/lib/server/auth';
+import { clientIp, isSameOrigin, jsonNoStore, readJsonBody } from '@/lib/server/http';
+import { setSessionCookie } from '@/lib/server/auth';
 import { openDb } from '@/lib/server/turso';
 
 export const dynamic = 'force-dynamic';

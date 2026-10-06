@@ -27,7 +27,7 @@ prouvé. Il complète `REAL-LAUNCH-STATUS.md` (état d'ensemble) et
 | Contenu par modules/leçons | ✅ | modules, leçons, ressource, durée |
 | Progression étudiant | ✅ | « 0 / 5 » → « 1 / 5 leçons terminées », leçon hors droit refusée (403) |
 | Anti-bruteforce (par e-mail et par IP) | ✅ | 3ᵉ tentative bloquée avec délai de reprise |
-| Protection CSRF (origine obligatoire) | ✅ | `POST` sans `Origin` → 403 |
+| Protection CSRF (origine obligatoire) | ✅ | `POST` sans `Origin` → 403 ; origine étrangère → 403 |
 | Pulse Chariow (webhook signé) | ⛔ **fermé** | `CHARIOW_ENABLE_PULSE` non activé → 503 |
 | Envoi d'e-mails de confirmation | ⛔ **non configuré** | hors développement : inscription refusée (503), aucun compte fantôme |
 | Paiements dans l'application (Flutterwave/MoneyFusion) | ⛔ **inactifs** | aucun encaissement possible depuis le site |
@@ -194,10 +194,11 @@ revoir avec l'hébergement retenu.
 
 ## 10. Vérifications exécutées (6 octobre 2026)
 
-- `npm test` → **18 tests réussis** : signature Pulse, comparaison Pulse/Get
+- `npm test` → **23 tests réussis** : signature Pulse, comparaison Pulse/Get
   Sale, noyau d'auth (inscription, confirmation, session, suspension, débit,
   expiration), ledger Chariow (produit inconnu et montant divergent refusés,
-  accès accordé seulement après confirmation).
+  accès accordé seulement après confirmation) et garde-fous HTTP (origine,
+  tolérance d'aperçu limitée au développement, liens d'e-mail, corps borné).
 - `npm run test:sql` → **20 tests réussis** : schéma 001+002, contraintes,
   absence de données semées, manifeste de migration staging.
 - `npm run typecheck` → réussi. `npm run build -- --webpack` → réussi (toutes

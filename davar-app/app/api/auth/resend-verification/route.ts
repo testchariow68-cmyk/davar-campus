@@ -5,7 +5,7 @@ import {
   normalizeEmail,
   rateLimitKey,
 } from '@/lib/server/auth-core';
-import { clientIp, isDevelopment, isSameOrigin, jsonNoStore, publicOrigin, readJsonBody } from '@/lib/server/auth';
+import { clientIp, isDevelopment, isSameOrigin, jsonNoStore, linkOrigin, readJsonBody } from '@/lib/server/http';
 import { mailerConfigured, sendVerificationEmail } from '@/lib/server/mailer';
 import { openDb } from '@/lib/server/turso';
 
@@ -50,7 +50,8 @@ export async function POST(request: Request) {
     if (!userId || alreadyVerified) return jsonNoStore({ ok: true });
 
     const token = await createEmailToken(db, userId, 'verify_email');
-    const origin = publicOrigin() ?? new URL(request.url).origin;
+    const origin = linkOrigin(request);
+    if (!origin) return jsonNoStore({ error: 'origin_not_configured' }, 503);
     const verifyUrl = `${origin}/verifier-email?token=${encodeURIComponent(token)}`;
     let emailSent = false;
     if (mailerConfigured()) {

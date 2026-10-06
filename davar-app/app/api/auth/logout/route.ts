@@ -1,4 +1,5 @@
-import { isSameOrigin, jsonNoStore, logoutCurrentSession } from '@/lib/server/auth';
+import { isSameOrigin, jsonNoStore } from '@/lib/server/http';
+import { logoutCurrentSession } from '@/lib/server/auth';
 
 export const dynamic = 'force-dynamic';
 

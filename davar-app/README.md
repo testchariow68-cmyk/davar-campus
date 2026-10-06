@@ -10,7 +10,7 @@ npm run db:seed    # migrations 001+002 + catalogue + compte de démonstration l
 APP_ENV=development TURSO_DATABASE_URL="file:$PWD/dev-data/davar-dev.db" npm run dev
 ```
 
-Tests : `npm test` (18 tests Node) · `npm run test:sql` (20 tests SQLite) ·
+Tests : `npm test` (23 tests Node) · `npm run test:sql` (20 tests SQLite) ·
 `npm run typecheck` · `npm run build -- --webpack` · `npm run build:vinext`.
 
 Configuration : copiez `.env.example` en `.env.local` (jamais versionné).

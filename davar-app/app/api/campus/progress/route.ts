@@ -1,4 +1,5 @@
-import { currentSession, isSameOrigin, jsonNoStore, readJsonBody } from '@/lib/server/auth';
+import { isSameOrigin, jsonNoStore, readJsonBody } from '@/lib/server/http';
+import { currentSession } from '@/lib/server/auth';
 import { setLessonCompletion } from '@/lib/server/campus';
 
 export const dynamic = 'force-dynamic';

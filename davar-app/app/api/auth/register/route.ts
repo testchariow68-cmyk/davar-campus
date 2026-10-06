@@ -5,7 +5,7 @@ import {
   rateLimitKey,
   registerUser,
 } from '@/lib/server/auth-core';
-import { clientIp, isDevelopment, isSameOrigin, jsonNoStore, publicOrigin, readJsonBody } from '@/lib/server/auth';
+import { clientIp, isDevelopment, isSameOrigin, jsonNoStore, linkOrigin, readJsonBody } from '@/lib/server/http';
 import { mailerConfigured, sendVerificationEmail } from '@/lib/server/mailer';
 import { openDb } from '@/lib/server/turso';
 
@@ -25,7 +25,8 @@ export async function POST(request: Request) {
   if (!mailerConfigured() && !development)
     return jsonNoStore({ error: 'email_delivery_not_configured' }, 503);
 
-  const origin = publicOrigin() ?? new URL(request.url).origin;
+  const origin = linkOrigin(request);
+  if (!origin) return jsonNoStore({ error: 'origin_not_configured' }, 503);
   const db = await openDb();
   try {
     const ipBucket = await rateLimitKey('register.ip', clientIp(request));

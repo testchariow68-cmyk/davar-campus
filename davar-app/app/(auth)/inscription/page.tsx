@@ -4,7 +4,7 @@ import { SignupForm } from '@/components/SignupForm';
 import { currentUser } from '@/lib/server/auth';
 import { mailerConfigured } from '@/lib/server/mailer';
 import { openDb } from '@/lib/server/turso';
-import { isDevelopment } from '@/lib/server/auth';
+import { isDevelopment } from '@/lib/server/http';
 
 export const metadata = { title: 'Inscription — Davar Académie Campus' };
 export const dynamic = 'force-dynamic';
