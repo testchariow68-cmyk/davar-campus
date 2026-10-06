@@ -56,9 +56,9 @@ export function CatalogClient() {
     <section className="card card-pad mt16">
       <h1>Formations Davar Académie</h1>
       <p className="muted small">
-        L’achat se fait sur notre boutique Chariow. L’accès au campus est ensuite ouvert
-        automatiquement, dès que l’adresse e-mail du compte est confirmée — utilisez la même
-        adresse que pour l’achat.
+        L’achat se fait sur notre boutique Chariow ; l’accès au campus est ensuite rattaché
+        au compte, dès que son adresse e-mail est confirmée. Utilisez la même adresse que
+        pour l’achat.
       </p>
 
       {catalog.status === 'loading' && (
@@ -87,15 +87,29 @@ export function CatalogClient() {
               <p style={{ fontWeight: 700 }}>{training.priceCfa.toLocaleString('fr-FR')} FCFA</p>
               <div className="row" style={{ gap: 8, flexWrap: 'wrap' }}>
                 {training.buyUrl ? (
-                  <a className="btn btn-primary" href={training.buyUrl} target="_blank" rel="noreferrer">
-                    Acheter sur Chariow
-                  </a>
+                  <>
+                    <a className="btn btn-primary" href={training.buyUrl} target="_blank" rel="noreferrer">
+                      Acheter sur Chariow
+                    </a>
+                    <Link className="btn btn-ghost" href="/inscription">J’ai déjà acheté</Link>
+                  </>
                 ) : (
-                  <Link className="btn" href={`/formation/${training.id}`}>
-                    Acheter cette formation
-                  </Link>
+                  /* Aucun lien d'achat : on ne propose PAS de bouton menant à un
+                     cul-de-sac. Une formation sans lien reste honnêtement en attente. */
+                  <>
+                    <span className="btn" aria-disabled="true" style={{ opacity: 0.65, cursor: 'default' }}>
+                      Achat bientôt disponible
+                    </span>
+                    <a
+                      className="btn btn-ghost"
+                      href={`https://wa.me/2250585375999?text=${encodeURIComponent(`Bonjour Davar Académie, je souhaite m’inscrire à la formation « ${training.title} ».`)}`}
+                      target="_blank"
+                      rel="noreferrer"
+                    >
+                      Nous écrire sur WhatsApp
+                    </a>
+                  </>
                 )}
-                <Link className="btn btn-ghost" href="/inscription">J’ai déjà acheté</Link>
               </div>
             </article>
           ))}

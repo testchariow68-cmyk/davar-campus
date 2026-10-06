@@ -1,7 +1,15 @@
-/* Migration contrôlée : DAVAR Campus, Turso libSQL staging uniquement.
+/* Migration contrôlée : DAVAR Campus, Turso libSQL — CIBLE STAGING PAR DÉFAUT.
  * AUCUNE écriture par défaut. Ne jamais charger .env.local.
  * --inspect : métadonnées seules ; --apply : écriture UNIQUEMENT après revue
- * du plan, jeton staging dédié et confirmation humaine dans le terminal.
+ * du plan, jeton dédié et confirmation humaine dans le terminal.
+ *
+ * DAVAR_SCHEMA_TARGET=production (défaut : staging) change la cible ET les règles :
+ *   - staging    : APP_ENV=staging, hôte `davar-campus-staging-*.turso.io`,
+ *                  phrase « APPLIQUER DAVAR STAGING »
+ *   - production : APP_ENV=production, hôte EXACT déclaré, JAMAIS un hôte
+ *                  contenant « staging », phrase « APPLIQUER DAVAR PRODUCTION »
+ * Un hôte staging ne peut donc pas être migré en croyant viser la production,
+ * et inversement.
  *
  * Le script est un manifeste fermé : chaque migration est identifiée par son
  * SHA-256 revu, son nombre exact de DDL et les tables qu'elle doit produire.
@@ -57,13 +65,22 @@ if (mode === '--manifest' && process.argv.length === 3) {
 if (!['--inspect','--apply'].includes(mode) || process.argv.length !== 3) {
   console.error('Usage: node scripts/staging-schema.mjs --inspect|--apply|--manifest');process.exit(2);
 }
+const target = (process.env.DAVAR_SCHEMA_TARGET ?? 'staging').trim();
+if (target !== 'staging' && target !== 'production') {
+  console.error('REFUS : DAVAR_SCHEMA_TARGET inconnu (valeurs admises : staging, production)');process.exit(2);
+}
+const isProduction = target === 'production';
 const {APP_ENV,TURSO_DATABASE_URL:url,TURSO_EXPECTED_HOST:host,TURSO_AUTH_TOKEN:authToken} = process.env;
 let parsed;
 try {parsed = new URL(url);} catch {}
-if (APP_ENV !== 'staging' || !authToken || !host || !parsed ||
-    !['libsql:','https:'].includes(parsed.protocol) || parsed.hostname !== host ||
-    !host.startsWith('davar-campus-staging-') || !host.endsWith('.turso.io')) {
-  console.error('REFUS : cible DAVAR libSQL staging non vérifiée');process.exit(2);
+const looksStaging = /(^|[.-])staging([.-]|$)/i.test(host ?? '');
+const commonChecks = APP_ENV === target && Boolean(authToken) && Boolean(host) && Boolean(parsed) &&
+  ['libsql:','https:'].includes(parsed.protocol) && parsed.hostname === host && host.endsWith('.turso.io');
+const targetChecks = isProduction
+  ? !looksStaging                       // production : jamais un hôte de recette
+  : host?.startsWith('davar-campus-staging-');
+if (!commonChecks || !targetChecks) {
+  console.error(`REFUS : cible DAVAR libSQL ${target} non vérifiée`);process.exit(2);
 }
 
 /** Charge une migration, vérifie l'empreinte revue puis la liste des DDL. */
@@ -96,7 +113,7 @@ try {
   const before = await client.execute(
     "SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%' ORDER BY name");
   const existing = before.rows.map(row => String(row.name));
-  console.log('Moteur déclaré par opérateur: libSQL | environnement: staging');
+  console.log(`Moteur déclaré par opérateur: libSQL | cible: ${target}`);
   console.log('Table(s) déjà présente(s) :', existing.length ? existing.join(', ') : 'aucune');
 
   const applied = new Map();
@@ -128,9 +145,10 @@ try {
       if (Number(fk.rows[0]?.foreign_keys) !== 1) throw Error('Clés étrangères inactives ; revue requise, aucune écriture');
       const rl = createInterface({input:stdin,output:stdout});
       let answer;
-      try {answer = await rl.question('ÉCRITURE STAGING uniquement. Tapez exactement APPLIQUER DAVAR STAGING : ');}
+      const phrase = isProduction ? 'APPLIQUER DAVAR PRODUCTION' : 'APPLIQUER DAVAR STAGING';
+      try {answer = await rl.question(`ÉCRITURE ${target.toUpperCase()} uniquement. Tapez exactement ${phrase} : `);}
       finally {rl.close();}
-      if (answer !== 'APPLIQUER DAVAR STAGING') throw Error('Confirmation absente, aucune écriture');
+      if (answer !== phrase) throw Error('Confirmation absente, aucune écriture');
       for (const migration of pending) {
         const {sql, hash, ddl} = reviewed(migration);
         // Une transaction libSQL par migration : un échec annule la migration entière.
@@ -154,7 +172,7 @@ try {
     if (seen.length !== MIGRATIONS.length ||
         MIGRATIONS.some((migration, index) => seen[index][0] !== migration.version || seen[index][1] !== migration.sha256))
       throw Error('Reçu de migration à examiner');
-    console.log('Staging vérifié :', names.join(', '));
+    console.log(`Base ${target} vérifiée :`, names.join(', '));
     console.log('Aucune donnée étudiante, formation, paiement ou droit n’a été écrite.');
   }
 } catch (error) {

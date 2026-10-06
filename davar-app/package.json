@@ -14,7 +14,7 @@
     "db:dev": "node --experimental-strip-types scripts/dev-db.mjs --migrate",
     "db:seed": "node --experimental-strip-types scripts/dev-db.mjs --migrate --seed",
     "db:reset": "node --experimental-strip-types scripts/dev-db.mjs --reset --migrate --seed",
-    "test": "node --experimental-strip-types --test tests/chariow-signature.test.mjs tests/chariow-validate.test.mjs tests/auth-core.test.mjs tests/chariow-ledger.test.mjs tests/http-guards.test.mjs tests/kdf-service.test.mjs tests/quota-mailer.test.mjs tests/client-kdf.test.mjs",
+    "test": "node --experimental-strip-types --test tests/chariow-signature.test.mjs tests/chariow-validate.test.mjs tests/auth-core.test.mjs tests/chariow-ledger.test.mjs tests/http-guards.test.mjs tests/kdf-service.test.mjs tests/quota-mailer.test.mjs tests/client-kdf.test.mjs tests/deploy-bindings.test.mjs",
     "test:sql": "python3 -m unittest -q tests/test_turso_core.py tests/test_auth_schema.py tests/test_migrations_manifest.py",
     "rehearsal:staging": "node --experimental-strip-types scripts/rehearsal-staging.mjs"
   },
