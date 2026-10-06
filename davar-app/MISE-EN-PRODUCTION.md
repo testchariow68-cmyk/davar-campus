@@ -136,6 +136,27 @@ inconnue fait **échouer la construction** plutôt que d'envoyer un e-mail par u
 ⚠️ Si vous modifiez un secret dans le tableau de bord, Cloudflare **republie une version** du
 Worker : faites-le avant la recette finale, puis recontrôlez.
 
+## 3 ter. La page de vente Chariow, telle qu'elle répond (vérifiée le 6 octobre 2026)
+
+Consultée depuis l'extérieur, votre checkout est **vivant et vendable** :
+
+| Ce qui est affiché | Valeur constatée |
+|---|---|
+| Boutique | **DAVAR ACADEMIE** (`d-ueo.mychariow.co`) |
+| Produit | **« Formation Intégrale : Vaincre le trac et Devenir un excellent orateur »** |
+| Prix montré à un visiteur hors zone FCFA | **70,57 $** — l'équivalent de vos 45 000 FCFA |
+| Champs demandés à l'acheteur | prénom, nom, **adresse e-mail**, téléphone (WhatsApp de préférence) |
+
+⚠️ **Le point qui compte pour l'exploitation** : c'est **l'adresse e-mail saisie sur le checkout** qui
+rattachera la vente au compte de l'étudiant. Demandez donc à chaque acheteur de créer son compte
+avec **exactement** cette adresse, confirmée. Sinon la vente ne trouvera personne et l'accès
+restera à ouvrir à la main.
+
+⚠️ Écart de libellé assumé : le produit s'appelle « Formation Intégrale : Vaincre le trac et Devenir
+un excellent orateur » chez Chariow, et « Devenir un excellent orateur » dans votre campus (titre
+que vous avez fixé). Ce sont bien le même produit et le même lien — l'identifiant `prd_6wx1czzp`
+fait foi.
+
 ## 4 bis. Graver votre compte propriétaire (Super Admin)
 
 Sans ce compte, personne ne peut diriger la plateforme : ni ajouter un cours, ni une leçon, ni
