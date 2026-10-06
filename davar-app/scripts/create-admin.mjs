@@ -123,7 +123,7 @@ try {
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) throw new Error('adresse e-mail invalide');
 
   const nomPropose = (process.env.DAVAR_OWNER_NAME ?? (email === proprietaireExistant?.email_normalized ? texte(proprietaireExistant.display_name) : '')).trim();
-  const inviteNom = nomPropose ? `Nom affiché [${nomPropose}] : ` : 'Nom affiché (ex. YAPO Serge Trésor) : ';
+  const inviteNom = nomPropose ? `Nom affiché [${nomPropose}] : ` : 'Nom affiché (ex. M. Yapo) : ';
   const nom = ((await rl.question(inviteNom)).trim() || nomPropose).trim();
   if (nom.length < 2 || nom.length > 80) throw new Error('nom invalide (2 à 80 caractères)');
   // IMPÉRATIF : libérer l'entrée avant la saisie masquée. Tant que cette interface

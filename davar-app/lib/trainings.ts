@@ -6,6 +6,12 @@
  * la vente — « Devenir un excellent orateur », dont le lien de checkout Chariow
  * existe déjà. Les trois autres ont été retirées du catalogue faute de lien
  * d'achat : une formation visible mais non achetable serait un mensonge.
+ *
+ * LIEN D'ACHAT VÉRIFIÉ : le propriétaire a confirmé le 6 octobre 2026 que
+ * `https://d-ueo.mychariow.co/prd_6wx1czzp/checkout` est bien le bon lien de
+ * checkout de cette formation, et que `prd_6wx1czzp` est bien le produit qui lui
+ * correspondra dans Chariow. Ne pas modifier l'un sans l'autre : c'est cet
+ * identifiant `prd_` qui rattachera automatiquement une vente à la formation.
  */
 export interface Training {
   id: string;

@@ -150,7 +150,7 @@ $env:TURSO_EXPECTED_HOST = '<hôte exact de la base>'
 
 # Votre adresse de direction — elle sera proposée par défaut, Entrée suffit :
 $env:DAVAR_OWNER_EMAIL = 'davaracademie@gmail.com'
-$env:DAVAR_OWNER_NAME  = 'DAVAR ACADÉMIE'
+$env:DAVAR_OWNER_NAME  = 'M. Yapo'
 
 node --experimental-strip-types scripts\create-admin.mjs
 ```
