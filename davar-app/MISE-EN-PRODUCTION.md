@@ -148,8 +148,16 @@ $env:TURSO_DATABASE_URL = '<URL libsql de la base de production>'
 $env:TURSO_AUTH_TOKEN  = '<jeton applicatif>'
 $env:TURSO_EXPECTED_HOST = '<hôte exact de la base>'
 
+# Votre adresse de direction — elle sera proposée par défaut, Entrée suffit :
+$env:DAVAR_OWNER_EMAIL = 'davaracademie@gmail.com'
+$env:DAVAR_OWNER_NAME  = 'DAVAR ACADÉMIE'
+
 node --experimental-strip-types scripts\create-admin.mjs
 ```
+
+⚠️ **Cette adresse est celle que vous devez réellement relever.** C'est elle qui recevra le lien de
+confirmation à l'inscription, et c'est elle qui rattachera vos futurs achats Chariow à votre compte.
+Si vous vous trompez, relancez le script avec la bonne adresse : il met à jour.
 
 Le script demande l'e-mail, le nom affiché, puis le mot de passe en **saisie masquée**. Le mot de
 passe ne quitte jamais votre machine : il est dérivé sur place (PBKDF2-SHA256, 600 000 itérations,
@@ -157,9 +165,13 @@ exactement comme le navigateur d'un étudiant) et seule la clé dérivée est é
 journalisé, rien n'est transmis.
 
 Trois garanties : le compte est marqué **admin**, son adresse est **déjà confirmée** (vous êtes le
-propriétaire, il n'y a aucun e-mail à valider), et le script **refuse de créer un second
-propriétaire** — le projet en prévoit un seul. Pour changer le mot de passe plus tard, relancez-le
-avec la **même adresse** : il met à jour au lieu de dupliquer.
+propriétaire, il n'y a aucun e-mail à valider), et le script **refuse réellement de créer un second
+propriétaire** — le projet en prévoit un seul. Concrètement, si un propriétaire existe déjà :
+
+- relancé avec **son** adresse → il change son mot de passe (il met à jour, il ne duplique pas) ;
+- relancé avec une **autre** adresse → il s'arrête net : « davaracademie@gmail.com dirige déjà la
+  plateforme ». Pour remplacer le propriétaire, passez par **Espace Direction → Équipe →
+  Propriétaire (transféré)**.
 
 ## 4 ter. L'Espace Direction : diriger sans ligne de commande
 
@@ -172,7 +184,7 @@ l'espace du propriétaire :
 | **Formations** | Créer une formation, l'enregistrer, l'ouvrir ou la fermer, la supprimer. |
 | **Construire** | Ajouter vos modules et vos leçons, choisir leur type (vidéo, texte, exercice, séance en direct), leur durée, leur adresse de ressource, et les réordonner. |
 | **Étudiants** | Voir qui est inscrit, ouvrir un accès à la main, le retirer, suspendre ou réactiver un compte. |
-| **Équipe** | Nommer un membre du staff, ou transférer la propriété. |
+| **Équipe** | Nommer un membre du staff, ou transférer la propriété (le propriétaire reste unique). |
 
 Deux règles y sont appliquées par le serveur, jamais par le navigateur :
 

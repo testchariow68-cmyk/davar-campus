@@ -98,6 +98,8 @@ async function deriver(motDePasse, selBase64url, iterations) {
   return base64url(new Uint8Array(bits));
 }
 
+const texte = (valeur) => (valeur == null ? '' : String(valeur));
+
 /* ------------------------------------------------------------------ déroulé */
 
 const db = createClient({ url, authToken });
@@ -105,17 +107,24 @@ const rl = createInterface({ input: stdin, output: stdout });
 
 try {
   const admins = await db.execute("SELECT id, email_normalized, display_name FROM users WHERE role='admin'");
-  if (admins.rows.length) {
-    const existant = admins.rows[0];
-    console.log(`Un SUPER ADMIN existe déjà : ${existant.email_normalized} (${existant.display_name}).`);
-    console.log('Le projet impose un propriétaire UNIQUE : le script ne créera pas de second compte.');
-    console.log('Pour changer son mot de passe : relancez avec le MÊME e-mail, il sera mis à jour.');
-    console.log('Pour remplacer le propriétaire : utilisez d’abord le transfert de propriété.\n');
+  const proprietaireExistant = admins.rows[0] ?? null;
+  if (proprietaireExistant) {
+    console.log(`Un SUPER ADMIN existe déjà : ${proprietaireExistant.email_normalized} (${proprietaireExistant.display_name}).`);
+    console.log('Le projet impose un propriétaire UNIQUE. Deux choix, et deux seulement :');
+    console.log(`  • changer SON mot de passe  → relancez avec exactement la même adresse : ${proprietaireExistant.email_normalized}`);
+    console.log('  • transférer la propriété   → Espace Direction → Équipe, puis « Propriétaire (transféré) »\n');
   }
 
-  const email = normalizeEmail(await rl.question('E-mail du propriétaire : '));
+  // Adresse proposée par défaut : DAVAR_OWNER_EMAIL, ou le propriétaire déjà en
+  // base (le cas normal quand on vient changer le mot de passe). Entrée = accepter.
+  const adresseProposee = (process.env.DAVAR_OWNER_EMAIL ?? proprietaireExistant?.email_normalized ?? '').trim();
+  const inviteEmail = adresseProposee ? `E-mail du propriétaire [${adresseProposee}] : ` : 'E-mail du propriétaire : ';
+  const email = normalizeEmail((await rl.question(inviteEmail)).trim() || adresseProposee);
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) throw new Error('adresse e-mail invalide');
-  const nom = (await rl.question('Nom affiché (ex. YAPO Serge Trésor) : ')).trim();
+
+  const nomPropose = (process.env.DAVAR_OWNER_NAME ?? (email === proprietaireExistant?.email_normalized ? texte(proprietaireExistant.display_name) : '')).trim();
+  const inviteNom = nomPropose ? `Nom affiché [${nomPropose}] : ` : 'Nom affiché (ex. YAPO Serge Trésor) : ';
+  const nom = ((await rl.question(inviteNom)).trim() || nomPropose).trim();
   if (nom.length < 2 || nom.length > 80) throw new Error('nom invalide (2 à 80 caractères)');
   // IMPÉRATIF : libérer l'entrée avant la saisie masquée. Tant que cette interface
   // vit, elle consomme les caractères et la saisie masquée ne recevrait rien.
@@ -127,6 +136,16 @@ try {
   });
   if (existant.rows.length && existant.rows[0].role !== 'admin')
     throw new Error(`un compte existe déjà pour ${email} avec le rôle « ${existant.rows[0].role} ». Changez d’adresse ou élevez d’abord ce compte (production-ops.mjs grant-staff).`);
+  if (proprietaireExistant && email !== proprietaireExistant.email_normalized)
+    throw new Error(
+      `refusé : ${proprietaireExistant.email_normalized} dirige déjà la plateforme. La plateforme n’a qu’un propriétaire. ` +
+        `Pour lui donner un mot de passe, relancez avec SON adresse ; pour le remplacer, transférez la propriété depuis l’Espace Direction → Équipe.`
+    );
+  if (proprietaireExistant && email !== proprietaireExistant.email_normalized)
+    throw new Error(
+      `refusé : ${proprietaireExistant.email_normalized} dirige déjà la plateforme. La plateforme n’a qu’un propriétaire. ` +
+        `Pour lui donner un mot de passe, relancez avec SON adresse ; pour le remplacer, transférez la propriété depuis l’Espace Direction → Équipe.`
+    );
 
   const motDePasse = await demanderMasque('Mot de passe (aucun écho) : ');
   if (motDePasse.length < 12) throw new Error('mot de passe trop court : 12 caractères minimum pour un compte propriétaire');
@@ -170,6 +189,14 @@ try {
   console.log('   dérivation  : client-v1, PBKDF2-SHA256 600 000 itérations');
   console.log('\nConnectez-vous sur /connexion avec cet e-mail et ce mot de passe : la dérivation');
   console.log('se refera dans votre navigateur, exactement comme pour un étudiant.');
+  console.log('\nIMPORTANT : connectez-vous avec L’ADRESSE QUE VOUS RELEVEZ RÉELLEMENT.');
+  console.log('C’est elle qui recevra le lien de confirmation lors d’une inscription, et c’est');
+  console.log('elle qui rattachera automatiquement vos futurs achats Chariow à votre compte.');
+  console.log('Si ce n’est pas la bonne boîte, recommencez avec la bonne adresse : elle sera mise à jour.');
+  console.log('\nIMPORTANT : connectez-vous avec L’ADRESSE QUE VOUS RELEVEZ RÉELLEMENT.');
+  console.log('C’est elle qui recevra le lien de confirmation lors d’une inscription, et c’est');
+  console.log('elle qui rattachera automatiquement vos futurs achats Chariow à votre compte.');
+  console.log('Si ce n’est pas la bonne boîte, recommencez avec la bonne adresse : elle sera mise à jour.');
   console.log('\nPour diriger, ouvrez l’Espace Direction dans votre navigateur : /direction');
   console.log('Vous y créerez vos formations, vos modules et vos leçons, vous nommerez votre équipe,');
   console.log('vous ouvrirez les accès à la main et vous viderez le contenu d’essai — sans ligne de commande.');
