@@ -12,6 +12,7 @@ const LIENS = [
   { href: '/direction/certificats', libelle: 'Certificats' },
   { href: '/direction/avis', libelle: 'Avis' },
   { href: '/direction/assistant', libelle: 'Assistant virtuel' },
+  { href: '/direction/ressources', libelle: 'Ressources' },
   { href: '/direction/equipe', libelle: 'Équipe' },
   { href: '/direction/test', libelle: 'Vue test' },
 ];

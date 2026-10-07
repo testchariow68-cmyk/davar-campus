@@ -1,6 +1,7 @@
 import { currentSession } from '@/lib/server/auth';
 import { jsonNoStore } from '@/lib/server/http';
 import { trackApiRequest } from '@/lib/server/quota';
+import { stockagePret, urlLecture } from '@/lib/server/stockage';
 
 export const dynamic = 'force-dynamic';
 
@@ -40,9 +41,8 @@ export async function GET(request: Request, contexte: { params: Promise<{ id: st
     if (!proprietaire && !((pourTous || aMoi) && inscrit))
       return jsonNoStore({ error: 'acces_refuse' }, 403);
 
-    const base = (process.env.RESOURCES_BASE_URL ?? '').trim();
     const cle = typeof ressource.file_key === 'string' ? ressource.file_key : '';
-    if (!base || !cle)
+    if (!cle || !stockagePret())
       return jsonNoStore(
         {
           error: 'stockage_non_relie',
@@ -53,7 +53,9 @@ export async function GET(request: Request, contexte: { params: Promise<{ id: st
       );
 
     // Adresse signée à durée courte : le fichier ne circule jamais sans contrôle.
-    return Response.redirect(`${base.replace(/\/$/, '')}/${encodeURIComponent(cle)}`, 302);
+    const adresse = await urlLecture(cle, 300);
+    if (!adresse) return jsonNoStore({ error: 'stockage_non_relie' }, 503);
+    return Response.redirect(adresse, 302);
   } catch {
     return jsonNoStore({ error: 'unavailable' }, 503);
   }

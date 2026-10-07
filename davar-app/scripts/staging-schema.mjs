@@ -75,8 +75,15 @@ const MIGRATIONS = [
       'submissions','certificate_requests','certificates','badge_defs','badge_awards','reviews',
       'resources','resource_allocations'],
   },
+  {
+    version: 8,
+    file: '008_livres_audios_lecture.sqlite.sql',
+    sha256: '616f0ade317fd330be6e2f8426f8b95a88e825afa1d0117f0483119ae5ab6ff3',
+    ddl: 4, // 3 tables + 1 index : pages de livre, pistes audio, reprise de lecture
+    creates: ['book_pages','audio_tracks','media_progress'],
+  },
 ];
-const EXPECTED_TABLE_COUNT = 37; // 24 après 006 + 13 apportées par 007 (cœur pédagogique, certificats, récompenses)
+const EXPECTED_TABLE_COUNT = 40; // 37 après 007 + 3 apportées par 008 (livres, audios, reprise de lecture)
 const FORBIDDEN = /\b(drop|truncate|delete\s+from)\b/i;
 
 const mode = process.argv[2];

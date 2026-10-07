@@ -24,6 +24,8 @@ export type Ressource = {
   /** Nombre d'étudiants nommément attribués : 0 = offerte à tous. */
   attribueeA: number;
   obtenueLeMs: number | null;
+  /** Publiée = visible des étudiants. Retirée = visible du seul propriétaire. */
+  publiee: boolean;
 };
 
 function texte(valeur: unknown, defaut = ''): string {
@@ -43,7 +45,7 @@ function entier(valeur: unknown): number | null {
 export async function ressourcesDeEtudiant(db: Db, userId: string): Promise<Ressource[]> {
   const lignes = await db.execute({
     sql: `SELECT r.id, r.kind, r.title, r.description, r.cover_key, r.file_key, r.duration_min,
-                 r.training_id, r.position, t.title AS formation_titre,
+                 r.training_id, r.position, r.published, t.title AS formation_titre,
                  (SELECT COUNT(*) FROM resource_allocations ra WHERE ra.resource_id = r.id) AS attribuees,
                  (SELECT at_ms FROM resource_allocations ra WHERE ra.resource_id = r.id AND ra.user_id = ?) AS obtenue,
                  (SELECT COUNT(*) FROM enrollments e WHERE e.user_id = ? AND e.training_id = r.training_id) AS inscrit
@@ -72,6 +74,7 @@ export async function ressourcesDeEtudiant(db: Db, userId: string): Promise<Ress
     position: entier(row.position) ?? 0,
     attribueeA: entier(row.attribuees) ?? 0,
     obtenueLeMs: entier(row.obtenue),
+    publiee: entier(row.published) === 1,
   }));
 }
 
@@ -138,7 +141,7 @@ export async function retirerAttribution(db: Db, resourceId: string, userId: str
 export async function toutesRessources(db: Db): Promise<Ressource[]> {
   const lignes = await db.execute({
     sql: `SELECT r.id, r.kind, r.title, r.description, r.cover_key, r.file_key, r.duration_min,
-                 r.training_id, r.position, t.title AS formation_titre,
+                 r.training_id, r.position, r.published, t.title AS formation_titre,
                  (SELECT COUNT(*) FROM resource_allocations ra WHERE ra.resource_id = r.id) AS attribuees
           FROM resources r LEFT JOIN trainings t ON t.id = r.training_id
           ORDER BY r.kind, r.position, r.title`,
@@ -156,5 +159,6 @@ export async function toutesRessources(db: Db): Promise<Ressource[]> {
     position: entier(row.position) ?? 0,
     attribueeA: entier(row.attribuees) ?? 0,
     obtenueLeMs: null,
+    publiee: entier(row.published) === 1,
   }));
 }

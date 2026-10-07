@@ -118,10 +118,16 @@ export default defineConfig({
       // Moteur personnalisé : n'est utilisé que si les deux sont posés.
       ASSISTANT_CUSTOM_URL: bindings.secret(),
       ASSISTANT_CUSTOM_KEY: bindings.secret(),
-      // Ressources (livres, audios, documents) : adresse de base du stockage.
-      // Tant qu'elle n'est pas posée, l'application DIT que le fichier n'est pas
-      // encore déposé — elle ne fait jamais semblant de l'ouvrir.
-      RESOURCES_BASE_URL: bindings.secret(),
+      // Stockage des fichiers (livres, audios, documents) : Cloudflare R2, dans le
+      // palier gratuit (10 Go). Ces quatre valeurs sont saisies dans le tableau de
+      // bord, jamais ici. Tant qu'elles manquent, l'application DIT que le fichier
+      // n'est pas encore déposé — elle ne fait jamais semblant de l'ouvrir.
+      // Le secret ne quitte jamais le serveur : le navigateur ne reçoit qu'une
+      // adresse signée, valable quelques minutes.
+      R2_ACCOUNT_ID: bindings.secret(),
+      R2_ACCESS_KEY_ID: bindings.secret(),
+      R2_SECRET_ACCESS_KEY: bindings.secret(),
+      R2_BUCKET: bindings.secret(),
     },
   }),
 });
