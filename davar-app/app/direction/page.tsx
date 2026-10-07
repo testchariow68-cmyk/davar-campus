@@ -139,12 +139,15 @@ export default async function DirectionPage() {
         <h3 className="mb8">Ce que la plateforme ne fait pas encore</h3>
         <ul className="small muted" style={{ paddingLeft: 18, lineHeight: 1.9 }}>
           <li>Les paiements encaissés dans l&apos;application sont reportés ; l&apos;accès est ouvert à la main après un achat Chariow.</li>
-          <li>La vue test « côté staff », remplie de données fictives, n&apos;est pas construite.</li>
+          <li>La vue test s&apos;arrête volontairement aux personnes réelles : aucun chiffre fictif n&apos;est inventé pour faire joli.</li>
           <li>
             Les notifications du navigateur ne sont pas encore envoyées d&apos;elles-mêmes : la cloche du campus, elle,
             reçoit tout.
           </li>
-          <li>L&apos;assiduité (temps passé, régularité) et l&apos;analyse de l&apos;assistant n&apos;ont pas encore leurs écrans.</li>
+          <li>
+            Le dépôt des fichiers (livres, audios, photos) attend les clés de stockage : la plateforme refuse proprement
+            tant qu&apos;elles ne sont pas posées, plutôt que de perdre un fichier.
+          </li>
         </ul>
       </div>
 

@@ -230,3 +230,76 @@ revoir avec l'hébergement retenu.
   envoi d'e-mail réel, transactions Turso hébergées, comportement à chaud sous
   Workers, quotas facturés par les fournisseurs, restauration de sauvegarde. À
   faire en environnement privé avant toute ouverture au public.
+
+## 11. Mise à jour du 7 octobre 2026 — tout brancher, écran par écran
+
+Deuxième tranche, même branche `arena/09f3da07-davar-campus`. Elle répond à la
+consigne du propriétaire : **« tout brancher : assistants et absolument tout »**,
+en gardant la fidélité au prototype (95 vues) comme règle de conduite.
+
+### L'Espace Direction est complet (22 écrans, ceux du prototype)
+
+| Écran | Ce qu'il fait réellement |
+|---|---|
+| Vue d'ensemble | état du campus, alarmes, et ce que la plateforme ne fait pas encore |
+| Analytics | leçons terminées, progression moyenne **par formation**, réussite aux évaluations, activité 14 jours |
+| Santé technique | chaque service dit s'il est relié ou en attente ; quotas du jour ; traces achats/webhooks/exports/purges |
+| Analyse des assistants | qui répond et pourquoi, requêtes par jour et par fournisseur, questions par formation, base de connaissances |
+| Badges & distinctions | qui a reçu quel badge, quel jour, par quelle règle ou quelle main ; ce que personne n'a encore reçu |
+| Activité des étudiants | connexions 30 j, dernière activité (toutes traces), questions posées |
+| Formations, Ressources, Devoirs | création, publication, structure, ressources, corrections |
+| Étudiants, Conversations, Avis, Certificats | accès, réponses, avis, demandes de certificat |
+| Récompenses | catalogue préconfiguré, attribution manuelle motivée, réglages du moteur d'assiduité |
+| Ventes | achats vérifiés, chiffre d'affaires **par devise**, chaîne paiement → webhook → compte → formation |
+| Cycle de vie, Équipe, Assistant virtuel, Exports, E-mails, Intégrations, Réglages, Vue test | inchangés ou complétés |
+| Activités de l'équipe | journal fermé des actions du staff, actions importantes alertées, manager sans les gestes du propriétaire |
+
+### Les moteurs qui tournent maintenant
+
+- **Assiduité** : rappels après absence (textes du propriétaire, un cycle à la
+  fois) et distinctions du temps (Régularité, Persévérance, Retour en Force),
+  calculés sur l'historique réel des jours travaillés. Côté étudiant, le passage
+  se fait à la visite du campus (au plus une fois toutes les dix minutes) ;
+  côté Direction, le propriétaire peut vérifier le cycle à la demande.
+- **Journal de l'équipe** (migration 016) : vocabulaire **fermé**, action refusée
+  = action non écrite, alerte au propriétaire et aux managers pour les gestes
+  lourds — jamais chez leur auteur.
+- **Ventes** : chaque ligne vient d'un reçu vérifié par le webhook signé ; les
+  totaux ne mélangent jamais deux devises ; les acheteurs sans compte sont
+  annoncés comme une file à surveiller.
+- **Vue test** : réservée au propriétaire, huit comptes de test marqués
+  `is_test`, jamais connectables, exclus de **tous** les chiffres.
+
+### Migrations ajoutées (aucune destructive)
+
+- **015** : `badge_awards.note` — le motif d'une attribution manuelle (le
+  prototype l'exige : « Motif (consigné dans l'historique) »).
+- **016** : `staff_events` — le journal de l'équipe (table + 2 index).
+- Manifeste `staging-schema.mjs` : **16 migrations, 49 tables attendues**,
+  empreintes et nombre de DDL revus. `test_migrations_manifest.py` continue de
+  refuser tout écart.
+
+### Vérifications exécutées (7 octobre 2026)
+
+- `npm test` → **173 tests réussis** (22 fichiers), dont les nouveaux : santé
+  technique et assistants, badges et activité, ventes, analytics, assiduité,
+  passage étudiant, journal de l'équipe.
+- `npm run test:sql` → **25 tests réussis**. `npm run build` → réussi.
+  Manifeste v16 → 49 tables.
+- **Recette de vue test** (`npm run recette:vue-test`, 27 contrôles verts) : un
+  VRAI serveur, une VRAIE connexion du propriétaire (PBKDF2 600 000 itérations
+  comme le navigateur), les huit comptes de test, les vues Coach et Analyste, et
+  l'ouverture des 22 écrans. Elle refuse de tourner sur une base hébergée
+  (`file:…dev-data/` exigé).
+
+### Toujours pas branché (et dit tel quel dans l'application)
+
+- **Envoi des e-mails** (Google Apps Script) — l'inscription est refusée plutôt
+  que de créer un compte invérifiable. Le lien d'invitation est montré au
+  propriétaire pour qu'il le transmette lui-même.
+- **Stockage des fichiers** (R2) — dépôt des livres, audios et photos de profil :
+  refus propre, message clair, aucun fichier perdu.
+- **Push navigateur** — la préférence est enregistrée et la cloche reçoit tout ;
+  l'envoi lui-même viendra avec le service d'envoi.
+- **Pulse Chariow** — circuit codé et testé en local, drapeau fermé : à n'activer
+  qu'après la recette sur le compte marchand.
