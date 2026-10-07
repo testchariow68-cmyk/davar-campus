@@ -47,6 +47,7 @@ export const SECTIONS = [
   'recompenses',
   'ventes',
   'cycle',
+  'activites',
   'equipe',
   'assistant',
   'exports',
@@ -100,6 +101,7 @@ export const SECTIONS_PAR_ROLE: Record<RoleEquipe, SectionDirection[]> = {
     'recompenses',
     'ventes',
     'cycle',
+    'activites',
     'equipe',
   ],
 };

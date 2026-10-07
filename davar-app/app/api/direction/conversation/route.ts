@@ -3,6 +3,7 @@ import { jsonNoStore, readJsonBody } from '@/lib/server/http';
 import { trackApiRequest } from '@/lib/server/quota';
 import { marquerResolue, repondreCommeCoach, validerReponseIA } from '@/lib/server/echanges';
 import { notifier } from '@/lib/server/notifications';
+import { enregistrerEvenement } from '@/lib/server/journal';
 
 export const dynamic = 'force-dynamic';
 
@@ -16,7 +17,7 @@ export async function POST(request: Request) {
 
   const verrou = action === 'repondre' ? await verrouEcriture(request, 'repondre-conversation') : await verrouSupervision(request);
   if (!verrou.ok) return verrou.reponse;
-  const { db } = verrou.session;
+  const { db, reel } = verrou.session;
 
   const conversationId = typeof body?.conversationId === 'string' ? body.conversationId : '';
   if (!conversationId) return jsonNoStore({ error: 'invalid_input' }, 400);
@@ -48,16 +49,31 @@ export async function POST(request: Request) {
           maintenant
         );
       }
+      await enregistrerEvenement(db, {
+        actorId: reel.id,
+        action: 'reponse-conversation',
+        detail: `conversation ${conversationId} · ${texte.slice(0, 80)}`,
+      });
       return jsonNoStore({ ok: true });
     }
 
     if (action === 'valider') {
       await validerReponseIA(db, conversationId, maintenant);
+      await enregistrerEvenement(db, {
+        actorId: reel.id,
+        action: 'validation-conversation',
+        detail: `conversation ${conversationId}`,
+      });
       return jsonNoStore({ ok: true, message: 'Réponse validée : elle porte désormais votre accord.' });
     }
 
     if (action === 'resoudre') {
       await marquerResolue(db, conversationId, maintenant);
+      await enregistrerEvenement(db, {
+        actorId: reel.id,
+        action: 'resolution-conversation',
+        detail: `conversation ${conversationId}`,
+      });
       return jsonNoStore({ ok: true, message: 'Conversation close.' });
     }
 

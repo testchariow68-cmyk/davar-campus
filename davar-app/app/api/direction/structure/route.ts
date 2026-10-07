@@ -1,6 +1,7 @@
 import { verrouProprietaire } from '@/lib/server/direction-access';
 import { jsonNoStore, readJsonBody } from '@/lib/server/http';
 import { trackApiRequest } from '@/lib/server/quota';
+import { enregistrerEvenement } from '@/lib/server/journal';
 import {
   ajouterLecon,
   ajouterModule,
@@ -20,7 +21,7 @@ export async function POST(request: Request) {
   await trackApiRequest();
   const verrou = await verrouProprietaire(request);
   if (!verrou.ok) return verrou.reponse;
-  const { db } = verrou.session;
+  const { db, reel } = verrou.session;
 
   const body = await readJsonBody(request);
   const action = typeof body?.action === 'string' ? body.action : '';
@@ -57,6 +58,12 @@ export async function POST(request: Request) {
       default:
         return jsonNoStore({ ok: false, erreur: 'action_inconnue' }, 400);
     }
+    if (resultat.ok)
+      await enregistrerEvenement(db, {
+        actorId: reel.id,
+        action: 'contenu-structure',
+        detail: `${action} · ${id}`,
+      });
     return jsonNoStore(resultat, resultat.ok ? 200 : 400);
   } catch {
     return jsonNoStore({ ok: false, erreur: 'unavailable' }, 503);

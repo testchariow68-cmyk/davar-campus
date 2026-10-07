@@ -1,6 +1,7 @@
 import { verrouProprietaire } from '@/lib/server/direction-access';
 import { jsonNoStore, linkOrigin, readJsonBody } from '@/lib/server/http';
 import { trackApiRequest } from '@/lib/server/quota';
+import { enregistrerEvenement, type ActionJournal } from '@/lib/server/journal';
 import {
   accorderAcces,
   listerEquipe,
@@ -56,6 +57,11 @@ export async function POST(request: Request) {
           );
         }
         const libelles = (attribution.roles ?? []).map((role) => role);
+        await enregistrerEvenement(db, {
+          actorId: reel.id,
+          action: 'roles-equipe',
+          detail: `${email} · ${libelles.join(', ') || 'aucun rôle'}`,
+        });
         return jsonNoStore({
           ok: true,
           message: libelles.length
@@ -99,6 +105,11 @@ export async function POST(request: Request) {
           };
           return jsonNoStore({ ok: false, erreur: invitation.erreur, message: messages[invitation.erreur] }, 400);
         }
+        await enregistrerEvenement(db, {
+          actorId: reel.id,
+          action: 'invitation-creee',
+          detail: `${invitation.invitation.email} · ${kind === 'staff' ? 'équipe' : 'étudiant'}`,
+        });
         return jsonNoStore({
           ok: true,
           message: `Invitation créée pour ${invitation.invitation.email} — valable ${kind === 'staff' ? 7 : 3} jours.`,
@@ -114,6 +125,12 @@ export async function POST(request: Request) {
 
       case 'revoquer-invitation': {
         const reussie = await revoquerInvitation(db, String(body?.id ?? ''));
+        if (reussie)
+          await enregistrerEvenement(db, {
+            actorId: reel.id,
+            action: 'invitation-revoquee',
+            detail: String(body?.id ?? ''),
+          });
         return jsonNoStore({
           ok: reussie,
           message: reussie ? 'Invitation révoquée : le lien ne fonctionne plus.' : 'Cette invitation n’existait plus.',
@@ -140,6 +157,11 @@ export async function POST(request: Request) {
           };
           return jsonNoStore({ ok: false, erreur: transfert.erreur, message: messages[transfert.erreur] }, 400);
         }
+        await enregistrerEvenement(db, {
+          actorId: reel.id,
+          action: 'transfert-initie',
+          detail: email,
+        });
         return jsonNoStore({
           ok: true,
           message: 'Un e-mail de confirmation a été envoyé au nouveau propriétaire. Le transfert n’est effectif qu’après sa confirmation.',
@@ -153,6 +175,7 @@ export async function POST(request: Request) {
       case 'transfert-annuler': {
         const enAttente = await transfertEnAttente(db);
         const reussie = enAttente ? await annulerTransfert(db, enAttente.id) : false;
+        if (reussie) await enregistrerEvenement(db, { actorId: reel.id, action: 'transfert-annule', detail: reel.email });
         return jsonNoStore({
           ok: reussie,
           message: reussie ? 'Transfert annulé : vous restez propriétaire.' : 'Aucun transfert en attente.',
@@ -162,6 +185,19 @@ export async function POST(request: Request) {
       default:
         return jsonNoStore({ ok: false, erreur: 'action_inconnue' }, 400);
     }
+    // Le journal garde la trace humaine de ce que la base vient d'accepter.
+    // Une action refusée ne s'écrit PAS : le journal raconte des faits.
+    const ACTIONS_JOURNALISEES: Record<string, ActionJournal> = {
+      'set-role': 'role-change',
+      'grant-access': 'acces-accorde',
+      'revoke-access': 'acces-retire',
+      'set-status': 'statut-compte',
+      'toggle-test': 'compte-test',
+      'purge-content': 'purge-contenu',
+    };
+    const actionJournal = ACTIONS_JOURNALISEES[action];
+    if (resultat.ok && actionJournal)
+      await enregistrerEvenement(db, { actorId: reel.id, action: actionJournal, detail: email || formation || action });
     return jsonNoStore(resultat, resultat.ok ? 200 : 400);
   } catch {
     return jsonNoStore({ ok: false, erreur: 'unavailable' }, 503);

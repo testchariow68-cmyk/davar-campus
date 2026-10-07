@@ -131,8 +131,15 @@ const MIGRATIONS = [
     ddl: 1, // 1 colonne ajoutée : le motif d'une attribution manuelle
     creates: [],
   },
+  {
+    version: 16,
+    file: '016_journal_equipe.sqlite.sql',
+    sha256: 'e600d77a5831917f9ce1fbcd7a1b32dac604a85b5463c26cec7e7df58e16434e',
+    ddl: 3, // la table du journal et ses deux index
+    creates: ['staff_events'],
+  },
 ];
-const EXPECTED_TABLE_COUNT = 48; // 47 après 012 + 1 (013 préférences personnelles) — 014 et 015 ajoutent des colonnes, pas une table
+const EXPECTED_TABLE_COUNT = 49; // 48 après 013 — 014 et 015 ajoutent des colonnes, 016 ajoute le journal de l'équipe
 const FORBIDDEN = /\b(drop|truncate|delete\s+from)\b/i;
 
 const mode = process.argv[2];

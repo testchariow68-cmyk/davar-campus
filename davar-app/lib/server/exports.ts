@@ -7,6 +7,7 @@
  * honnête de tenir la promesse « derrière le mot de passe ».
  */
 import { verifyPassword, type Db } from './auth-core.ts';
+import { enregistrerEvenement } from './journal.ts';
 
 function texte(valeur: unknown, defaut = ''): string {
   return typeof valeur === 'string' ? valeur : defaut;
@@ -193,6 +194,13 @@ export async function journaliserExport(db: Db, kind: string, lignes: number, ac
     sql: 'INSERT INTO exports_log(id, kind, rows, actor, at_ms) VALUES (?,?,?,?,?)',
     args: [`exp_${maintenant.toString(36)}${Math.random().toString(36).slice(2, 8)}`, kind, lignes, acteur, maintenant],
   });
+  // Le journal de l'équipe garde la trace humaine ; `exports_log` garde la trace
+  // technique avec le nombre de lignes. Les deux, jamais l'un sans l'autre.
+  await enregistrerEvenement(
+    db,
+    { actorId: acteur, action: 'export-donnees', detail: `${kind} · ${lignes} ligne(s)` },
+    maintenant
+  );
 }
 
 export async function derniersExports(db: Db, limite = 20): Promise<Array<{ kind: string; rows: number; atMs: number }>> {

@@ -1,6 +1,7 @@
 import { verrouEcriture, verrouProprietaire } from '@/lib/server/direction-access';
 import { jsonNoStore, readJsonBody } from '@/lib/server/http';
 import { trackApiRequest } from '@/lib/server/quota';
+import { enregistrerEvenement } from '@/lib/server/journal';
 import { deciderDevoir } from '@/lib/server/pedagogie';
 import { deciderCertificat } from '@/lib/server/certificats';
 import { notifier } from '@/lib/server/notifications';
@@ -54,6 +55,11 @@ export async function POST(request: Request) {
           maintenant
         );
       }
+      await enregistrerEvenement(db, {
+        actorId: reel.id,
+        action: 'decision-devoir',
+        detail: `devoir ${id} · ${decision === 'approved' ? 'validé' : 'refusé'}`,
+      });
       return jsonNoStore({ ok: true, message: decision === 'approved' ? 'Devoir validé : l’étudiant est prévenu.' : 'Devoir refusé, avec votre explication.' });
     }
 

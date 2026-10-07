@@ -26,6 +26,7 @@ const LIBELLES_SECTION: Record<string, string> = {
   recompenses: 'Récompenses',
   ventes: 'Ventes',
   cycle: 'Cycle de vie',
+  activites: 'Activités de l’équipe',
   equipe: 'Équipe',
   assistant: 'Assistant virtuel',
 };

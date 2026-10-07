@@ -1,6 +1,7 @@
 import { verrouProprietaire } from '@/lib/server/direction-access';
 import { jsonNoStore, readJsonBody } from '@/lib/server/http';
 import { trackApiRequest } from '@/lib/server/quota';
+import { enregistrerEvenement } from '@/lib/server/journal';
 import { ecrireReglages, lireReglages, lienSocialValide } from '@/lib/server/settings';
 import { creerCle, listerCles, revoquerCle } from '@/lib/server/cles-api';
 import { emailBudget, mailerConfigured, sendEmail } from '@/lib/server/mailer';
@@ -59,6 +60,12 @@ export async function POST(request: Request) {
         entrees[cle] = propre;
       }
       const ecrites = await ecrireReglages(db, entrees, maintenant);
+      if (ecrites > 0)
+        await enregistrerEvenement(db, {
+          actorId: reel.id,
+          action: 'reglages-campus',
+          detail: Object.keys(entrees).join(', ').slice(0, 200),
+        });
       return jsonNoStore({ ok: true, message: `${ecrites} réglage(s) enregistré(s).`, reglages: await lireReglages(db) });
     }
 

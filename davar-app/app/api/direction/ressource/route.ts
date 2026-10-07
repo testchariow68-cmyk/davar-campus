@@ -1,6 +1,7 @@
 import { verrouProprietaire } from '@/lib/server/direction-access';
 import { jsonNoStore, readJsonBody } from '@/lib/server/http';
 import { trackApiRequest } from '@/lib/server/quota';
+import { enregistrerEvenement } from '@/lib/server/journal';
 import { attribuerRessource, creerRessource, retirerAttribution } from '@/lib/server/ressources';
 import { ajouterPage, ajouterPiste, definirPiste, supprimerPage } from '@/lib/server/medias';
 import { clePropre, libellePlafond, stockagePret, tailleAcceptable } from '@/lib/server/stockage';
@@ -41,6 +42,11 @@ export async function POST(request: Request) {
         maintenant
       );
       if (!resultat.ok) return jsonNoStore({ error: resultat.erreur }, 400);
+      await enregistrerEvenement(db, {
+        actorId: reel.id,
+        action: 'ressource-depot',
+        detail: `${kind} · ${texteDe(body?.title, 160)}`,
+      });
       return jsonNoStore({ ok: true, id: resultat.id, message: 'Ressource créée.' });
     }
 
@@ -136,6 +142,11 @@ export async function POST(request: Request) {
         { userId, kind: 'ressource', titre: 'Une nouvelle ressource vous est attribuée', corps: 'Retrouvez-la dans « Mes ressources ».', route: '/campus/ressources' },
         maintenant
       );
+      await enregistrerEvenement(db, {
+        actorId: reel.id,
+        action: 'ressource-attribution',
+        detail: `${resourceId} → ${courriel}`,
+      });
       return jsonNoStore({ ok: true, message: `Ressource attribuée à ${courriel}.` });
     }
 

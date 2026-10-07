@@ -1,6 +1,7 @@
 import { verrouProprietaire } from '@/lib/server/direction-access';
 import { jsonNoStore, readJsonBody } from '@/lib/server/http';
 import { trackApiRequest } from '@/lib/server/quota';
+import { enregistrerEvenement } from '@/lib/server/journal';
 import {
   FOURNISSEURS,
   definirAssociation,
@@ -31,7 +32,7 @@ export async function POST(request: Request) {
   await trackApiRequest();
   const verrou = await verrouProprietaire(request);
   if (!verrou.ok) return verrou.reponse;
-  const { db } = verrou.session;
+  const { db, reel } = verrou.session;
 
   const body = await readJsonBody(request);
   const action = typeof body?.action === 'string' ? body.action : '';
@@ -57,6 +58,12 @@ export async function POST(request: Request) {
         if (chaine.length > 0) patch.chaine = chaine;
       }
       const enregistree = await ecrireConfig(db, actuelle, patch, maintenant);
+      if (Object.keys(patch).length)
+        await enregistrerEvenement(db, {
+          actorId: reel.id,
+          action: 'assistant-reglages',
+          detail: Object.keys(patch).join(', '),
+        });
       return jsonNoStore({ ok: true, config: { ...enregistree, modeles: enregistree.modeles, limites: enregistree.limites } });
     }
 

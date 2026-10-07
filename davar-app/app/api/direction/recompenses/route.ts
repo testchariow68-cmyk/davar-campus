@@ -1,6 +1,7 @@
 import { verrouEcriture, verrouProprietaire } from '@/lib/server/direction-access';
 import { jsonNoStore, readJsonBody } from '@/lib/server/http';
 import { trackApiRequest } from '@/lib/server/quota';
+import { enregistrerEvenement } from '@/lib/server/journal';
 import {
   enregistrerReglagesAssiduite,
   lireReglagesAssiduite,
@@ -27,7 +28,7 @@ export async function POST(request: Request) {
   // Le périmètre de lecture est celui de la section : propriétaire ou manager.
   const verrouLecture = await verrouEcriture(request, 'attribuer-distinction');
   if (!verrouLecture.ok) return verrouLecture.reponse;
-  const { db } = verrouLecture.session;
+  const { db, reel } = verrouLecture.session;
 
   const body = await readJsonBody(request);
   const action = typeof body?.action === 'string' ? body.action : '';
@@ -45,6 +46,11 @@ export async function POST(request: Request) {
         absenceDays: Number(body?.absenceDays),
         periodDays: Number(body?.periodDays),
         minActiveDays: Number(body?.minActiveDays),
+      });
+      await enregistrerEvenement(db, {
+        actorId: reel.id,
+        action: 'recompenses-reglages',
+        detail: `absence ${reglages.absenceDays} j · régularité ${reglages.minActiveDays}/${reglages.periodDays} j`,
       });
       return jsonNoStore({
         ok: true,
@@ -77,6 +83,12 @@ export async function POST(request: Request) {
           note: motif,
         },
       );
+      if (pose)
+        await enregistrerEvenement(db, {
+          actorId: reel.id,
+          action: 'distinction-manuelle',
+          detail: `${badgeId} à ${String(etudiant.rows[0].display_name)} · ${motif.slice(0, 120)}`,
+        });
       return jsonNoStore({
         ok: pose,
         message: pose
@@ -91,6 +103,11 @@ export async function POST(request: Request) {
       if (resultat.distinctions.length) parties.push(`${resultat.distinctions.length} distinction(s) attribuée(s)`);
       if (resultat.rappels.length) parties.push(`${resultat.rappels.length} rappel(s) déposé(s)`);
       if (resultat.rappelRefuses) parties.push(`${resultat.rappelRefuses} étudiant(s) ont coupé les notifications`);
+      await enregistrerEvenement(db, {
+        actorId: reel.id,
+        action: 'rappel-cycle',
+        detail: `${resultat.distinctions.length} distinction(s), ${resultat.rappels.length} rappel(s)`,
+      });
       return jsonNoStore({
         ok: true,
         message: parties.length

@@ -169,6 +169,7 @@ try {
   for (const [chemin, marqueur] of [
     ['/direction/ventes', 'Ventes'],
     ['/direction/recompenses', 'Récompenses'],
+    ['/direction/activites', 'Activités de l’équipe'],
   ]) {
     const page = await appel(pot, chemin);
     const html = await page.text();
@@ -227,9 +228,12 @@ try {
   controler('les comptes de test se retirent', retraitJson.comptes?.length === 0, `${retraitJson.message ?? ''}`);
 } finally {
   // Les clés étrangères SONT appliquées : on retire d'abord les lignes filles.
+  // `staff_events` en fait partie depuis le journal de l'équipe : la recette
+  // écrit de vraies actions, et le journal refuse un auteur qui n'existe plus.
   for (const table of ['sessions', 'notifications', 'user_prefs', 'social_subscriptions']) {
     await db.execute({ sql: `DELETE FROM ${table} WHERE user_id = 'usr_recette'` }).catch(() => {});
   }
+  await db.execute({ sql: "DELETE FROM staff_events WHERE actor_id = 'usr_recette'" }).catch(() => {});
   await db.execute({ sql: "DELETE FROM users WHERE id = 'usr_recette'" });
   await db.close();
 }

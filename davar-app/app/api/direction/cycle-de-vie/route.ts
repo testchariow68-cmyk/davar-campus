@@ -1,6 +1,7 @@
 import { verrouProprietaire } from '@/lib/server/direction-access';
 import { jsonNoStore, readJsonBody } from '@/lib/server/http';
 import { trackApiRequest } from '@/lib/server/quota';
+import { enregistrerEvenement } from '@/lib/server/journal';
 import { motDePasseProprietaireValide } from '@/lib/server/exports';
 import {
   CLE_CYCLE_ACTIF,
@@ -63,6 +64,7 @@ export async function POST(request: Request) {
           400
         );
       const resultat = await executerCycleDeVie(db, { appliquer: true, acteur: reel.id });
+      await enregistrerEvenement(db, { actorId: reel.id, action: 'cycle-de-vie', detail: 'passage appliqué' });
       return jsonNoStore({
         ok: true,
         rapport: resultat.rapport,

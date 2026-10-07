@@ -1,6 +1,7 @@
 import { verrouProprietaire } from '@/lib/server/direction-access';
 import { jsonNoStore, readJsonBody } from '@/lib/server/http';
 import { trackApiRequest } from '@/lib/server/quota';
+import { enregistrerEvenement } from '@/lib/server/journal';
 import {
   ajouterMotivations,
   envoyerMotivation,
@@ -16,7 +17,7 @@ export async function POST(request: Request) {
   await trackApiRequest();
   const verrou = await verrouProprietaire(request);
   if (!verrou.ok) return verrou.reponse;
-  const { db } = verrou.session;
+  const { db, reel } = verrou.session;
 
   const body = await readJsonBody(request);
   const action = typeof body?.action === 'string' ? body.action : '';
@@ -64,6 +65,8 @@ export async function POST(request: Request) {
 
     if (action === 'envoyer') {
       const resultat = await envoyerMotivation(db);
+      if (resultat.ok)
+        await enregistrerEvenement(db, { actorId: reel.id, action: 'motivation-envoyee', detail: resultat.message });
       return jsonNoStore(
         {
           ok: resultat.ok,

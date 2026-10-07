@@ -193,6 +193,12 @@ test('les ventes, les progressions et les avis s’exportent tels quels', async 
 
 test('chaque export est journalisé — on sait toujours qui a fait sortir quoi', async () => {
   const db = await baseVide();
+  // L'auteur doit exister : le journal de l'équipe refuse un identifiant inventé.
+  await db.execute({
+    sql: `INSERT INTO users(id,email_normalized,display_name,password_hash,email_verified_at_ms,role,status,created_at_ms,is_test)
+          VALUES ('usr_proprietaire','proprietaire@davar.test','M. Yapo','peu-importe',?,'admin','active',?,0)`,
+    args: [MAINTENANT, MAINTENANT],
+  });
   await journaliserExport(db, 'etudiants', 12, 'usr_proprietaire', MAINTENANT);
   await journaliserExport(db, 'ventes', 3, 'usr_proprietaire', MAINTENANT + 5000);
 
@@ -201,6 +207,12 @@ test('chaque export est journalisé — on sait toujours qui a fait sortir quoi'
   assert.equal(journal[0].kind, 'ventes', 'le plus récent d’abord');
   assert.equal(journal[0].rows, 3);
   assert.equal(journal[1].atMs, MAINTENANT);
+
+  // Et l'action d'équipe correspondante est écrite : un export se sait.
+  const equipe = await db.execute("SELECT action, detail FROM staff_events ORDER BY at_ms DESC");
+  assert.equal(equipe.rows.length, 2);
+  assert.equal(String(equipe.rows[0].action), 'export-donnees');
+  assert.match(String(equipe.rows[0].detail), /ventes · 3 ligne/);
   await db.close();
 });
 
