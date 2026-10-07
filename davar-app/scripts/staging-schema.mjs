@@ -51,6 +51,13 @@ const MIGRATIONS = [
     ddl: 3, // 3 colonnes additives sur users : aucun objet détruit
     creates: [],
   },
+  {
+    version: 5,
+    file: '005_comptes_test.sqlite.sql',
+    sha256: '31022f91f6430b4f393d8b767ad0a7347ca5eb44bd0a2a74f5d4a3fbb18c20fb',
+    ddl: 2, // 1 colonne additive + 1 index : les comptes de test sont marqués, pas déplacés
+    creates: [],
+  },
 ];
 const EXPECTED_TABLE_COUNT = 16; // 9 après 001 + 5 après 002 + 2 après 003 (004 n'ajoute que des colonnes)
 const FORBIDDEN = /\b(drop|truncate|delete\s+from)\b/i;

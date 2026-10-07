@@ -30,6 +30,7 @@ const echec = (erreur: string): Resultat => ({ ok: false, erreur });
 /* ------------------------------------------------------------------ vue d'ensemble */
 
 export type VueEnsemble = {
+  comptesTest: number;
   etudiants: number;
   etudiantsConfirmes: number;
   etudiantsSuspendus: number;
@@ -54,14 +55,17 @@ export async function vueEnsemble(db: Db): Promise<VueEnsemble> {
     return nombre(resultat.rows[0]?.n);
   };
   const [
-    etudiants, etudiantsConfirmes, etudiantsSuspendus, membres, proprietaires,
+    comptesTest, etudiants, etudiantsConfirmes, etudiantsSuspendus, membres, proprietaires,
     acces, accesVendus, accesAccordes, achats, formations, formationsPubliees,
     modules, lecons, leconsSansRessource, leconsTerminees,
   ] = await Promise.all([
-    compter("SELECT COUNT(*) AS n FROM users WHERE role='student'"),
-    compter("SELECT COUNT(*) AS n FROM users WHERE role='student' AND email_verified_at_ms IS NOT NULL"),
-    compter("SELECT COUNT(*) AS n FROM users WHERE role='student' AND status='suspended'"),
-    compter("SELECT COUNT(*) AS n FROM users WHERE role<>'student'"),
+    // Les comptes de TEST n'entrent dans aucun chiffre réel : un test ne doit
+    // jamais gonfler un compteur de la plateforme (décision du 6 octobre 2026).
+    compter('SELECT COUNT(*) AS n FROM users WHERE is_test=1'),
+    compter("SELECT COUNT(*) AS n FROM users WHERE role='student' AND is_test=0"),
+    compter("SELECT COUNT(*) AS n FROM users WHERE role='student' AND is_test=0 AND email_verified_at_ms IS NOT NULL"),
+    compter("SELECT COUNT(*) AS n FROM users WHERE role='student' AND is_test=0 AND status='suspended'"),
+    compter("SELECT COUNT(*) AS n FROM users WHERE role<>'student' AND is_test=0"),
     compter("SELECT COUNT(*) AS n FROM users WHERE role='admin'"),
     compter('SELECT COUNT(*) AS n FROM enrollments'),
     compter("SELECT COUNT(*) AS n FROM enrollments WHERE source='verified_purchase'"),
@@ -74,10 +78,10 @@ export async function vueEnsemble(db: Db): Promise<VueEnsemble> {
     compter('SELECT COUNT(*) AS n FROM course_lessons WHERE resource_url IS NULL'),
     compter('SELECT COUNT(*) AS n FROM lesson_completions'),
   ]);
-  const derniere = await db.execute("SELECT MAX(created_at_ms) AS d FROM users WHERE role='student'");
+  const derniere = await db.execute("SELECT MAX(created_at_ms) AS d FROM users WHERE role='student' AND is_test=0");
   const derniereInscriptionMs = derniere.rows[0]?.d == null ? null : nombre(derniere.rows[0].d);
   return {
-    etudiants, etudiantsConfirmes, etudiantsSuspendus, membres, proprietaires,
+    comptesTest, etudiants, etudiantsConfirmes, etudiantsSuspendus, membres, proprietaires,
     acces, accesVendus, accesAccordes, achats, formations, formationsPubliees,
     modules, lecons, leconsSansRessource, leconsTerminees, derniereInscriptionMs,
   };
@@ -496,12 +500,13 @@ export type Membre = {
   role: string;
   statut: string;
   confirme: boolean;
+  estTest: boolean;
   derniereConnexionMs: number | null;
 };
 
 export async function listerEquipe(db: Db): Promise<Membre[]> {
   const resultat = await db.execute(
-    `SELECT id,email_normalized,display_name,role,status,email_verified_at_ms,last_login_at_ms
+    `SELECT id,email_normalized,display_name,role,status,email_verified_at_ms,last_login_at_ms,is_test
      FROM users WHERE role<>'student' ORDER BY role, email_normalized`
   );
   return resultat.rows.map((ligne) => ({
@@ -511,6 +516,7 @@ export async function listerEquipe(db: Db): Promise<Membre[]> {
     role: texte(ligne.role),
     statut: texte(ligne.status),
     confirme: ligne.email_verified_at_ms != null,
+    estTest: bool(ligne.is_test),
     derniereConnexionMs: ligne.last_login_at_ms == null ? null : nombre(ligne.last_login_at_ms),
   }));
 }
@@ -549,6 +555,29 @@ export async function definirRole(db: Db, email: string, role: string): Promise<
   return { ok: true, message: `${texte(utilisateur.rows[0].display_name)} est désormais ${libelle}.` };
 }
 
+/**
+ * Marquer un compte comme COMPTE DE TEST, ou le remettre parmi les comptes réels.
+ * Pourquoi : le propriétaire ne veut pas voir le campus avec le compte d'une
+ * personne réelle. Un compte de test sert à regarder les écrans ; il est donc
+ * marqué, et il est exclu des chiffres réels de la plateforme.
+ */
+export async function basculerCompteTest(db: Db, email: string, estTest: boolean): Promise<Resultat> {
+  const normalise = normalizeEmail(email);
+  const utilisateur = await db.execute({
+    sql: 'SELECT id, display_name, role FROM users WHERE email_normalized=?',
+    args: [normalise],
+  });
+  if (!utilisateur.rows.length) return echec('compte_introuvable');
+  await db.execute({ sql: 'UPDATE users SET is_test=? WHERE id=?', args: [estTest ? 1 : 0, texte(utilisateur.rows[0].id)] });
+  const qui = texte(utilisateur.rows[0].display_name) || normalise;
+  return {
+    ok: true,
+    message: estTest
+      ? `${qui} est désormais un compte de test : il ne compte plus dans les chiffres réels.`
+      : `${qui} est redevenu un compte réel.`,
+  };
+}
+
 /* --------------------------------------------------------------------- étudiants */
 
 export type Etudiant = {
@@ -557,6 +586,7 @@ export type Etudiant = {
   nom: string;
   statut: string;
   confirme: boolean;
+  estTest: boolean;
   creeMs: number;
   acces: { trainingId: string; titre: string; source: string; acquisMs: number }[];
   leconsTerminees: number;
@@ -565,9 +595,9 @@ export type Etudiant = {
 export async function listerEtudiants(db: Db, recherche = '', limite = 100): Promise<Etudiant[]> {
   const terme = `%${recherche.trim().toLowerCase()}%`;
   const resultat = await db.execute({
-    sql: `SELECT id,email_normalized,display_name,status,email_verified_at_ms,created_at_ms
+    sql: `SELECT id,email_normalized,display_name,status,email_verified_at_ms,created_at_ms,is_test
           FROM users WHERE role='student' AND (?='%%' OR email_normalized LIKE ? OR LOWER(display_name) LIKE ?)
-          ORDER BY created_at_ms DESC LIMIT ?`,
+          ORDER BY is_test, created_at_ms DESC LIMIT ?`,
     args: [terme, terme, terme, Math.min(Math.max(limite, 1), 500)],
   });
   const ids = resultat.rows.map((ligne) => texte(ligne.id));
@@ -603,6 +633,7 @@ export async function listerEtudiants(db: Db, recherche = '', limite = 100): Pro
       nom: texte(ligne.display_name),
       statut: texte(ligne.status),
       confirme: ligne.email_verified_at_ms != null,
+      estTest: bool(ligne.is_test),
       creeMs: nombre(ligne.created_at_ms),
       acces: parUtilisateur.get(id) ?? [],
       leconsTerminees: termineesParUtilisateur.get(id) ?? 0,

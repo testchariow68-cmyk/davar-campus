@@ -11,6 +11,7 @@ type EtudiantVue = {
   nom: string;
   statut: string;
   confirme: boolean;
+  estTest: boolean;
   creeMs: number;
   acces: Acces[];
   leconsTerminees: number;
@@ -76,7 +77,8 @@ export function EtudiantsOutils({ etudiants, formations }: { etudiants: Etudiant
                   <div style={{ fontWeight: 700 }}>
                     {etudiant.nom}{' '}
                     {etudiant.statut === 'suspended' ? <span className="dv-tag closed">suspendu</span> : null}{' '}
-                    {etudiant.confirme ? null : <span className="dv-tag closed">e-mail à confirmer</span>}
+                    {etudiant.confirme ? null : <span className="dv-tag closed">e-mail à confirmer</span>}{' '}
+                    {etudiant.estTest ? <span className="dv-tag">compte de test</span> : null}
                   </div>
                   <div className="small muted">
                     {etudiant.email} · inscrit le {new Date(etudiant.creeMs).toLocaleDateString('fr-FR')} ·{' '}
@@ -84,6 +86,13 @@ export function EtudiantsOutils({ etudiants, formations }: { etudiants: Etudiant
                   </div>
                 </div>
                 <span className="dv-actions">
+                  <button
+                    className="dv-mini"
+                    disabled={enCours}
+                    onClick={() => agir({ action: 'toggle-test', email: etudiant.email, estTest: !etudiant.estTest })}
+                  >
+                    {etudiant.estTest ? 'Compte réel' : 'Marquer test'}
+                  </button>
                   <button
                     className="dv-mini"
                     disabled={enCours}

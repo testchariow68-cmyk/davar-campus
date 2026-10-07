@@ -19,6 +19,7 @@ import { applyAllMigrations } from './helpers/migrations.mjs';
 import {
   accorderAcces,
   ajouterLecon,
+  basculerCompteTest,
   ajouterModule,
   creerFormation,
   definirRole,
@@ -265,5 +266,35 @@ test('la purge vide le contenu mais garde les formations', async () => {
   assert.equal(vue.lecons, 0);
   assert.equal(vue.acces, 0);
   assert.equal(vue.formations, 1, 'les formations sont conservées : c’est le catalogue du propriétaire');
+  await db.close();
+});
+
+test('les comptes de test sont marqués et exclus des chiffres réels', async () => {
+  const db = await baseVide();
+  await creerEtudiant(db, 'reel@davar.test', true, 'usr_reel');
+  await creerEtudiant(db, 'test@davar.test', true, 'usr_test');
+
+  const avant = await vueEnsemble(db);
+  assert.equal(avant.etudiants, 2);
+  assert.equal(avant.comptesTest, 0);
+
+  const bascule = await basculerCompteTest(db, 'test@davar.test', true);
+  assert.equal(bascule.ok, true);
+
+  const apres = await vueEnsemble(db);
+  assert.equal(apres.etudiants, 1, 'un compte de test ne doit pas gonfler le chiffre des étudiants');
+  assert.equal(apres.comptesTest, 1);
+
+  const liste = await listerEtudiants(db);
+  assert.equal(liste.find((etudiant) => etudiant.email === 'test@davar.test').estTest, true);
+  assert.equal(liste.find((etudiant) => etudiant.email === 'reel@davar.test').estTest, false);
+
+  const retour = await basculerCompteTest(db, 'test@davar.test', false);
+  assert.equal(retour.ok, true);
+  assert.equal((await vueEnsemble(db)).comptesTest, 0);
+  assert.equal((await vueEnsemble(db)).etudiants, 2);
+
+  const inconnu = await basculerCompteTest(db, 'personne@davar.test', true);
+  assert.equal(inconnu.ok, false);
   await db.close();
 });

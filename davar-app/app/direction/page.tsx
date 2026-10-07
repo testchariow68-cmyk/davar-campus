@@ -73,6 +73,10 @@ export default async function DirectionPage() {
           <b>{vue.membres}</b>
           <span className="small muted">membres de l&apos;équipe</span>
         </div>
+        <div className="dv-stat">
+          <b>{vue.comptesTest}</b>
+          <span className="small muted">comptes de test (hors chiffres)</span>
+        </div>
       </div>
 
       {vue.proprietaires !== 1 && (

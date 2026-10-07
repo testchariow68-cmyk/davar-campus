@@ -4,7 +4,16 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { messageDe, poster } from './api';
 
-type MembreVue = { id: string; email: string; nom: string; role: string; statut: string; confirme: boolean; derniereConnexionMs: number | null };
+type MembreVue = {
+  id: string;
+  email: string;
+  nom: string;
+  role: string;
+  statut: string;
+  confirme: boolean;
+  estTest: boolean;
+  derniereConnexionMs: number | null;
+};
 
 const LIBELLES: Record<string, string> = { admin: 'Propriétaire', staff: 'Membre du staff', student: 'Étudiant' };
 
@@ -48,6 +57,7 @@ export function EquipeOutils({ equipe, suggestions }: { equipe: MembreVue[]; sug
                 <th>Rôle</th>
                 <th>État</th>
                 <th>Dernière connexion</th>
+                <th>Rôle</th>
                 <th />
               </tr>
             </thead>
@@ -81,7 +91,19 @@ export function EquipeOutils({ equipe, suggestions }: { equipe: MembreVue[]; sug
                   <td className="small muted">
                     {membre.derniereConnexionMs ? new Date(membre.derniereConnexionMs).toLocaleDateString('fr-FR') : 'jamais'}
                   </td>
-                  <td className="small muted">{LIBELLES[membre.role] ?? membre.role}</td>
+                  <td>
+                    <div className="small muted">{LIBELLES[membre.role] ?? membre.role}</div>
+                    {membre.estTest ? <span className="dv-tag">compte de test</span> : null}
+                  </td>
+                  <td className="small muted">
+                    <button
+                      className="dv-mini"
+                      disabled={enCours}
+                      onClick={() => agir({ action: 'toggle-test', email: membre.email, estTest: !membre.estTest })}
+                    >
+                      {membre.estTest ? 'Compte réel' : 'Marquer test'}
+                    </button>
+                  </td>
                 </tr>
               ))}
             </tbody>

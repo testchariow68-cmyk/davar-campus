@@ -26,9 +26,6 @@ export default async function FormationDirectionPage({ params }: { params: Promi
           </Link>
           <h1 className="mt4">{formation.title}</h1>
         </div>
-        <Link href={`/formation/${formation.id}`} className="btn btn-ghost">
-          Voir la fiche publique
-        </Link>
       </div>
 
       <div className="grid g2 mb24" style={{ gap: 16, alignItems: 'start' }}>

@@ -3,7 +3,6 @@
  *
  *   node --experimental-strip-types scripts/dev-db.mjs --migrate
  *   node --experimental-strip-types scripts/dev-db.mjs --migrate --seed     (catalogue seul)
- *   node --experimental-strip-types scripts/dev-db.mjs --migrate --demo     (contenu de TEST)
  *   node --experimental-strip-types scripts/dev-db.mjs --empty              (vide le contenu)
  *   node --experimental-strip-types scripts/dev-db.mjs --reset --migrate    (base neuve)
  *   node --experimental-strip-types scripts/dev-db.mjs --grant etudiant@exemple.com t-orateur
@@ -12,8 +11,9 @@
  * plateforme doit être vide car tout était pour tester. » En conséquence :
  *   — `--seed` n'installe plus QUE le catalogue des formations. Aucun module,
  *     aucune leçon, aucun compte de démonstration n'est créé par défaut ;
- *   — le contenu d'essai (2 modules, 5 leçons, un étudiant démo) n'existe plus
- *     que derrière le drapeau explicite `--demo`, qui l'annonce en majuscules ;
+ *   — il n'existe plus AUCUN contenu de démonstration : ni compte fictif, ni
+ *     module, ni leçon. Les comptes de test se créent depuis le site, puis se
+ *     marquent « compte de test » dans l'Espace Direction (onglet Vue test) ;
  *   — `--empty` remet la plateforme à zéro : progressions, accès, leçons,
  *     modules, comptes de test et compteurs. Les formations sont conservées.
  *
@@ -125,58 +125,6 @@ async function seed() {
 }
 
 /**
- * CONTENU DE TEST — jamais installé par défaut.
- * Sert uniquement à éprouver les écrans (structure de cours, progression) en local.
- */
-async function demo() {
-  const now = Date.now();
-  await seed();
-  const modules = [
-    { id: 'mod-or-1', trainingId: 't-orateur', position: 1, title: 'Vaincre le trac', summary: 'Comprendre la peur de parler et la désamorcer.' },
-    { id: 'mod-or-2', trainingId: 't-orateur', position: 2, title: 'Structurer un discours', summary: 'Accroche, développement, appel à l’action.' },
-  ];
-  const lessons = [
-    { id: 'les-or-1-1', moduleId: 'mod-or-1', position: 1, title: 'D’où vient le trac ?', kind: 'video', duration: 12 },
-    { id: 'les-or-1-2', moduleId: 'mod-or-1', position: 2, title: 'Respiration et voix', kind: 'video', duration: 15 },
-    { id: 'les-or-1-3', moduleId: 'mod-or-1', position: 3, title: 'Exercice : se présenter en 60 secondes', kind: 'exercise', duration: 10 },
-    { id: 'les-or-2-1', moduleId: 'mod-or-2', position: 1, title: 'L’accroche qui capte', kind: 'video', duration: 18 },
-    { id: 'les-or-2-2', moduleId: 'mod-or-2', position: 2, title: 'Plan en trois temps', kind: 'text', duration: 8 },
-  ];
-  for (const module of modules)
-    await db.execute({
-      sql: `INSERT INTO course_modules(id, training_id, position, title, summary) VALUES (?, ?, ?, ?, ?)
-            ON CONFLICT(id) DO UPDATE SET title=excluded.title, summary=excluded.summary`,
-      args: [module.id, module.trainingId, module.position, module.title, module.summary],
-    });
-  for (const lesson of lessons)
-    await db.execute({
-      sql: `INSERT INTO course_lessons(id, module_id, position, title, kind, resource_url, duration_min)
-            VALUES (?, ?, ?, ?, ?, NULL, ?)
-            ON CONFLICT(id) DO UPDATE SET title=excluded.title, kind=excluded.kind, duration_min=excluded.duration_min`,
-      args: [lesson.id, lesson.moduleId, lesson.position, lesson.title, lesson.kind, lesson.duration],
-    });
-  const demoEmail = 'etudiant.demo@davar.local';
-  const existing = await db.execute({ sql: 'SELECT id FROM users WHERE email_normalized = ?', args: [demoEmail] });
-  let demoPassword = null;
-  if (existing.rows.length === 0) {
-    demoPassword = `Demo-${Math.random().toString(36).slice(2, 10)}-${Math.random().toString(36).slice(2, 8)}`;
-    await db.execute({
-      sql: `INSERT INTO users(id, email_normalized, display_name, password_hash, email_verified_at_ms, role, status, created_at_ms)
-            VALUES ('usr_demo_local', ?, 'Étudiant démo', ?, ?, 'student', 'active', ?)`,
-      args: [demoEmail, await hashPassword(demoPassword), now, now],
-    });
-    await db.execute({
-      sql: `INSERT INTO enrollments(user_id, training_id, source, sale_id, acquired_at_ms)
-            VALUES ('usr_demo_local', 't-orateur', 'staff_grant', NULL, ?)`,
-      args: [now],
-    });
-  }
-  console.log('⚠ CONTENU DE TEST installé : 2 modules, 5 leçons, un étudiant de démonstration.');
-  console.log(demoPassword ? `  compte de test : ${demoEmail} / ${demoPassword}` : `  compte de test déjà présent : ${demoEmail}`);
-  console.log('  Ne jamais installer ce contenu sur la plateforme réelle : utilisez --empty pour le retirer.');
-}
-
-/**
  * Remet la plateforme à zéro : progressions, accès, leçons, modules, comptes de
  * test, compteurs et statistiques d'exploitation. Les FORMATIONS sont conservées.
  * Refuse dès qu'un achat vérifié existe : une vente est une pièce comptable.
@@ -233,7 +181,6 @@ try {
   await migrate();
   if (has('--empty')) await empty();
   if (has('--seed')) await seed();
-  if (has('--demo')) await demo();
   if (has('--grant')) await grant(args[args.indexOf('--grant') + 1], args[args.indexOf('--grant') + 2]);
   const counts = await db.execute(
     `SELECT (SELECT COUNT(*) FROM trainings) AS trainings,

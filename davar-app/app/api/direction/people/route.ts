@@ -3,6 +3,7 @@ import { jsonNoStore, readJsonBody } from '@/lib/server/http';
 import { trackApiRequest } from '@/lib/server/quota';
 import {
   accorderAcces,
+  basculerCompteTest,
   definirRole,
   definirStatut,
   purgerContenu,
@@ -38,6 +39,9 @@ export async function POST(request: Request) {
         break;
       case 'set-status':
         resultat = await definirStatut(db, email, String(body?.statut ?? ''));
+        break;
+      case 'toggle-test':
+        resultat = await basculerCompteTest(db, email, body?.estTest === true);
         break;
       case 'purge-content':
         resultat = await purgerContenu(db, String(body?.confirmation ?? ''));

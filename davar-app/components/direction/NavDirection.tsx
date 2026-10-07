@@ -8,6 +8,7 @@ const LIENS = [
   { href: '/direction/formations', libelle: 'Formations' },
   { href: '/direction/etudiants', libelle: 'Étudiants' },
   { href: '/direction/equipe', libelle: 'Équipe' },
+  { href: '/direction/test', libelle: 'Vue test' },
 ];
 
 /** Navigation de l'espace Direction. Rien n'est actif par défaut : le lien courant est marqué. */

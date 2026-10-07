@@ -157,6 +157,24 @@ un excellent orateur » chez Chariow, et « Devenir un excellent orateur » dans
 que vous avez fixé). Ce sont bien le même produit et le même lien — l'identifiant `prd_6wx1czzp`
 fait foi.
 
+## 3 quater. Ce que l'application NE vend PAS (décision du 6 octobre 2026)
+
+« Supprime les pages de vente : les prix qui sont dessus ne sont pas les vrais prix. J'ai déjà une
+page de vente qui n'est pas celle-là. »
+
+C'est fait, et cela va dans le sens de vos propres documents (« la plateforme est privée, on y entre
+uniquement après achat ») :
+
+| Avant | Maintenant |
+|---|---|
+| Page d'accueil = catalogue public avec les prix | **Entrée du campus privé**, sans aucun prix |
+| Page d'achat `/formation/<id>` (prix + bouton) | **supprimée** |
+| Ancienne page de paiement `/campus/checkout/<id>` | **supprimée** |
+| Interface `/api/trainings` (prix exposés) | **supprimée** |
+
+Conséquence : **plus aucun prix n'est affiché dans l'application**, et l'achat se fait uniquement sur
+votre page officielle. Le prix saisi dans l'Espace Direction sert à vos dossiers, jamais à vendre.
+
 ## 4 bis. Graver votre compte propriétaire (Super Admin)
 
 Sans ce compte, personne ne peut diriger la plateforme : ni ajouter un cours, ni une leçon, ni
@@ -194,6 +212,26 @@ propriétaire** — le projet en prévoit un seul. Concrètement, si un proprié
   plateforme ». Pour remplacer le propriétaire, passez par **Espace Direction → Équipe →
   Propriétaire (transféré)**.
 
+## 4 quater. Comptes de test et vue test (décision du 6 octobre 2026)
+
+Décisions du propriétaire, appliquées telles quelles :
+
+1. **Aucun compte de démonstration n'existe plus.** Ils ont été retirés du code (`dev-db.mjs` ne
+   crée plus aucun compte : ni étudiant fictif, ni administrateur de démonstration) et de la base
+   locale. Il n'y a donc plus rien de fictif qui traîne dans la plateforme.
+2. **Les comptes de test sont marqués.** Un compte de test est un compte ordinaire porteur de la
+   marque `is_test` (migration **005**). Il sert à regarder les écrans, et il est **exclu de tous les
+   chiffres réels** de la vue d'ensemble : un test ne gonfle jamais un compteur.
+3. **Côté étudiant, la vue test se fait avec vos VRAIES choses** (vos formations, vos modules, vos
+   leçons). L'onglet **Vue test** de l'Espace Direction affiche exactement ce qu'un étudiant avec
+   accès découvrira, en lecture seule : rien n'est modifié, aucune progression n'est écrite.
+4. **Côté staff, la vue test avec données fictives n'est pas encore construite** — le campus n'a
+   aujourd'hui aucun écran « staff » à prévisualiser. C'est annoncé dans l'onglet Vue test, plutôt
+   que simulé.
+
+Pour préparer un compte de test : laissez-le se créer normalement sur le site (adresse de test),
+puis dans **Étudiants** ou **Équipe**, cliquez « Marquer test ». Le bouton repasse en « Compte réel ».
+
 ## 4 ter. L'Espace Direction : diriger sans ligne de commande
 
 Une fois connecté, l'adresse **`/direction`** (ou le bouton « Direction » en haut du campus) ouvre
@@ -206,6 +244,7 @@ l'espace du propriétaire :
 | **Construire** | Ajouter vos modules et vos leçons, choisir leur type (vidéo, texte, exercice, séance en direct), leur durée, leur adresse de ressource, et les réordonner. |
 | **Étudiants** | Voir qui est inscrit, ouvrir un accès à la main, le retirer, suspendre ou réactiver un compte. |
 | **Équipe** | Nommer un membre du staff, ou transférer la propriété (le propriétaire reste unique). |
+| **Vue test** | Voir le vrai contenu comme un étudiant le verra ; repérer les comptes de test. |
 
 Deux règles y sont appliquées par le serveur, jamais par le navigateur :
 

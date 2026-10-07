@@ -16,9 +16,14 @@ export function migrationFiles() {
 }
 
 export function statementsOf(file) {
-  return readFileSync(join(MIGRATIONS_DIR, file), 'utf8')
+  // L'ordre compte : on retire d'abord les commentaires, ENSUITE on découpe sur
+  // « ; ». Découper d'abord casserait toute migration dont un commentaire
+  // contient un point-virgule : le morceau suivant ne serait plus un commentaire
+  // et serait exécuté comme du SQL (panne constatée le 6 octobre 2026).
+  const sansCommentaires = readFileSync(join(MIGRATIONS_DIR, file), 'utf8').replace(/^\s*--.*$/gm, '');
+  return sansCommentaires
     .split(';')
-    .map((statement) => statement.replace(/^\s*--.*$/gm, '').trim())
+    .map((statement) => statement.trim())
     .filter(Boolean);
 }
 
