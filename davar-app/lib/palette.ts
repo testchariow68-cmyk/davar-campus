@@ -43,7 +43,8 @@ export function couleurValide(valeur: unknown): boolean {
 
 /** La couleur, ou le défaut : jamais autre chose qu'un #RRGGBB valide. */
 export function couleurOuDefaut(valeur: unknown, defaut: string): string {
-  return typeof valeur === 'string' && couleurValide(valeur) ? valeur.toLowerCase() : defaut;
+  // On ne transforme pas ce que le propriétaire a écrit : on recopie, tel quel.
+  return typeof valeur === 'string' && couleurValide(valeur) ? valeur : defaut;
 }
 
 export type CouleursPersonnalisees = { p: string; s: string; a: string; grad: boolean };
