@@ -223,3 +223,43 @@ export async function listTrainingsApercu(db: Db): Promise<EnrolledTraining[]> {
 export async function getTrainingApercu(db: Db, trainingId: string): Promise<TrainingDetail | null> {
   return lireContenuFormation(db, trainingId, null);
 }
+
+export type FormationADecouvrir = { id: string; title: string; description: string | null; prixCfa: number; lienAchat: string | null };
+
+/** Le lien de checkout Chariow d'une formation : le lien enregistré, sinon celui du produit. */
+export function lienAchatChariow(buyUrl: string | null, chariowProductId: string | null): string | null {
+  const enregistre = (buyUrl ?? '').trim();
+  if (/^https:\/\//i.test(enregistre)) return enregistre;
+  const produit = (chariowProductId ?? '').trim();
+  if (/^prd_[A-Za-z0-9]+$/.test(produit)) return `https://d-ueo.mychariow.co/${produit}/checkout`;
+  return null;
+}
+
+/**
+ * « DÉCOUVRIR PLUS DE FORMATIONS » — les formations ouvertes que l'étudiant ne
+ * possède pas encore. Le prix n'apparaît QUE pour celles-là (décision du
+ * propriétaire) : ce qu'il a déjà acheté n'a plus de prix à ses yeux.
+ */
+export async function listFormationsADecouvrir(db: Db, userId: string): Promise<FormationADecouvrir[]> {
+  const resultat = await db.execute({
+    sql: `SELECT id, title, description, price_cfa, chariow_product_id, buy_url FROM trainings
+          WHERE published = 1
+            AND id NOT IN (SELECT training_id FROM enrollments WHERE user_id = ?)
+          ORDER BY title`,
+    args: [userId],
+  });
+  const liste: FormationADecouvrir[] = [];
+  for (const row of resultat.rows) {
+    const id = text(row.id);
+    const title = text(row.title);
+    if (!id || !title) continue;
+    liste.push({
+      id,
+      title,
+      description: text(row.description),
+      prixCfa: num(row.price_cfa),
+      lienAchat: lienAchatChariow(text(row.buy_url), text(row.chariow_product_id)),
+    });
+  }
+  return liste;
+}

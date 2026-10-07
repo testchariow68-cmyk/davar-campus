@@ -4,6 +4,7 @@ import { Icon } from '@/components/campus/Icon';
 import { currentSession } from '@/lib/server/auth';
 import { listTrainingsApercu, listUserTrainings } from '@/lib/server/campus';
 import { depuis, modulesConsultes, salutation } from '@/lib/server/campus-recents';
+import { lireMotivations } from '@/lib/server/motivations';
 
 export const dynamic = 'force-dynamic';
 export const metadata = { title: 'Tableau de bord — Davar Académie Campus' };
@@ -27,18 +28,17 @@ function Progression({ pourcent }: { pourcent: number }) {
  * formation », mêmes « Consultés récemment », puis « Mes formations ».
  *
  * Écart assumé et visible : les cartes du prototype qui reposent sur des parties
- * pas encore construites (notifications push, assistant, motivation de la
- * semaine, certificats) ne sont pas affichées. Chacune reviendra avec la brique
- * correspondante — jamais avant.
+ * pas encore construites ne sont pas affichées — jamais simulées.
  */
 export default async function CampusDashboard() {
   const session = await currentSession();
   if (!session) redirect('/connexion');
   const { db, user } = session;
 
-  const [formations, recents] = await Promise.all([
+  const [formations, recents, motivations] = await Promise.all([
     session.vueTest ? listTrainingsApercu(db) : listUserTrainings(db, user.id),
     session.vueTest ? Promise.resolve([]) : modulesConsultes(db, user.id),
+    lireMotivations(db),
   ]);
 
   const avecProgression = formations.map((formation) => ({
@@ -125,6 +125,18 @@ export default async function CampusDashboard() {
                 <Icon nom="chevR" taille={15} className="faint" />
               </Link>
             ))}
+          </div>
+
+          <div className="card card-pad mb24" style={{ background: 'linear-gradient(140deg, var(--violet-soft) 0%, var(--card) 70%)' }}>
+            <div className="eyebrow">
+              <Icon nom="quote" taille={13} /> Votre motivation de la semaine
+            </div>
+            <p style={{ fontSize: 15, fontWeight: 600, fontStyle: 'italic', marginTop: 10 }}>
+              « {motivations.courante} »
+            </p>
+            <div className="xs faint mt8">
+              Chaque dimanche, une nouvelle motivation vous arrive dans la cloche de votre campus.
+            </div>
           </div>
 
           <div className="card">

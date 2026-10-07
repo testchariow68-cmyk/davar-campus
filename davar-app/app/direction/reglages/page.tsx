@@ -1,9 +1,11 @@
 import { redirect } from 'next/navigation';
 import { ApparenceAdmin } from '@/components/direction/ApparenceAdmin';
+import { MotivationsAdmin } from '@/components/direction/MotivationsAdmin';
 import { ReglagesAdmin } from '@/components/direction/ReglagesAdmin';
 import { sessionProprietaire } from '@/lib/server/direction-access';
 import { apparenceChoisie } from '@/lib/server/apparence';
 import { lireReglages } from '@/lib/server/settings';
+import { lireMotivations } from '@/lib/server/motivations';
 import { abonnements, totalParPlateforme } from '@/lib/server/social';
 
 export const dynamic = 'force-dynamic';
@@ -13,11 +15,12 @@ export const metadata = { title: 'Réglages — Direction' };
 export default async function ReglagesPage() {
   const proprietaire = await sessionProprietaire();
   if (!proprietaire) redirect('/direction');
-  const [reglages, apparence, suivis, totaux] = await Promise.all([
+  const [reglages, apparence, suivis, totaux, motivations] = await Promise.all([
     lireReglages(proprietaire.db),
     apparenceChoisie(proprietaire.db),
     abonnements(proprietaire.db, 100),
     totalParPlateforme(proprietaire.db),
+    lireMotivations(proprietaire.db),
   ]);
 
   return (
@@ -34,6 +37,9 @@ export default async function ReglagesPage() {
       <ApparenceAdmin paletteInitiale={apparence.palette} couleursInitiales={apparence.couleurs} />
       <div className="mt16" />
       <ReglagesAdmin initiaux={reglages} />
+
+      <div className="mt16" />
+      <MotivationsAdmin initial={motivations} />
 
       <div className="card card-pad mt16">
         <h3 className="mb4">Contrôle des abonnements</h3>

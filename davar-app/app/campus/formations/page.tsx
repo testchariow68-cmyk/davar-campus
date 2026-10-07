@@ -2,7 +2,7 @@ import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { Icon } from '@/components/campus/Icon';
 import { currentSession } from '@/lib/server/auth';
-import { listTrainingsApercu, listUserTrainings } from '@/lib/server/campus';
+import { listFormationsADecouvrir, listTrainingsApercu, listUserTrainings } from '@/lib/server/campus';
 
 export const dynamic = 'force-dynamic';
 export const metadata = { title: 'Mes formations — Davar Académie Campus' };
@@ -15,6 +15,8 @@ export default async function MesFormationsPage() {
   const formations = session.vueTest
     ? await listTrainingsApercu(session.db)
     : await listUserTrainings(session.db, session.user.id);
+  // En vue test, le propriétaire voit sa formation comme s'il l'avait : rien à découvrir.
+  const aDecouvrir = session.vueTest ? [] : await listFormationsADecouvrir(session.db, session.user.id);
 
   return (
     <>
@@ -72,6 +74,39 @@ export default async function MesFormationsPage() {
               </Link>
             );
           })}
+        </div>
+      )}
+
+      {aDecouvrir.length > 0 && (
+        <div className="card mt24">
+          <div className="card-head">
+            <h3>Découvrir plus de formations</h3>
+          </div>
+          {aDecouvrir.map((formation) => (
+            <div key={formation.id} className="res-item" style={{ alignItems: 'center' }}>
+              <span className="step-ico s-cur">
+                <Icon nom="sparkles" taille={14} />
+              </span>
+              <div className="wrap">
+                <b style={{ fontSize: 13.5 }}>{formation.title}</b>
+                {formation.description && <div className="xs faint">{formation.description}</div>}
+              </div>
+              <span className="row" style={{ gap: 10 }}>
+                <b className="small">{formation.prixCfa.toLocaleString('fr-FR')} FCFA</b>
+                {formation.lienAchat ? (
+                  <a className="btn btn-primary" href={formation.lienAchat} target="_blank" rel="noopener noreferrer">
+                    Obtenir
+                  </a>
+                ) : (
+                  <span className="xs faint">bientôt disponible</span>
+                )}
+              </span>
+            </div>
+          ))}
+          <div className="xs faint" style={{ padding: '10px 16px' }}>
+            L’achat se fait sur la page officielle de DAVAR ACADÉMIE. Votre accès s’ouvre ensuite ici avec l’adresse
+            e-mail de votre achat.
+          </div>
         </div>
       )}
     </>
