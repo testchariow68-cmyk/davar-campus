@@ -198,7 +198,12 @@ refuse tout :
 - S'il n'existe pas : **« Créer un seau »** → nom en **minuscules, chiffres et
   tirets** (R2 refuse les majuscules et les points), puis créer.
 
-→ `R2_BUCKET` = ce nom, par exemple `davar-campus-fichiers`.
+→ `R2_BUCKET` = **ce nom**, par exemple `davar-campus-fichiers`.
+
+⚠️ **Ne mettez là aucune « valeur de jeton ».** Ce n'est pas une clé, ni un
+identifiant, ni un secret : c'est le **nom** que vous avez donné à votre seau —
+celui qui s'affiche en haut de sa page, en minuscules. Si votre écran montre une
+« valeur du jeton », elle ne va **nulle part** dans ce fichier (voir 3c).
 
 ### 3b. L'identifiant de compte (32 caractères)
 
@@ -217,6 +222,21 @@ Cloudflare, ni votre mot de passe : c'est une **clé d'API S3**, créée dans R2
 
 - Sur la page **R2 → Vue d'ensemble**, repérez le bloc **« Jetons d'API » / API
   Tokens** et cliquez sur **« Gérer » / Manage**.
+**Deux types de jetons vous sont proposés. Choisissez « de compte » :**
+
+| Choix | À quoi il est rattaché | Pour nous |
+|---|---|---|
+| **« Créer un jeton de compte »** *(Create Account API token)* | **au compte Cloudflare lui-même** ; n'importe quel système autorisé peut l'utiliser, et il reste valable jusqu'à ce que vous le révoquiez | ✅ **celui-ci** |
+| « Créer un jeton utilisateur » *(Create User API token)* | à **votre personne** ; il hérite de vos droits et **cesse de fonctionner** si votre utilisateur quitte le compte | à éviter |
+
+Autrement dit : le jeton de compte appartient au **campus**, pas à vous. C'est ce
+qu'il faut pour une application qui doit déposer et relire des fichiers pendant
+des années.
+
+> Vous avez déjà créé un **jeton utilisateur** avec « Lecture et écriture
+> d'objets » ? Il fonctionnera quand même : ne refaites rien. Le jour où vous
+> aurez deux minutes, recréez-le en jeton de compte et remplacez les deux valeurs.
+
 - **« Créer un jeton d'API »** → **« Créer un jeton de compte »** *(Create Account
   API token)*.
 - **Autorisations** : **Lecture et écriture d'objets** *(Object Read & Write)* —
@@ -229,6 +249,14 @@ Cloudflare, ni votre mot de passe : c'est une **clé d'API S3**, créée dans R2
 |---|---|
 | **Access Key ID** (long identifiant alphanumérique) | `R2_ACCESS_KEY_ID` |
 | **Secret Access Key** (affiché **une seule fois**) | `R2_SECRET_ACCESS_KEY` |
+
+**Et la « valeur du jeton » ?** Si votre écran affiche une ligne de ce genre, elle
+ne se recopie dans **aucune** des quatre lignes R2 — ni dans `R2_BUCKET`, ni
+ailleurs. Dans notre architecture, c'est le couple **Access Key ID + Secret Access
+Key** qui sert (c'est ce qui permet de signer les adresses de dépôt et de lecture,
+valables quelques minutes). Autrement dit : si vous ne voyez pas ces deux noms,
+c'est que vous n'êtes pas sur l'écran « R2 → Vue d'ensemble → Jetons d'API →
+Gérer → Créer un jeton de compte ».
 
 > Si vous perdez le secret : recréez un jeton (l'ancien peut alors être révoqué).
 > La recette vous dira nommément si le format de l'identifiant ou du nom de seau

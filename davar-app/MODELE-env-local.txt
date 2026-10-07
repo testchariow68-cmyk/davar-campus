@@ -66,7 +66,9 @@ MAIL_APPS_SCRIPT_TOKEN=
 R2_ACCOUNT_ID=
 R2_ACCESS_KEY_ID=
 R2_SECRET_ACCESS_KEY=
-# Le nom du seau : minuscules, chiffres et tirets uniquement (pas de majuscules)
+# Le NOM de votre seau : minuscules, chiffres et tirets (pas de majuscules).
+# ⚠️ Ce n'est PAS une valeur de jeton : c'est le nom affiché en haut de la page
+# de votre seau, par exemple davar-campus-fichiers.
 R2_BUCKET=
 
 
