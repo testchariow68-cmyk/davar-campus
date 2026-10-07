@@ -22,6 +22,7 @@ const CLES_REGLAGES = new Set([
   'social.facebook',
   'announce.text',
   'announce.active',
+  'announce.audience',
   CLE_PALETTE,
   CLE_COULEURS,
 ]);

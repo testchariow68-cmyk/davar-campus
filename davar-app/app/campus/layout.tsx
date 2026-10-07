@@ -3,12 +3,15 @@ import { redirect } from 'next/navigation';
 import { Icon } from '@/components/campus/Icon';
 import { ThemeButton } from '@/components/campus/ThemeButton';
 import { UserMenu } from '@/components/campus/UserMenu';
+import { BandeauDefilant } from '@/components/campus/BandeauDefilant';
 import { BellMenu } from '@/components/campus/BellMenu';
 import { VueTestBar } from '@/components/campus/VueTestBar';
 import { VueTestMenu } from '@/components/campus/VueTestMenu';
 import { currentSession } from '@/lib/server/auth';
 import { listerComptesTest, peutTesterUneVue } from '@/lib/server/vue-test';
 import { compterNonLues, listerNotifications } from '@/lib/server/notifications';
+import { lireReglages } from '@/lib/server/settings';
+import { annonceDepuisReglages, annonceViseLUtilisateur, plateformesNonSuivies } from '@/lib/server/social';
 
 export const dynamic = 'force-dynamic';
 
@@ -18,11 +21,9 @@ export const dynamic = 'force-dynamic';
  * Même structure que le prototype, au même endroit :
  *   barre supérieure (marque + navigation + thème + compte), puis la page.
  *
- * Ce qui n'est pas encore repris est VOLONTAIREMENT absent plutôt que simulé :
- * la cloche de notifications, le bandeau d'annonces, le ticker social, les
- * fenêtres de discussion et la bulle flottante du prototype dépendent de parties
- * du campus qui n'existent pas encore côté serveur. Ils seront ajoutés avec
- * elles, à l'identique — un bouton qui n'ouvre rien serait un mensonge.
+ * Le bandeau du bas (annonces + réseaux) est celui du prototype : les
+ * plateformes non suivies défilent, et elles disparaissent dès que l'étudiant
+ * confirme son abonnement. Le propriétaire, lui, ne voit jamais le bandeau social.
  */
 export default async function CampusLayout({ children }: { children: React.ReactNode }) {
   const session = await currentSession();
@@ -35,10 +36,15 @@ export default async function CampusLayout({ children }: { children: React.React
    *   - fermé  : le bouton « Tester une vue », et pour le propriétaire SEULEMENT.
    * Aucun autre compte ne reçoit la liste des comptes de test : elle n'est même pas lue.
    */
-  const [notifications, nonLues] = await Promise.all([
+  const [notifications, nonLues, reglages] = await Promise.all([
     listerNotifications(session.db, user.id, Date.now(), 20),
     compterNonLues(session.db, user.id, Date.now()),
+    lireReglages(session.db),
   ]);
+  const annonceBrute = annonceDepuisReglages(reglages);
+  const annonce = annonceViseLUtilisateur(annonceBrute, reel.role) ? annonceBrute : null;
+  // Règle du prototype : le Super Admin ne voit jamais le bandeau social.
+  const reseaux = reel.role === 'admin' ? [] : await plateformesNonSuivies(session.db, user.id);
 
   const vuesTest =
     !vueTest && peutTesterUneVue(reel)
@@ -86,6 +92,8 @@ export default async function CampusLayout({ children }: { children: React.React
       </header>
 
       <main className="container">{children}</main>
+
+      <BandeauDefilant annonce={annonce} reseaux={reseaux} />
 
       <footer className="container" style={{ paddingBottom: 40 }}>
         <div className="row between small muted" style={{ gap: 10, flexWrap: 'wrap' }}>

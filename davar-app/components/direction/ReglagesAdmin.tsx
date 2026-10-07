@@ -13,6 +13,7 @@ type Champs = {
   'social.facebook': string;
   'announce.text': string;
   'announce.active': string;
+  'announce.audience': string;
 };
 
 /**
@@ -32,6 +33,7 @@ export function ReglagesAdmin({ initiaux }: { initiaux: Record<string, string> }
     'social.facebook': initiaux['social.facebook'] ?? '',
     'announce.text': initiaux['announce.text'] ?? '',
     'announce.active': initiaux['announce.active'] ?? '0',
+    'announce.audience': initiaux['announce.audience'] ?? 'all',
   }));
   const [note, setNote] = useState<string | null>(null);
   const [erreur, setErreur] = useState<string | null>(null);
@@ -99,8 +101,9 @@ export function ReglagesAdmin({ initiaux }: { initiaux: Record<string, string> }
       <div className="card card-pad">
         <h3 className="mb4">Réseaux</h3>
         <p className="small muted mb16">
-          Affichés dans la barre du bas, à côté des demandes d’abonnement. Un réseau disparaît des propositions dès que
-          l’étudiant s’y abonne. Adresses https exigées.
+          Affichés dans le bandeau du bas, à côté des demandes d’abonnement. Un réseau disparaît des propositions dès
+          que l’étudiant confirme son abonnement — et le propriétaire ne voit jamais ce bandeau chez lui. Adresses
+          https exigées.
         </p>
         <div className="col" style={{ gap: 12 }}>
           {champ('social.instagram', 'Instagram', 'https://instagram.com/…')}
@@ -122,7 +125,19 @@ export function ReglagesAdmin({ initiaux }: { initiaux: Record<string, string> }
               checked={champs['announce.active'] === '1'}
               onChange={(evenement) => changer('announce.active', evenement.target.checked ? '1' : '0')}
             />
-            <span className="small">Afficher le bandeau dans le campus</span>
+            <span className="small">Afficher l’annonce dans le campus</span>
+          </label>
+          <label style={{ display: 'block' }}>
+            <span className="eyebrow" style={{ display: 'block', marginBottom: 4 }}>Qui la voit ?</span>
+            <select
+              className="inp"
+              value={champs['announce.audience']}
+              onChange={(evenement) => changer('announce.audience', evenement.target.value)}
+            >
+              <option value="all">Tout le monde</option>
+              <option value="students">Les étudiants seulement</option>
+              <option value="staff">L’équipe seulement</option>
+            </select>
           </label>
         </div>
       </div>

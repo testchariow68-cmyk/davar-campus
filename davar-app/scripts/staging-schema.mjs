@@ -103,8 +103,15 @@ const MIGRATIONS = [
     ddl: 4, // 2 tables + 2 index : invitations et transfert de propriété
     creates: ['invites','ownership_transfers'],
   },
+  {
+    version: 12,
+    file: '012_reseaux_sociaux.sqlite.sql',
+    sha256: 'abf78f0adcfc8cd9971239805111e998671686369af817eda019ba0a0418de2b',
+    ddl: 2, // 1 table + 1 index : confirmation d'abonnement aux réseaux
+    creates: ['social_subscriptions'],
+  },
 ];
-const EXPECTED_TABLE_COUNT = 46; // 44 après 010 + 2 (011 invitations, transfert de propriété)
+const EXPECTED_TABLE_COUNT = 47; // 46 après 011 + 1 (012 abonnements aux réseaux)
 const FORBIDDEN = /\b(drop|truncate|delete\s+from)\b/i;
 
 const mode = process.argv[2];
