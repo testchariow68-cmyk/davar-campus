@@ -221,6 +221,13 @@ Le campus répond avec **vos contenus**, jamais avec une clé visible par les
 étudiants : ces clés vivent côté serveur. Le palier gratuit de Groq est le plus
 généreux, et il n'entraîne pas ses modèles sur vos données — commencez par lui.
 
+**La clé Groq fait deux métiers** : les réponses de l'assistant, **et la dictée
+vocale des avis** (un étudiant qui parle au lieu d'écrire, son texte apparaît).
+Les plafonds gratuits sont distincts de part et d'autre — 1 000 questions/jour
+d'un côté, 2 000 transcriptions et 28 800 secondes d'audio/jour de l'autre — et le
+code les protège séparément. Sans clé, l'assistant le dit honnêtement et l'étudiant
+dicte sur son appareil : personne n'est bloqué.
+
 | Valeur | Où exactement | Nom à écrire |
 |---|---|---|
 | Clé Groq (commence par `gsk_…`) | <https://console.groq.com/keys> → connexion → **Create API Key** → nommez-la « Campus Davar » → copier | `GROQ_API_KEY` |
