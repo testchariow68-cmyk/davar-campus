@@ -59,6 +59,15 @@ export const RAPPELS: Array<{ title: string; body: string }> = [
   },
 ];
 
+/** Les messages de bon retour du propriétaire (`RETURN_MSGS`), dans son ordre. */
+export const RETOURS: string[] = [
+  'Bon retour parmi nous. Votre parcours vous attendait. Reprenons là où vous vous étiez arrêté.',
+  'Heureux de vous revoir. Vous n’avez pas besoin de tout recommencer : il suffit de reprendre le chemin.',
+  'Vous voilà de retour. Prenez votre temps, retrouvez votre rythme et continuez votre parcours.',
+  'Votre parcours est toujours là. Une pause n’efface pas le chemin déjà parcouru.',
+  'Bon retour dans votre espace. La prochaine étape vous attend.',
+];
+
 const CLE_ABSENCE = 'rewards.absence_days';
 const CLE_PERIODE = 'rewards.reg_period_days';
 const CLE_MINIMUM = 'rewards.reg_min_active_days';
@@ -154,6 +163,137 @@ async function lignesTraces(db: Db, depuisMs: number) {
 }
 
 /* --------------------------------------------------------------- moteur */
+
+export type ResultatPassage = {
+  /** Le mot de bienvenue déposé après une absence, s'il y en a un. */
+  retour: string | null;
+  /** Les distinctions attribuées à cette visite. */
+  distinctions: string[];
+  /** Un rappel d'absence a-t-il été déposé ? */
+  rappel: string | null;
+};
+
+/**
+ * LE PASSAGE D'UN ÉTUDIANT — ce que le prototype faisait à chaque connexion.
+ *
+ * Il regarde UNE personne, pas tout le monde : c'est ce qui permet de l'appeler
+ * au fil des visites du campus sans payer une passe complète. Trois gestes :
+ *   - les distinctions du temps gagnées depuis la dernière visite ;
+ *   - le mot de bienvenue après une absence (les cinq textes tournent) ;
+ *   - le rappel du cycle en cours, s'il n'a pas déjà été déposé.
+ *
+ * Rien n'est inventé : sans trace de travail, il ne se passe rien.
+ */
+export async function passageEtudiant(db: Db, userId: string, maintenant = Date.now()): Promise<ResultatPassage> {
+  // Le passage est appelé à chaque visite du campus : il se limite lui-même à une
+  // fois toutes les dix minutes par personne. La règle du projet est de protéger
+  // les quotas, y compris contre nos propres générosités.
+  const dernier = await db.execute({
+    sql: "SELECT pref_value FROM user_prefs WHERE user_id = ? AND pref_key = 'assiduite.passage_at'",
+    args: [userId],
+  });
+  const dernierMs = Number(dernier.rows[0]?.pref_value ?? 0);
+  if (Number.isFinite(dernierMs) && dernierMs > 0 && maintenant - dernierMs < 10 * 60 * 1000)
+    return { retour: null, distinctions: [], rappel: null };
+  await db.execute({
+    sql: `INSERT INTO user_prefs(user_id, pref_key, pref_value, updated_at_ms) VALUES (?, 'assiduite.passage_at', ?, ?)
+          ON CONFLICT(user_id, pref_key) DO UPDATE SET pref_value = excluded.pref_value, updated_at_ms = excluded.updated_at_ms`,
+    args: [userId, String(maintenant), maintenant],
+  });
+
+  const profil = await db.execute({
+    sql: `SELECT display_name FROM users WHERE id = ? AND role = 'student' AND is_test = 0 AND status = 'active'`,
+    args: [userId],
+  });
+  if (!profil.rows.length) return { retour: null, distinctions: [], rappel: null };
+  const nom = String(profil.rows[0].display_name ?? '');
+  const reglages = await lireReglagesAssiduite(db);
+  const fenetre = Math.max(reglages.periodDays, reglages.absenceDays * 12) * JOUR_MS;
+  const debut = maintenant - fenetre;
+  const traces = await lignesTraces(db, debut);
+  const jours = [...(traces.get(userId) ?? new Set<string>())].sort();
+
+  const distinctions: string[] = [];
+  const joursDansLaFenetre = jours.filter(
+    (jour) => Date.parse(`${jour}T00:00:00.000Z`) >= maintenant - reglages.periodDays * JOUR_MS
+  );
+
+  if (joursDansLaFenetre.length >= reglages.minActiveDays) {
+    const pose = await attribuerBadge(db, { userId, badgeId: 'BADGE_REGULARITE' }, maintenant);
+    if (pose) distinctions.push('Régularité');
+  }
+
+  const tentatives = await db.execute({
+    sql: 'SELECT passed AS passed, at_ms AS at FROM assessment_attempts WHERE user_id = ? ORDER BY at_ms',
+    args: [userId],
+  });
+  const premierEchec = tentatives.rows.find((ligne) => Number(ligne.passed) === 0);
+  if (premierEchec) {
+    const reussieApres = tentatives.rows.find(
+      (ligne) => Number(ligne.passed) === 1 && Number(ligne.at) > Number(premierEchec.at)
+    );
+    if (reussieApres && (await attribuerBadge(db, { userId, badgeId: 'BADGE_PERSEVERANCE' }, maintenant)))
+      distinctions.push('Persévérance');
+  }
+
+  let retourApresPause = false;
+  for (let index = 1; index < jours.length; index += 1) {
+    const precedent = Date.parse(`${jours[index - 1]}T00:00:00.000Z`);
+    const courant = Date.parse(`${jours[index]}T00:00:00.000Z`);
+    if (courant - precedent >= reglages.absenceDays * JOUR_MS) retourApresPause = true;
+  }
+  if (retourApresPause && jours[jours.length - 1] === jourDe(maintenant)) {
+    if (await attribuerBadge(db, { userId, badgeId: 'BADGE_RETOUR_EN_FORCE' }, maintenant))
+      distinctions.push('Retour en Force');
+  }
+
+  // ── Le mot de bienvenue : une seule fois par retour réel.
+  let retour: string | null = null;
+  const dejaVenus = await db.execute({
+    sql: `SELECT COUNT(*) AS n FROM notifications WHERE user_id = ? AND kind = 'retour'`,
+    args: [userId],
+  });
+  const derniereTrace = jours.length ? Date.parse(`${jours[jours.length - 1]}T00:00:00.000Z`) : null;
+  const retourDejaDit = await db.execute({
+    sql: `SELECT COUNT(*) AS n FROM notifications
+           WHERE user_id = ? AND kind = 'retour' AND created_at_ms >= ?`,
+    args: [userId, Math.max(0, (derniereTrace ?? maintenant) - JOUR_MS)],
+  });
+  if (
+    retourApresPause &&
+    Number(retourDejaDit.rows[0]?.n ?? 0) === 0 &&
+    (await notificationsAcceptees(db, userId, 'retour'))
+  ) {
+    const tour = Number(dejaVenus.rows[0]?.n ?? 0);
+    retour = RETOURS[tour % RETOURS.length];
+    await notifier(db, { userId, kind: 'retour', titre: 'Bon retour parmi nous', corps: retour }, maintenant);
+  }
+
+  // ── Le rappel du cycle en cours, s'il n'a pas déjà été déposé.
+  let rappel: string | null = null;
+  const dernierJour = jours.length ? jours[jours.length - 1] : null;
+  if (dernierJour) {
+    const joursDabsence = Math.floor((maintenant - Date.parse(`${dernierJour}T23:59:59.000Z`)) / JOUR_MS);
+    if (joursDabsence >= reglages.absenceDays) {
+      const cycle = Math.floor(joursDabsence / reglages.absenceDays);
+      const servis = await db.execute({
+        sql: `SELECT COUNT(*) AS n FROM notifications
+               WHERE user_id = ? AND kind = 'rappel' AND created_at_ms >= ?`,
+        args: [userId, debut],
+      });
+      if (Number(servis.rows[0]?.n ?? 0) < cycle) {
+        const message = RAPPELS[(cycle - 1) % RAPPELS.length];
+        if (await notificationsAcceptees(db, userId, 'rappel')) {
+          await notifier(db, { userId, kind: 'rappel', titre: message.title, corps: message.body }, maintenant);
+          rappel = message.title;
+        }
+      }
+    }
+  }
+
+  void nom;
+  return { retour, distinctions, rappel };
+}
 
 export type ResultatAssiduite = {
   reglages: ReglagesAssiduite;

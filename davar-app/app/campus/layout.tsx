@@ -9,6 +9,7 @@ import { VueTestBar } from '@/components/campus/VueTestBar';
 import { VueTestMenu } from '@/components/campus/VueTestMenu';
 import { currentSession } from '@/lib/server/auth';
 import { listerComptesTest, peutTesterUneVue } from '@/lib/server/vue-test';
+import { passageEtudiant } from '@/lib/server/assiduite';
 import { compterNonLues, listerNotifications } from '@/lib/server/notifications';
 import { lirePreferences } from '@/lib/server/profil';
 import { EchelleAffichage } from '@/components/campus/EchelleAffichage';
@@ -38,6 +39,11 @@ export default async function CampusLayout({ children }: { children: React.React
    *   - fermé  : le bouton « Tester une vue », et pour le propriétaire SEULEMENT.
    * Aucun autre compte ne reçoit la liste des comptes de test : elle n'est même pas lue.
    */
+  // Le passage d'assiduité : ce que le prototype faisait à chaque connexion.
+  // Il ne concerne QUE les étudiants réels — jamais le staff, jamais une vue test,
+  // jamais un compte de test. Il regarde une personne, pas tout le monde.
+  if (reel.role === 'student' && !vueTest) await passageEtudiant(session.db, user.id).catch(() => null);
+
   const [notifications, nonLues, reglages, preferences] = await Promise.all([
     listerNotifications(session.db, user.id, Date.now(), 20),
     compterNonLues(session.db, user.id, Date.now()),

@@ -163,6 +163,15 @@ export async function attribuerBadge(
   },
   maintenant = Date.now()
 ): Promise<boolean> {
+  // Le badge doit exister au catalogue : on refuse d'écrire une attribution qui
+  // pointerait dans le vide. Le catalogue s'installe depuis « Récompenses » et
+  // depuis l'espace Distinctions de l'étudiant.
+  const badge = await db.execute({
+    sql: 'SELECT name, short_text FROM badge_defs WHERE id = ?',
+    args: [options.badgeId],
+  });
+  if (!badge.rows.length) return false;
+
   const resultat = await db.execute({
     sql: `INSERT INTO badge_awards(id, user_id, badge_id, training_id, source, awarded_by, note, at_ms)
           VALUES (?,?,?,?,?,?,?,?)
@@ -182,10 +191,6 @@ export async function attribuerBadge(
 
   // Le prototype prévient toujours l'étudiant : « Nouvelle distinction » suivi
   // de la phrase du badge. On fait pareil — c'est la reconnaissance qui compte.
-  const badge = await db.execute({
-    sql: 'SELECT name, short_text FROM badge_defs WHERE id = ?',
-    args: [options.badgeId],
-  });
   const nom = texte(badge.rows[0]?.name);
   const phrase = texte(badge.rows[0]?.short_text);
   if (nom) {
