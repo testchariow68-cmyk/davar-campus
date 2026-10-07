@@ -13,6 +13,10 @@ const LIENS = [
   { href: '/direction/avis', libelle: 'Avis' },
   { href: '/direction/assistant', libelle: 'Assistant virtuel' },
   { href: '/direction/ressources', libelle: 'Ressources' },
+  { href: '/direction/exports', libelle: 'Exports' },
+  { href: '/direction/emails', libelle: 'E-mails' },
+  { href: '/direction/integrations', libelle: 'Intégrations' },
+  { href: '/direction/reglages', libelle: 'Réglages' },
   { href: '/direction/equipe', libelle: 'Équipe' },
   { href: '/direction/test', libelle: 'Vue test' },
 ];

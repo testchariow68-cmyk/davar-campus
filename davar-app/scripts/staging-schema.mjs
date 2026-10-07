@@ -82,8 +82,15 @@ const MIGRATIONS = [
     ddl: 4, // 3 tables + 1 index : pages de livre, pistes audio, reprise de lecture
     creates: ['book_pages','audio_tracks','media_progress'],
   },
+  {
+    version: 9,
+    file: '009_cles_api_exports.sqlite.sql',
+    sha256: 'e3ea69cb6363bf3eaa6d37cfd964813eabcdc00fd21679aa3765b23f13570313',
+    ddl: 4, // 2 tables + 2 index : clés d'accès révocables, journal des exports
+    creates: ['api_keys','exports_log'],
+  },
 ];
-const EXPECTED_TABLE_COUNT = 40; // 37 après 007 + 3 apportées par 008 (livres, audios, reprise de lecture)
+const EXPECTED_TABLE_COUNT = 42; // 37 après 007 + 3 (008 livres/audios/reprise) + 2 (009 clés/journal)
 const FORBIDDEN = /\b(drop|truncate|delete\s+from)\b/i;
 
 const mode = process.argv[2];
