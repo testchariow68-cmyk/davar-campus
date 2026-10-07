@@ -129,11 +129,11 @@ export function AssistantConfig({
 
           <div className="divider" />
 
-          <div className="eyebrow mb8">Transcription fidèle des avis audio</div>
+          <div className="eyebrow mb8">Transcription fidèle des avis audio (open source · gratuit · sans serveur à héberger)</div>
           <div className="col" style={{ gap: 8 }}>
             {[
-              ['browser-whisper', 'Whisper dans le navigateur (transformers.js)', '100 % open source, s’exécute sur l’appareil de l’étudiant : zéro quota, zéro serveur, zéro coût. Un peu plus lent.'],
-              ['groq-whisper', 'Whisper large-v3 via Groq', 'Modèle open source, API hébergée gratuite : ≈ 2 000 transcriptions/jour, 99 langues. Aucun VPS.'],
+              ['groq-whisper', 'Whisper large-v3 via Groq (recommandé)', 'Modèle open source, API hébergée gratuite : ≈ 2 000 transcriptions/jour, 99 langues, très pointu. Aucun VPS. Aucun téléchargement pour l’étudiant.'],
+              ['browser-whisper', 'Whisper dans le navigateur (transformers.js)', '100 % open source, s’exécute sur l’appareil de l’étudiant : zéro quota, zéro serveur, zéro coût. Un peu plus lent. Le modèle se télécharge une seule fois (≈ 41 Mo). Sert AUSSI de repli si la ligne ne répond pas.'],
             ].map(([valeur, libelle, detail]) => (
               <label key={valeur} className="row small" style={{ gap: 9, cursor: 'pointer' }}>
                 <input
@@ -152,6 +152,12 @@ export function AssistantConfig({
               </label>
             ))}
           </div>
+          {!moteurs.some((moteur) => moteur.provider === 'groq' && moteur.cle) && (
+            <p className="xs muted mt8">
+              Sans clé Groq posée, la transcription en ligne ne partira pas : l’étudiant dictera sur son appareil, et
+              l’enregistrement ne quittera jamais son téléphone. Aucun étudiant n’est jamais bloqué.
+            </p>
+          )}
         </div>
 
         <div className="col" style={{ gap: 16 }}>

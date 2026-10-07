@@ -49,6 +49,11 @@ test('budgets par défaut alignés sur les offres gratuites retenues', () => {
   assert.equal(DEFAULT_BUDGETS['turso.rows_read'].limit, 500_000_000);
   assert.equal(DEFAULT_BUDGETS['email.sent'].limit, 300);
   assert.equal(DEFAULT_BUDGETS['kdf.operations'].limit, 3_000);
+  // Transcription vocale (Whisper large-v3, palier gratuit Groq) : 2 000 requêtes
+  // et 28 800 secondes d'audio par jour. Ce sont les chiffres publiés par le
+  // moteur, pas une estimation.
+  assert.equal(DEFAULT_BUDGETS['transcription.requests'].limit, 2_000);
+  assert.equal(DEFAULT_BUDGETS['transcription.seconds'].limit, 28_800);
   assert.equal(DEFAULT_BUDGETS['worker.requests'].period, 'day');
   assert.equal(DEFAULT_BUDGETS['turso.rows_written'].period, 'month');
 });

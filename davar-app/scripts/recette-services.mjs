@@ -19,6 +19,11 @@
  *   5. CHARIOW  — l'état du drapeau et la présence des quatre valeurs. Aucun
  *                 appel au marchand : la recette Pulse se fait à la main, plus tard.
  *
+ *   6. ASSISTANTS — la clé Groq sert DEUX choses : les réponses de l'assistant et
+ *                 la transcription des avis dictés. On la vérifie par la liste des
+ *                 modèles du fournisseur : c'est gratuit, et cela ne consomme
+ *                 aucune question ni aucune transcription.
+ *
  * SORTIE : uniquement des verdicts (« posée », « absente », « relié », « refusé »),
  * jamais une valeur. Un service non configuré n'est PAS un échec : c'est un état.
  * Un service configuré qui ne répond pas, lui, fait sortir le script en erreur.
@@ -346,6 +351,61 @@ function verifierChariow() {
   console.log('   Aucun appel au marchand n’a été fait par cette recette.');
 }
 
+/* ----------------------------------------- 6. assistants et dictée vocale */
+
+/**
+ * La clé Groq n'est pas un secret « à trouver » : elle se crée dans une console
+ * (voir GUIDE-MES-VALEURS.md). Elle sert l'assistant ET la transcription des avis.
+ * On la vérifie par un appel qui ne consomme rien : la liste des modèles.
+ */
+async function verifierAssistants() {
+  console.log('\n6. ASSISTANTS ET DICTÉE VOCALE');
+  console.log(`   ${etat('GROQ_API_KEY')} · ${etat('GEMINI_API_KEY')}`);
+  const groq = (process.env.GROQ_API_KEY ?? '').trim();
+  const gemini = (process.env.GEMINI_API_KEY ?? '').trim();
+  if (groq.length === 0 && gemini.length === 0) {
+    console.log('   → en attente : l’assistant le dit honnêtement (il renvoie au coach humain),');
+    console.log('     et l’étudiant qui dicte un avis bascule sur la transcription de son appareil.');
+    return;
+  }
+  if (groq.length > 0) {
+    try {
+      const reponse = await fetch('https://api.groq.com/openai/v1/models', {
+        headers: { authorization: `Bearer ${groq}` },
+        signal: AbortSignal.timeout(15000),
+      });
+      controler(
+        'la clé Groq est acceptée',
+        reponse.ok,
+        reponse.status === 401 ? 'clé refusée — vérifiez qu’elle commence par gsk_ et qu’elle est active' : `HTTP ${reponse.status}`
+      );
+      if (reponse.ok) {
+        const corps = await reponse.json().catch(() => null);
+        const modeles = Array.isArray(corps?.data) ? corps.data.map((modele) => String(modele?.id ?? '')) : [];
+        console.log('   → elle sert l’assistant ET la transcription des avis dictés (Whisper large-v3).');
+        controler(
+          'le moteur de transcription est disponible',
+          modeles.some((modele) => modele.startsWith('whisper-large-v3')),
+          'whisper-large-v3 — la liste des modèles ne le montre pas'
+        );
+      }
+    } catch {
+      controler('la clé Groq est acceptée', false, 'injoignable');
+    }
+  }
+  if (gemini.length > 0) {
+    try {
+      const reponse = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${encodeURIComponent(gemini)}`, {
+        signal: AbortSignal.timeout(15000),
+      });
+      controler('la clé Gemini est acceptée', reponse.ok, reponse.status === 400 ? 'clé refusée' : `HTTP ${reponse.status}`);
+    } catch {
+      controler('la clé Gemini est acceptée', false, 'injoignable');
+    }
+  }
+  console.log('   (aucune question, aucune transcription n’a été consommée par cette recette)');
+}
+
 /* ------------------------------------------------------------------ suite */
 
 console.log('RECETTE DES SERVICES — verdicts seulement, jamais une valeur.');
@@ -354,6 +414,7 @@ await verifierBase();
 await verifierStockage();
 await verifierEmails();
 verifierChariow();
+await verifierAssistants();
 
 console.log(
   echecs === 0

@@ -178,6 +178,7 @@ copier sa sortie sans rien exposer.
 | **Stockage R2** | un vrai aller-retour : dépôt par adresse signée, relecture par adresse signée, contenu identique (`recette/preuve-….txt`, une centaine d'octets, supprimable depuis le tableau de bord) |
 | **E-mails** | le relais répond en ligne, puis le jeton est éprouvé par un envoi vers une adresse **invalide** — le script Google vérifie le jeton AVANT le destinataire, donc aucun e-mail ne part ; l'adresse d'essai ne sert qu'avec `--email` |
 | **Chariow** | présence des quatre valeurs et état du drapeau — **aucun appel au marchand** n'est fait ici |
+| **Assistants** | présence des clés, et vérification de la clé Groq par la liste de ses modèles : cela valide aussi la **dictée vocale des avis**, et ne consomme **aucune question ni aucune transcription** |
 
 Deux règles de lecture : un service que vous n'avez pas encore branché **n'est pas un échec** (il
 est annoncé « en attente », et l'application le dit aussi à ses utilisateurs) ; un service branché

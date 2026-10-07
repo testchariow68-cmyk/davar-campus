@@ -75,7 +75,10 @@ export const CONFIG_DEFAUT = {
   primaryProvider: 'groq' as Fournisseur,
   chaine: ['groq', 'gemini', 'openrouter', 'hf'] as Fournisseur[],
   studentDailyCap: 30,
-  transcription: 'browser-whisper',
+  // Choix du propriétaire (7 octobre 2026) : les DEUX moteurs sont gardés, et
+  // c'est « Whisper large-v3 via Groq » qui vient en premier, comme dans le
+  // prototype — le navigateur reste le repli quand la ligne ne peut pas répondre.
+  transcription: 'groq-whisper',
 };
 
 export type ConfigAssistant = {

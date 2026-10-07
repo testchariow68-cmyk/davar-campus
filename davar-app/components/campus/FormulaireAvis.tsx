@@ -2,24 +2,32 @@
 
 import { useState } from 'react';
 import { Icon } from './Icon';
+import { DicteeVocale } from './DicteeVocale';
 
 /**
- * Donner son avis : écrit, ou DICTÉ puis transcrit dans le navigateur.
+ * Donner son avis : écrit, ou DICTÉ puis transcrit.
  *
- * Le choix par défaut du propriétaire est Whisper dans le navigateur : l'étudiant
- * n'envoie aucun fichier audio, seule la transcription est conservée. C'est du
- * côté client pur — zéro quota, zéro serveur, zéro coût.
+ * Les DEUX moteurs gardés par le propriétaire sont branchés (voir `DicteeVocale`) :
+ *   - « en ligne » (défaut) : la voix part, le texte revient en quelques secondes ;
+ *   - « sur l'appareil » : la transcription se fait dans le navigateur, et sert
+ *     aussi de repli quand la transcription en ligne ne peut pas répondre.
+ *
+ * Dans les deux cas, l'enregistrement n'est pas conservé : seul le texte l'est —
+ * c'est la règle écrite du propriétaire.
  */
 export function FormulaireAvis({
   formationId,
   formationTitre,
   step,
   dejaDepose = false,
+  moteurTranscription = 'groq-whisper',
 }: {
   formationId: string;
   formationTitre: string;
   step: number;
   dejaDepose?: boolean;
+  /** Le moteur choisi par le propriétaire dans la Direction. */
+  moteurTranscription?: string;
 }) {
   const [ouvert, setOuvert] = useState(false);
   const [corps, setCorps] = useState('');
@@ -27,6 +35,8 @@ export function FormulaireAvis({
   const [message, setMessage] = useState<string | null>(null);
   const [enCours, setEnCours] = useState(false);
   const [depose, setDepose] = useState(dejaDepose);
+  // D'où vient le texte dicté : cela se dit honnêtement dans la fiche de l'avis.
+  const [origine, setOrigine] = useState<'en-ligne' | 'appareil' | null>(null);
 
   const mots = corps.trim() === '' ? 0 : corps.trim().split(/\s+/).length;
 
@@ -42,7 +52,8 @@ export function FormulaireAvis({
           step,
           kind,
           body: corps,
-          transcribedBy: kind === 'audio' ? 'navigateur' : null,
+          transcribedBy:
+            kind === 'audio' ? (origine === 'appareil' ? 'navigateur' : origine === 'en-ligne' ? 'en-ligne' : 'saisie-manuelle') : null,
         }),
       });
       const donnees = (await reponse.json().catch(() => ({}))) as { ok?: boolean; message?: string };
@@ -94,7 +105,7 @@ export function FormulaireAvis({
         placeholder={
           kind === 'ecrit'
             ? 'Ce que cette formation a changé pour vous, ce qui vous a servi, ce qui pourrait être plus clair…'
-            : 'Écrivez ce que vous dictez, ou utilisez la dictée de votre téléphone puis collez le texte ici.'
+            : 'Appuyez sur « Dicter mon avis » et parlez : le texte s’écrira ici, et vous pourrez le corriger.'
         }
       />
       <div className="row between mt8" style={{ gap: 8 }}>
@@ -106,10 +117,22 @@ export function FormulaireAvis({
         </button>
       </div>
       {kind === 'audio' && (
-        <p className="xs faint mt8">
-          <Icon nom="mic" taille={12} /> Un avis dicté est transcrit sur votre appareil : seule la transcription est
-          conservée.
-        </p>
+        <>
+          <DicteeVocale
+            formationId={formationId}
+            moteur={moteurTranscription}
+            onTexte={(texte, dOu) => {
+              setOrigine(dOu);
+              setCorps((actuel) => (actuel.trim().length > 0 ? `${actuel.trim()} ${texte}` : texte));
+            }}
+          />
+          <p className="xs faint mt8">
+            <Icon nom="lock" taille={12} />{' '}
+            {moteurTranscription === 'browser-whisper'
+              ? 'La transcription se fait sur votre appareil : l’enregistrement ne quitte jamais votre téléphone, et seule la transcription est conservée.'
+              : 'Votre voix est transcrite, puis l’enregistrement est effacé aussitôt : seule la transcription est conservée.'}
+          </p>
+        </>
       )}
       {message && <p className="xs muted mt8">{message}</p>}
     </div>

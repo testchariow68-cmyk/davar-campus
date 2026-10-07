@@ -281,8 +281,14 @@ Ce que vous verrez, et comment le lire :
 - **`en attente`** — vous ne l'avez pas encore branché : ce **n'est pas** un
   échec, et l'application le dit elle-même à ses utilisateurs.
 - **`ÉCHEC`** — ce service **est censé marcher** et ne répond pas. La ligne vous
-  dit lequel des quatre points regarder (format d'identifiant, nom de seau,
-  adresse du relais, jeton).
+  dit lequel des points regarder (format d'identifiant, nom de seau, adresse du
+  relais, jeton, validité de la clé Groq).
+
+La recette couvre six points : vos trois clés internes, la base, le stockage, les
+e-mails, Chariow, et **la clé Groq — qui sert à la fois l'assistant et la dictée
+vocale des avis**. Cette dernière vérification interroge la liste des modèles du
+fournisseur : elle valide la clé **sans consommer une seule question ni une seule
+transcription**.
 
 Pour recevoir en plus **un vrai e-mail d'essai** (facultatif, à la fin) :
 

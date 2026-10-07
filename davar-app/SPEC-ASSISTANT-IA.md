@@ -105,6 +105,34 @@ Deux moteurs open source, gratuits, sans serveur à héberger (`views-admin.js`,
 
 Cette seconde option est du **côté client pur** : c'est votre principe appliqué à la lettre.
 
+> **Décision du propriétaire (7 octobre 2026) — « Plan A : Whisper large-v3 via
+> Groq. Plan B : Whisper dans le navigateur. C'est ce qu'on garde. »** Les DEUX
+> moteurs sont donc branchés, et l'écran Direction les présente dans l'ordre du
+> prototype : **Groq en premier (« recommandé »)**, le navigateur ensuite.
+>
+> Comment cela fonctionne, exactement :
+> - **Plan A (défaut)** — l'enregistrement part au campus, qui le fait transcrire
+>   par Groq et renvoie le texte. **Rien à télécharger** pour l'étudiant ; 2 000
+>   transcriptions et 28 800 secondes d'audio par jour (palier gratuit, la même
+>   clé `GROQ_API_KEY` que l'assistant, mais des plafonds distincts).
+> - **Plan B** — le modèle se **télécharge une seule fois** dans le navigateur
+>   (≈ 41 Mo, whisper-tiny quantifié), puis la transcription se fait sur l'appareil :
+>   l'enregistrement ne quitte jamais le téléphone, et cela marche ensuite sans réseau.
+> - **Plan B sert aussi de repli automatique** : si la clé Groq est absente, si le
+>   plafond du jour est atteint ou si le moteur ne répond pas, l'étudiant se voit
+>   proposer la transcription sur son appareil — **il n'est jamais bloqué** pour
+>   rendre un avis obligatoire.
+> - Dans les deux cas l'enregistrement **n'est jamais conservé** : seul le texte
+>   l'est, et la fiche de l'avis dit d'où il vient (« en-ligne », « navigateur »,
+>   « saisie-manuelle »).
+>
+> Code : `lib/server/transcription.ts` (Plan A, contrat Groq et plafonds),
+> `app/api/campus/transcrire/route.ts` (la route qui transmet puis oublie l'audio),
+> `components/campus/DicteeVocale.tsx` (l'enregistrement et Plan B).
+> Le plafond est de **8 Mo** par enregistrement (≈ 15 minutes de parole, sous les
+> 25 Mo du moteur) : une seule requête ne peut pas épuiser la mémoire d'un Worker
+> gratuit.
+
 ---
 
 ## 3. Ce que l'étudiant voit, exactement
@@ -180,7 +208,7 @@ sera respectée.
 | **Clé d'un moteur réellement posée** | — | ⚠️ **à faire par le propriétaire** : sans clé, l'assistant le dit honnêtement et renvoie au coach |
 | **Index vectoriel** (recherche du passage pertinent) | ✅ décrit | ⚠️ à venir : aujourd'hui les contenus sont transmis par extraits ; suffisant tant que les formations restent modestes |
 | Photo de l'assistant | ✅ | ⚠️ à venir (le nom, la langue et la couleur sont déjà là) |
-| Transcription des avis audio | ✅ | ⚠️ à venir (le choix du moteur est déjà enregistré) |
+| Transcription des avis audio | ✅ | ✅ **construite — les deux moteurs** : Groq (défaut) et le navigateur, avec repli automatique sur l'appareil |
 
 Dans le prototype lui-même, la réponse « intelligente » est un texte figé tiré au hasard
 (`aiAnswer()`, `views-student.js` l. 1639) : aucun appel à un vrai moteur n'y existe. Le
@@ -189,6 +217,9 @@ prototype décrit la configuration ; l'application, elle, la fait fonctionner.
 ---
 
 ## 7. Le préalable, et l'ordre de construction
+
+**Reste à faire côté propriétaire** : poser `GROQ_API_KEY` pour que la transcription
+en ligne fonctionne — la même clé sert l'assistant et la transcription des avis.
 
 **Préalable absolu** : l'assistant ne peut lire que ce qui existe. La plateforme contient
 aujourd'hui **une formation fermée et zéro leçon**. Il n'y a rien à lire. L'import de votre
@@ -205,7 +236,7 @@ Ordre proposé, du plus utile au plus fin :
    L'**index vectoriel** viendra quand le volume de contenus le justifiera.
 5. ✅ **L'écran de configuration complet** dans la Direction — **fait**.
 6. ✅ **La supervision coach** — voir, valider, corriger, répondre — **faite**.
-7. ⏳ **La transcription des avis audio** — Whisper dans le navigateur d'abord (zéro coût).
+7. ✅ **La transcription des avis audio** — **faite, les deux moteurs** : « Whisper large-v3 via Groq » par défaut (comme le prototype, rien à télécharger), « Whisper dans le navigateur » en second et en repli automatique. L'enregistrement n'est jamais conservé.
 8. ⏳ **Vos contenus réels** — vos modules et leçons, que vous importerez vous-même.
    L'assistant s'en nourrira à la seconde où ils seront là.
 

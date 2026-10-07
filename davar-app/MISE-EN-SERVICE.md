@@ -292,6 +292,24 @@ en gardant la fidélité au prototype (95 vues) comme règle de conduite.
   l'ouverture des 22 écrans. Elle refuse de tourner sur une base hébergée
   (`file:…dev-data/` exigé).
 
+### La dictée vocale des avis — les deux moteurs (7 octobre 2026)
+
+Les avis se donnent **écrits ou dictés**, et la dictée a deux moteurs, choisis dans
+Direction → Assistant virtuel :
+
+- **Whisper large-v3 via Groq** (défaut, « recommandé » comme dans le prototype) :
+  la voix est transcrite en ligne, l'étudiant n'a rien à télécharger ; 2 000
+  transcriptions et 28 800 secondes d'audio par jour au palier gratuit (même clé
+  `GROQ_API_KEY` que l'assistant, plafonds distincts).
+- **Whisper dans le navigateur** : le modèle (≈ 41 Mo) se télécharge une seule fois
+  puis la transcription se fait sur l'appareil — l'enregistrement ne quitte jamais
+  le téléphone.
+
+**Le second sert aussi de repli** : clé absente, plafond du jour atteint, moteur
+muet — l'étudiant se voit proposer la transcription sur son appareil. Un avis
+obligatoire n'est jamais bloqué. Dans les deux cas, **l'enregistrement n'est jamais
+conservé** ; seul le texte l'est, et la fiche indique son origine.
+
 ### Toujours pas branché (et dit tel quel dans l'application)
 
 - **Envoi des e-mails** (Google Apps Script) — l'inscription est refusée plutôt

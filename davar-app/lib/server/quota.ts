@@ -35,6 +35,12 @@ export const DEFAULT_BUDGETS: Record<string, QuotaBudget> = {
   // Hachages délégués au service gratuit : plafond volontairement bas, c'est
   // l'opération la plus coûteuse en CPU de tout le système.
   'kdf.operations': { name: 'kdf.operations', period: 'day', limit: 3_000, hard: true },
+  // Transcription vocale des avis (Whisper large-v3, palier gratuit Groq) :
+  // 2 000 requêtes/jour et 28 800 secondes d'audio/jour. Comptés séparément des
+  // questions posées à l'assistant, car Groq applique des plafonds distincts.
+  // Atteints, ils ne bloquent personne : l'étudiant dicte sur son appareil.
+  'transcription.requests': { name: 'transcription.requests', period: 'day', limit: 2_000, hard: true },
+  'transcription.seconds': { name: 'transcription.seconds', period: 'day', limit: 28_800, hard: true },
 };
 
 const ENV_NAMES: Record<string, string> = {
@@ -43,6 +49,8 @@ const ENV_NAMES: Record<string, string> = {
   'turso.rows_read': 'QUOTA_MONTHLY_ROWS_READ',
   'email.sent': 'QUOTA_DAILY_EMAILS',
   'kdf.operations': 'QUOTA_DAILY_KDF',
+  'transcription.requests': 'QUOTA_DAILY_TRANSCRIPTIONS',
+  'transcription.seconds': 'QUOTA_DAILY_TRANSCRIPTION_SECONDS',
 };
 
 export function budgetFor(name: keyof typeof DEFAULT_BUDGETS): QuotaBudget {
@@ -131,7 +139,7 @@ export async function flushCounters(db: Db, now = Date.now()): Promise<void> {
 /** Enregistre un événement coûteux (jamais de contenu personnel). Ne lève jamais. */
 export async function recordOpEvent(
   db: Db,
-  kind: 'kdf_hash' | 'kdf_verify' | 'email_sent' | 'email_refused',
+  kind: 'kdf_hash' | 'kdf_verify' | 'email_sent' | 'email_refused' | 'transcription_sent' | 'transcription_refused',
   now = Date.now()
 ): Promise<void> {
   try {

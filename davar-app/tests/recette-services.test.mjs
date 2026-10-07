@@ -40,6 +40,10 @@ const FAUX = {
   AUTH_PARAMS_SECRET: '',
   AUTH_VERIFIER_PEPPER: '',
   APP_DIAGNOSTIC_TOKEN: '',
+  // Les clés des assistants : vidées aussi, pour que la recette reste HORS RÉSEAU
+  // pendant les tests (sinon un faux jeton ferait un vrai appel chez le fournisseur).
+  GROQ_API_KEY: '',
+  GEMINI_API_KEY: '',
 };
 
 /** Les mêmes noms, tous vidés : l'état « rien n'est encore branché ». */

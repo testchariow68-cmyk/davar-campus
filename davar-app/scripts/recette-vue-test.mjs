@@ -105,6 +105,24 @@ try {
   controler('Espace Direction ouvert', directionAvant.status === 200);
   controler('la navigation complète est là', htmlAvant.includes('Réglages') && htmlAvant.includes('Vue test'));
 
+  // Les deux écrans de la dictée vocale des avis : celui où le propriétaire
+  // choisit le moteur, et celui où l'étudiant dicte.
+  for (const [chemin, marqueur] of [
+    ['/direction/assistant', 'Transcription fidèle des avis audio'],
+    ['/campus/avis', 'Mes avis'],
+  ]) {
+    const page = await appel(pot, chemin);
+    const html = await page.text();
+    controler(`${chemin} s’ouvre`, page.status === 200 && html.includes(marqueur), `HTTP ${page.status}`);
+  }
+  const assistantHtml = await (await appel(pot, '/direction/assistant')).text();
+  controler(
+    'les deux moteurs de dictée sont proposés, Groq en premier',
+    assistantHtml.includes('Whisper large-v3 via Groq (recommandé)') &&
+      assistantHtml.indexOf('Whisper large-v3 via Groq') < assistantHtml.indexOf('Whisper dans le navigateur'),
+    'l’ordre du prototype : Groq, puis le navigateur'
+  );
+
   const creation = await appel(pot, '/api/direction/comptes-test', {
     method: 'POST',
     headers: { 'content-type': 'application/json' },

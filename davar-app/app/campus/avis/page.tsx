@@ -4,6 +4,8 @@ import { FormulaireAvis } from '@/components/campus/FormulaireAvis';
 import { currentSession } from '@/lib/server/auth';
 import { avisAttendus, DELAI_PREMIER_AVIS_MS, DELAI_SECOND_AVIS_MS, MOTS_MAXIMUM } from '@/lib/server/avis';
 import { listUserTrainings } from '@/lib/server/campus';
+import { lireConfig } from '@/lib/server/assistant';
+import { moteurTranscription } from '@/lib/server/transcription';
 
 export const dynamic = 'force-dynamic';
 export const metadata = { title: 'Mes avis — Davar Académie Campus' };
@@ -17,7 +19,11 @@ export default async function AvisPage() {
   const session = await currentSession();
   if (!session) redirect('/connexion');
 
-  const formations = await listUserTrainings(session.db, session.user.id);
+  const [formations, config] = await Promise.all([
+    listUserTrainings(session.db, session.user.id),
+    lireConfig(session.db),
+  ]);
+  const moteur = moteurTranscription(config.transcription);
   const parFormation = await Promise.all(
     formations.map(async (formation) => ({
       id: formation.id,
@@ -65,6 +71,7 @@ export default async function AvisPage() {
               formationTitre={ligne.formation.titre}
               step={ligne.step}
               dejaDepose={false}
+              moteurTranscription={moteur}
             />
           ))}
         </div>
