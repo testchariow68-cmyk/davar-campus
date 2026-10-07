@@ -36,18 +36,40 @@ Git.
 noms se saisissent dans **Cloudflare → votre Worker → Settings → Variables and
 Secrets**, en **Secret**. Le code, lui, est déjà publié.
 
-### Obtenir le fichier sur votre machine, sans rien installer de plus
+### Obtenir le fichier sur votre machine — précisément quoi télécharger
 
-1. Sur GitHub : **Code → Download ZIP** (ou `git clone` si vous avez git), puis
-   décompressez le dossier `davar-app`.
-2. Dans un terminal, placez-vous dans ce dossier et lancez :
-   `npm install`, puis `npm run env:local`
-   → le fichier `davar-app\.env.local` est **créé pour vous**, avec les trois clés
-   déjà fabriquées et la liste de ce qui manque.
-3. Complétez-le avec les valeurs des sections 1 à 5 de ce guide (ou partez du
+⚠️ **D'abord la branche.** Le travail vit sur `arena/09f3da07-davar-campus`, **pas**
+sur `main`. Sur GitHub, choisissez-la **avant** de télécharger : menu déroulant
+qui affiche « main » (en haut à gauche de la liste des fichiers) → sélectionnez
+`arena/09f3da07-davar-campus` → **puis** `Code → Download ZIP`.
+
+Lien direct, qui télécharge la bonne branche sans rien chercher :
+<https://github.com/testchariow68-cmyk/davar-campus/archive/refs/heads/arena/09f3da07-davar-campus.zip>
+
+**Vous téléchargez = l'archive ZIP** du dépôt (≈ 26 Mo, dont 17,7 Mo sont votre
+propre archive d'origine : vous pouvez l'ignorer). Vous la décompressez, et vous
+obtenez un dossier `davar-campus-arena-09f3da07-davar-campus` contenant trois
+choses : `davar-app/` (l'application), `reference/` (le prototype conservé) et
+votre archive.
+
+**Tout se passe dans `davar-app/`** — c'est là qu'il y a `package.json`, donc
+là que se lancent toutes les commandes. **Jamais à la racine décompressée.**
+
+1. Installez **Node.js** si vous ne l'avez pas : <https://nodejs.org> → version
+   « LTS » (20.9 ou plus récente).
+2. Ouvrez un terminal **dans le dossier `davar-app`** : sur Windows, clic droit sur
+   le dossier → « Ouvrir dans le Terminal ».
+3. `npm install` — quelques minutes, une seule fois.
+4. `npm run env:local` — il fabrique les trois clés et écrit `davar-app\.env.local`,
+   avec la liste de ce qui reste à remplir.
+5. Complétez-le avec les valeurs des sections 1 à 5 de ce guide (ou partez du
    fichier `A-COLLER-DANS-env-local.txt` que je vous ai préparé — même contenu,
-   à recopier sous le nom `.env.local`).
-4. Vérifiez : `npm run recette:services`.
+   à enregistrer sous le nom `.env.local`).
+6. Vérifiez : `npm run recette:services`.
+
+> **Avec git, c'est plus simple** (si vous l'avez) :
+> `git clone https://github.com/testchariow68-cmyk/davar-campus.git`
+> puis `cd davar-campus` · `git checkout arena/09f3da07-davar-campus` · `cd davar-app`.
 
 ---
 
