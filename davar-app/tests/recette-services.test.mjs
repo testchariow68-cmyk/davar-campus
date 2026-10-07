@@ -100,6 +100,22 @@ test('un service en attente n’est pas un échec : la recette sort en succès',
   assert.equal(code, 0);
 });
 
+test('un mode d’envoi déclaré mais rien de posé reste un ÉTAT, pas un échec', () => {
+  const { code, sortie } = lancer({
+    R2_ACCOUNT_ID: '',
+    R2_ACCESS_KEY_ID: '',
+    R2_SECRET_ACCESS_KEY: '',
+    R2_BUCKET: '',
+    MAIL_APPS_SCRIPT_URL: '',
+    MAIL_APPS_SCRIPT_TOKEN: '',
+    MAILER_KIND: 'apps_script',
+    TURSO_DATABASE_URL: '',
+  });
+  assert.match(sortie, /en attente : aucune inscription réelle ne partira/);
+  assert.equal(sortie.includes('ÉCHEC'), false, `aucun contrôle ne devrait échouer :\n${sortie}`);
+  assert.equal(code, 0);
+});
+
 test('le jeton du relais d’e-mail n’est jamais envoyé sans le mode d’envoi', () => {
   // Garde-fou : sans MAILER_KIND, aucune requête ne part vers l’adresse posée.
   // L’adresse utilisée ici est un domaine qui n’existe pas ; si le script y

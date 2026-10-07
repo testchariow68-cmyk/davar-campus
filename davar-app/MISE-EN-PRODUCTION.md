@@ -152,6 +152,13 @@ Google Apps Script, laissez-les vides.
 
 ### Vérifier vos branchements vous-même — `npm run recette:services`
 
+> **Guide détaillé, clic par clic, pour aller chercher les valeurs** :
+> [GUIDE-MES-VALEURS.md](GUIDE-MES-VALEURS.md) — où cliquer, quoi copier, quel nom
+> lui donner, pour Turso, Apps Script, R2, Chariow et les assistants.
+> Pour la partie que personne ne peut vous fournir, `npm run env:local` fabrique les
+> trois clés internes (comptes et diagnostic) et écrit un `.env.local` prêt à remplir,
+> sans jamais écraser une valeur déjà présente.
+
 Avant de saisir quoi que ce soit dans Cloudflare, mettez vos valeurs dans
 `davar-app/.env.local` (fichier **jamais** envoyé sur GitHub, ignoré par git), puis :
 

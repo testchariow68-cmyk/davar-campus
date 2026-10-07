@@ -18,7 +18,8 @@
     "test:sql": "python3 -m unittest -q tests/test_turso_core.py tests/test_auth_schema.py tests/test_migrations_manifest.py",
     "rehearsal:staging": "node --experimental-strip-types scripts/rehearsal-staging.mjs",
     "recette:vue-test": "node --experimental-strip-types scripts/recette-vue-test.mjs",
-    "recette:services": "node --experimental-strip-types scripts/recette-services.mjs"
+    "recette:services": "node --experimental-strip-types scripts/recette-services.mjs",
+    "env:local": "node --experimental-strip-types scripts/env-local.mjs"
   },
   "dependencies": {
     "@libsql/client": "^0.15.15",

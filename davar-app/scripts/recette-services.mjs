@@ -179,7 +179,17 @@ async function verifierEmails() {
     return;
   }
 
-  // Les formats d'abord : une valeur mal collée est l'échec le plus probable, et
+  // Rien de posé pour ce service : c'est un ÉTAT, pas un échec — l'application
+  // le dit aussi à ses utilisateurs (« aucune inscription réelle ne partira »).
+  const rienDePose = mode === 'apps_script'
+    ? !posee('MAIL_APPS_SCRIPT_URL') && !posee('MAIL_APPS_SCRIPT_TOKEN')
+    : !posee('BREVO_API_KEY') && !posee('MAIL_FROM_EMAIL');
+  if (rienDePose) {
+    console.log('   → en attente : aucune inscription réelle ne partira (l’application refuse plutôt que de mentir).');
+    return;
+  }
+
+  // Les formats ensuite : une valeur mal collée est l'échec le plus probable, et
   // il est silencieux côté application. Ici, on le nomme.
   let structureValide = true;
   if (mode === 'apps_script') {
