@@ -36,6 +36,39 @@ présente : il ne fait que compléter ce qui manque.)
 
 ---
 
+## 0 bis. Les cinq noms qui ne se trouvent dans AUCUN tableau de bord
+
+Si vous cherchez ces cinq-là sans les trouver, c'est normal : **quatre ne se
+copient nulle part, il faut les fabriquer.** Voici d'où vient chacun.
+
+| Nom | D'où il vient, exactement | Où il va |
+|---|---|---|
+| `AUTH_PARAMS_SECRET` | **Fabriqué** par `npm run env:local` (64 caractères). C'est le sel qui rend une adresse inconnue indiscernable d'une adresse connue. Minimum 32 caractères. | `.env.local`, puis Cloudflare en **Secret** |
+| `AUTH_VERIFIER_PEPPER` | **Fabriqué** par `npm run env:local`. Sans lui, une fuite de la base seule suffirait à retrouver les mots de passe : il les protège. Minimum 16 caractères. | `.env.local`, puis Cloudflare en **Secret** |
+| `APP_DIAGNOSTIC_TOKEN` | **Fabriqué** par `npm run env:local`. Il ouvre les deux adresses de diagnostic (`/api/internal/…`). Minimum 32 caractères. | `.env.local`, puis Cloudflare en **Secret** |
+| `MAILER_KIND` | **Ce n'est pas un secret, et on ne le cherche nulle part** : c'est le mot **`apps_script`**. `npm run env:local` l'écrit pour vous dans `.env.local` ; à la publication, **le déploiement l'écrit lui-même dans Cloudflare** — vous ne le saisissez jamais. | `.env.local` (automatique) |
+| `MAIL_APPS_SCRIPT_TOKEN` | **Le seul des cinq à aller chercher** : c'est votre propriété `DAVAR_MAIL_SECRET` dans Apps Script — voir §2 ci-dessous. **Minimum 32 caractères** : le script Google refuse en dessous (erreur 500). | `.env.local`, puis Cloudflare en **Secret** |
+
+> **Si votre script n'a pas encore de propriété `DAVAR_MAIL_SECRET`** : dans
+> l'éditeur Apps Script, **⚙️ Paramètres du projet** → tout en bas **« Propriétés
+> du script »** → **« Ajouter une propriété du script »** → *Propriété* :
+> `DAVAR_MAIL_SECRET`, *Valeur* : une longue chaîne au hasard de **32 caractères
+> minimum** (par exemple `openssl rand -hex 32`, ou 40 caractères tapés au hasard)
+> → **Enregistrer la propriété**. Aucun redéploiement n'est nécessaire : le
+> script lit cette propriété à chaque appel. Copiez la **même** valeur dans
+> `MAIL_APPS_SCRIPT_TOKEN`.
+>
+> ⚠️ Les deux valeurs doivent être **rigoureusement identiques**, au caractère
+> près, sans espace avant ni après. C'est la cause n° 1 d'un relais qui répond
+> « non autorisé ». La recette vous le dira nommément.
+
+**Et si ces trois clés fabriquées vous inquiètent** : elles ne sortent jamais de
+votre machine ni de votre Worker. On ne les met pas non plus dans un document, et
+il ne faut pas les changer après l'ouverture du campus — cela déconnecterait les
+comptes déjà créés.
+
+---
+
 ## 1. Turso — la base de données (2 valeurs)
 
 **Où** : <https://app.turso.tech> (ou le bouton du tableau de bord sur
@@ -80,7 +113,7 @@ de relais.
 | Valeur à copier | Où exactement | Nom à écrire |
 |---|---|---|
 | L'adresse qui finit par `/exec` | bouton bleu **« Déployer »** en haut à droite → **« Gérer les déploiements »** → le déploiement **actif** → **« URL de l'application Web »** (elle ressemble à `https://script.google.com/macros/s/AKfy…/exec`) | `MAIL_APPS_SCRIPT_URL` |
-| Le jeton `DAVAR_MAIL_SECRET` | **Paramètres du projet** (la roue dentée ⚙️ dans la colonne de gauche) → tout en bas, **« Propriétés du script »** → la ligne `DAVAR_MAIL_SECRET` → l'œil pour l'afficher, puis copier | `MAIL_APPS_SCRIPT_TOKEN` |
+| Le jeton `DAVAR_MAIL_SECRET` (**32 caractères minimum**) | **Paramètres du projet** (la roue dentée ⚙️ dans la colonne de gauche) → tout en bas, **« Propriétés du script »** → la ligne `DAVAR_MAIL_SECRET` → l'œil pour l'afficher, puis copier | `MAIL_APPS_SCRIPT_TOKEN` |
 
 **Vérifiez ces deux réglages pendant que vous y êtes** — sans eux, le relais
 refuse tout :
@@ -220,6 +253,12 @@ Après `npm run env:local`, trois sont **déjà écrites** (fabriquées). Il vou
 | 14 | `CHARIOW_API_KEY` | Chariow | |
 | 15 | `CHARIOW_STORE_ID` | Chariow | |
 | 16 | `GROQ_API_KEY` *(puis `GEMINI_API_KEY`)* | assistant | |
+| — | `MAILER_KIND` | écrit automatiquement = `apps_script` | ✅ (rien à faire) |
+
+**Longueurs minimales vérifiées par la recette** : `AUTH_PARAMS_SECRET` 32,
+`AUTH_VERIFIER_PEPPER` 16, `APP_DIAGNOSTIC_TOKEN` 32,
+`MAIL_APPS_SCRIPT_TOKEN` **32** (le script Google refuse en dessous, même si
+l'application se contenterait de 16).
 
 **Un nom déjà présent dans le fichier ne doit pas être dupliqué** : modifiez la
 ligne existante (`NOM=votre-valeur`), sans guillemets ni espace autour du `=`.

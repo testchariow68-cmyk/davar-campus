@@ -128,7 +128,7 @@ Puis, dans le tableau de bord Cloudflare → Worker `davar-campus-production-202
 | `AUTH_VERIFIER_PEPPER` | chaîne aléatoire de 16 caractères minimum | les comptes |
 | `APP_DIAGNOSTIC_TOKEN` | chaîne aléatoire de 32 caractères minimum | le diagnostic |
 | `MAIL_APPS_SCRIPT_URL` | l'URL `/exec` de votre script Google Apps Script (étape 3b) | l'inscription |
-| `MAIL_APPS_SCRIPT_TOKEN` | le secret `DAVAR_MAIL_SECRET` de ce script (16 caractères minimum) | l'inscription |
+| `MAIL_APPS_SCRIPT_TOKEN` | le secret `DAVAR_MAIL_SECRET` de ce script (**32 caractères minimum** : le script Google refuse en dessous) | l'inscription |
 | `R2_ACCOUNT_ID` | l'identifiant de compte Cloudflare : **32 caractères hexadécimaux** (ni le nom du compte, ni un jeton d'API) | livres, audios, photos |
 | `R2_ACCESS_KEY_ID` | une **clé d'API S3** R2 (R2 → Manage API Tokens), pas un jeton d'API Cloudflare | livres, audios, photos |
 | `R2_SECRET_ACCESS_KEY` | le secret de cette clé S3 (affiché **une seule fois** à sa création) | livres, audios, photos |

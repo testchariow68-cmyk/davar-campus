@@ -3,17 +3,20 @@
  * vrais services, et il n'affiche JAMAIS la valeur d'un secret.
  *
  * Ce qu'il vérifie, et comment :
- *   1. BASE     — la connexion répond, les migrations sont appliquées, la
+ *   1. CLÉS     — les trois valeurs que PERSONNE ne peut vous fournir, celles que
+ *                 `npm run env:local` fabrique : présence et longueur minimale.
+ *                 Absentes, elles sont annoncées « en attente » — jamais un échec.
+ *   2. BASE     — la connexion répond, les migrations sont appliquées, la
  *                 dernière version est lue. Refus si l'origine est inconnue.
- *   2. STOCKAGE — un vrai aller-retour dans le seau : dépôt signé, relecture
+ *   3. STOCKAGE — un vrai aller-retour dans le seau : dépôt signé, relecture
  *                 signée, puis vérification du contenu. La preuve est un petit
  *                 fichier `recette/preuve-….txt` laissé dans le seau (vous pouvez
  *                 le supprimer depuis le tableau de bord : 100 octets).
- *   3. E-MAILS  — deux contrôles SANS envoyer d'e-mail : le relais répond en
+ *   4. E-MAILS  — deux contrôles SANS envoyer d'e-mail : le relais répond en
  *                 ligne, et le jeton est accepté (un envoi avec une adresse
  *                 invalide est refusé APRÈS la vérification du jeton). L'envoi
  *                 réel n'a lieu que si vous le demandez : `--email vous@exemple.com`.
- *   4. CHARIOW  — l'état du drapeau et la présence des quatre valeurs. Aucun
+ *   5. CHARIOW  — l'état du drapeau et la présence des quatre valeurs. Aucun
  *                 appel au marchand : la recette Pulse se fait à la main, plus tard.
  *
  * SORTIE : uniquement des verdicts (« posée », « absente », « relié », « refusé »),
@@ -55,10 +58,43 @@ function controler(nom, condition, detail = '') {
   if (!condition) echecs += 1;
 }
 
-/* ----------------------------------------------------------------- 1. base */
+/* --------------------------------------------------------- 1. clés internes */
+
+/**
+ * Les trois valeurs que personne ne peut vous fournir — ni un tableau de bord,
+ * ni un fournisseur. `npm run env:local` les fabrique. Absentes, elles sont un
+ * ÉTAT (« en attente »), pas un échec : en développement, l'application a des
+ * replis. Posées trop courtes, en revanche, elles cassent la production en
+ * silence — donc là, c'est un échec.
+ */
+function verifierClesInternes() {
+  console.log('\n1. VOS CLÉS INTERNES (fabriquées par « npm run env:local »)');
+  const attendues = [
+    ['AUTH_PARAMS_SECRET', 32, 'sel factice des comptes — sans elle, aucun compte en production'],
+    ['AUTH_VERIFIER_PEPPER', 16, 'poivre du vérificateur — une fuite de la base seule ne suffit plus'],
+    ['APP_DIAGNOSTIC_TOKEN', 32, 'ouvre les deux adresses de diagnostic'],
+  ];
+  for (const [nom, minimum, role] of attendues) console.log(`   ${etat(nom)}`);
+  let enAttente = 0;
+  for (const [nom, minimum, role] of attendues) {
+    const valeur = (process.env[nom] ?? '').trim();
+    if (valeur.length === 0) {
+      enAttente += 1;
+      continue;
+    }
+    controler(`${nom} est assez long`, valeur.length >= minimum, `${valeur.length} caractère(s) — minimum ${minimum} (${role})`);
+  }
+  if (enAttente === attendues.length) {
+    console.log('   → en attente : lancez « npm run env:local » et les trois sont écrites pour vous.');
+    return;
+  }
+  if (enAttente > 0) console.log(`   → ${enAttente} clé(s) encore absente(s) : « npm run env:local » complète ce qui manque, sans toucher au reste.`);
+}
+
+/* ----------------------------------------------------------------- 2. base */
 
 async function verifierBase() {
-  console.log('\n1. BASE DE DONNÉES');
+  console.log('\n2. BASE DE DONNÉES');
   console.log(`   ${etat('TURSO_DATABASE_URL')} · ${etat('TURSO_AUTH_TOKEN')}`);
   const url = (process.env.TURSO_DATABASE_URL ?? '').trim();
   if (!url) {
@@ -112,10 +148,10 @@ async function verifierBase() {
   await db.close();
 }
 
-/* ------------------------------------------------------------- 2. stockage */
+/* ------------------------------------------------------------- 3. stockage */
 
 async function verifierStockage() {
-  console.log('\n2. STOCKAGE DES FICHIERS (R2)');
+  console.log('\n3. STOCKAGE DES FICHIERS (R2)');
   for (const nom of ['R2_ACCOUNT_ID', 'R2_ACCESS_KEY_ID', 'R2_SECRET_ACCESS_KEY', 'R2_BUCKET']) console.log(`   ${etat(nom)}`);
   const config = configStockage();
   if (!config) {
@@ -159,12 +195,16 @@ async function verifierStockage() {
   }
 }
 
-/* -------------------------------------------------------------- 3. e-mails */
+/* -------------------------------------------------------------- 4. e-mails */
 
 async function verifierEmails() {
-  console.log('\n3. ENVOI DES E-MAILS');
-  console.log(`   MAILER_KIND : ${mailerKind()}`);
+  console.log('\n4. ENVOI DES E-MAILS');
   const mode = mailerKind();
+  // MAILER_KIND n'est pas un secret à chercher : c'est le mot « apps_script »,
+  // écrit par « npm run env:local ». On le dit explicitement quand il manque.
+  console.log(`   MAILER_KIND : ${mode === 'none' ? 'aucune valeur posée — « npm run env:local » écrit « apps_script »' : mode}`);
+  if (mode === 'apps_script') console.log(`   ${etat('MAIL_APPS_SCRIPT_URL')} · ${etat('MAIL_APPS_SCRIPT_TOKEN')}`);
+  if (mode === 'brevo') console.log(`   ${etat('BREVO_API_KEY')} · ${etat('MAIL_FROM_EMAIL')}`);
 
   if (mode === 'none') {
     if (posee('MAIL_APPS_SCRIPT_URL') || posee('MAIL_APPS_SCRIPT_TOKEN') || posee('BREVO_API_KEY')) {
@@ -205,8 +245,14 @@ async function verifierEmails() {
       structureValide = false;
     }
     const jeton = (process.env.MAIL_APPS_SCRIPT_TOKEN ?? '').trim();
-    if (jeton.length < 16) {
-      controler('le jeton du relais fait au moins 16 caractères', false, 'c’est la propriété DAVAR_MAIL_SECRET du script');
+    // L'application accepte 16 caractères, mais le script Google en exige 32 et
+    // répond 500 en dessous : c'est donc 32 qui compte, et on le dit ici.
+    if (jeton.length < 32) {
+      controler(
+        'le jeton du relais fait au moins 32 caractères',
+        false,
+        'c’est la propriété DAVAR_MAIL_SECRET du script — le script refuse en dessous de 32 (réponse 500)'
+      );
       structureValide = false;
     }
   } else {
@@ -283,10 +329,10 @@ async function verifierEmails() {
   }
 }
 
-/* ------------------------------------------------------------- 4. Chariow */
+/* ------------------------------------------------------------- 5. Chariow */
 
 function verifierChariow() {
-  console.log('\n4. VENTE CHARIOW (PULSE)');
+  console.log('\n5. VENTE CHARIOW (PULSE)');
   for (const nom of ['CHARIOW_PULSE_SECRET', 'CHARIOW_PULSE_ID', 'CHARIOW_API_KEY', 'CHARIOW_STORE_ID'])
     console.log(`   ${etat(nom)}`);
   const actif = (process.env.CHARIOW_ENABLE_PULSE ?? 'false').trim() === 'true';
@@ -303,6 +349,7 @@ function verifierChariow() {
 /* ------------------------------------------------------------------ suite */
 
 console.log('RECETTE DES SERVICES — verdicts seulement, jamais une valeur.');
+verifierClesInternes();
 await verifierBase();
 await verifierStockage();
 await verifierEmails();
