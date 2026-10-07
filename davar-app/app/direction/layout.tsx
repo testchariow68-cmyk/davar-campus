@@ -3,8 +3,10 @@ import { redirect } from 'next/navigation';
 import { LogoutButton } from '@/components/LogoutButton';
 import { NavDirection, type LienDirection } from '@/components/direction/NavDirection';
 import { VueTestBar } from '@/components/campus/VueTestBar';
+import { VueTestMenu } from '@/components/campus/VueTestMenu';
 import { currentSession } from '@/lib/server/auth';
 import { lireRoles, libellesDesRoles, rolesEnLigne, sectionsPour } from '@/lib/server/equipe';
+import { listerComptesTest, peutTesterUneVue } from '@/lib/server/vue-test';
 
 export const dynamic = 'force-dynamic';
 
@@ -69,17 +71,24 @@ const TOUT = [...ORDRE];
 /**
  * L'Espace Direction est réservé au propriétaire et à son équipe.
  *
- * Le périmètre est calculé ICI, côté serveur : le propriétaire voit tout, chaque
- * membre du staff ne voit que ce que ses rôles ouvrent — règle du prototype,
- * « Chaque membre du staff voit uniquement ce dont il a besoin. » Chaque page
- * revérifie ensuite la section pour son propre compte.
+ * Le périmètre est calculé ICI, côté serveur, sur le compte AFFICHÉ : le
+ * propriétaire voit tout, chaque membre du staff ne voit que ce que ses rôles
+ * ouvrent — règle du prototype, « Chaque membre du staff voit uniquement ce dont
+ * il a besoin. »
+ *
+ * Pendant une vue test, le compte affiché est le compte de test : la navigation
+ * montre donc exactement les écrans de la personne dont on teste la vue. Les
+ * PAGES, elles, continuent de vérifier les droits de la personne réelle — le
+ * propriétaire « garde ses droits » pendant la visite, comme le prototype le
+ * promet, et il revient par « Quitter » ou la touche Échap.
  */
 export default async function DirectionLayout({ children }: { children: React.ReactNode }) {
   const session = await currentSession();
   if (!session) redirect('/connexion');
-  const estProprietaire = session.reel.role === 'admin';
-  const estMembre = session.reel.role === 'staff';
-  if (!estProprietaire && !estMembre) {
+  const affiche = session.user;
+  const estProprietaire = affiche.role === 'admin';
+  const estMembre = affiche.role === 'staff';
+  if (!estProprietaire && !estMembre && !session.vueTest) {
     return (
       <div className="container" style={{ paddingTop: 40, paddingBottom: 56, maxWidth: 720 }}>
         <div className="card card-pad">
@@ -97,8 +106,14 @@ export default async function DirectionLayout({ children }: { children: React.Re
     );
   }
 
-  const roles = estProprietaire ? [] : await lireRoles(session.db, session.reel.id);
+  const roles = estProprietaire ? [] : await lireRoles(session.db, affiche.id);
   const sections = estProprietaire ? TOUT : sectionsPour(roles);
+  // Le propriétaire peut ouvrir une vue de test d'ici comme du campus ; la liste
+  // des comptes de test ne lui est lue qu'à lui, et jamais pendant une visite.
+  const vuesTest =
+    !session.vueTest && peutTesterUneVue(session.reel)
+      ? (await listerComptesTest(session.db)).map((compte) => ({ id: compte.id, libelle: compte.libelle }))
+      : [];
   const liens: LienDirection[] = sections.map((section) => ({
     section,
     href: CHEMINS[section],
@@ -125,6 +140,7 @@ export default async function DirectionLayout({ children }: { children: React.Re
             )}
           </div>
           <nav className="row" style={{ gap: 8, flexWrap: 'wrap' }}>
+            {vuesTest.length > 0 && <VueTestMenu vues={vuesTest} />}
             <span className="small muted">{session.reel.displayName}</span>
             <Link href="/campus" className="btn btn-ghost">
               Mon campus

@@ -13,11 +13,14 @@ export default async function DirectionPage() {
   if (!session) redirect('/connexion');
   const { db } = session;
 
-  const estProprietaire = session.reel.role === 'admin';
+  // Le compte AFFICHÉ commande la vue ; les droits, eux, restent ceux de la
+  // personne réelle (une visite test ne retire jamais ses droits au propriétaire).
+  const affiche = session.user;
+  const estProprietaire = affiche.role === 'admin';
   const [vue, formations, roles] = await Promise.all([
     vueEnsemble(db),
     listerFormations(db),
-    estProprietaire ? Promise.resolve([]) : lireRoles(db, session.reel.id),
+    estProprietaire ? Promise.resolve([]) : lireRoles(db, affiche.id),
   ]);
   const lienChariow = formations.some((formation) => formation.chariowProductId);
 
@@ -41,7 +44,9 @@ export default async function DirectionPage() {
 
   return (
     <div>
-      <h1 className="mb8">{estProprietaire ? 'Votre plateforme' : 'Vue d’ensemble de l’équipe'}</h1>
+      <h1 className="mb8">
+        {estProprietaire ? 'Votre plateforme' : affiche.role === 'staff' ? 'Vue d’ensemble de l’équipe' : 'Vue d’ensemble'}
+      </h1>
       <p className="small muted mb16">
         Chiffres lus à l&apos;instant dans la base. Aucun chiffre d&apos;apparat : si la plateforme est vide, elle l&apos;annonce.
       </p>

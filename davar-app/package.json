@@ -16,7 +16,8 @@
     "db:reset": "node --experimental-strip-types scripts/dev-db.mjs --reset --migrate --seed",
     "test": "node --experimental-strip-types --test tests/chariow-signature.test.mjs tests/chariow-validate.test.mjs tests/auth-core.test.mjs tests/chariow-ledger.test.mjs tests/http-guards.test.mjs tests/kdf-service.test.mjs tests/quota-mailer.test.mjs tests/client-kdf.test.mjs tests/deploy-bindings.test.mjs tests/direction.test.mjs tests/vue-test.test.mjs tests/assistant.test.mjs tests/pedagogie.test.mjs tests/livres-audios.test.mjs tests/direction-exports.test.mjs tests/apparence.test.mjs tests/cycle-de-vie.test.mjs tests/invitations-transfert.test.mjs tests/bandeau-social.test.mjs tests/motivations-decouverte.test.mjs tests/profil.test.mjs tests/equipe-roles.test.mjs",
     "test:sql": "python3 -m unittest -q tests/test_turso_core.py tests/test_auth_schema.py tests/test_migrations_manifest.py",
-    "rehearsal:staging": "node --experimental-strip-types scripts/rehearsal-staging.mjs"
+    "rehearsal:staging": "node --experimental-strip-types scripts/rehearsal-staging.mjs",
+    "recette:vue-test": "node --experimental-strip-types scripts/recette-vue-test.mjs"
   },
   "dependencies": {
     "@libsql/client": "^0.15.15",

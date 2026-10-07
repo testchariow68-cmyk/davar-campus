@@ -1,9 +1,27 @@
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
+import { ComptesTest } from '@/components/direction/ComptesTest';
 import { sessionProprietaire } from '@/lib/server/direction-access';
 import { listerEquipe, listerEtudiants, listerFormations, lireStructure } from '@/lib/server/direction';
+import { ECRITURES_PAR_ROLE, LIBELLES_ROLES, ROLES, sectionsPour, type Ecriture, type RoleEquipe } from '@/lib/server/equipe';
+import { COMPTES_TEST, listerComptesTest } from '@/lib/server/vue-test';
 
 export const dynamic = 'force-dynamic';
+
+/** Le libellé d'une section, tel qu'il apparaît dans la navigation de la Direction. */
+const LIBELLES_SECTION: Record<string, string> = {
+  accueil: 'Vue d’ensemble',
+  formations: 'Formations',
+  ressources: 'Ressources',
+  devoirs: 'Devoirs',
+  etudiants: 'Étudiants',
+  conversations: 'Conversations',
+  avis: 'Avis',
+  certificats: 'Certificats',
+  cycle: 'Cycle de vie',
+  equipe: 'Équipe',
+  assistant: 'Assistant virtuel',
+};
 
 /**
  * VUE TEST — regarder le campus sans jamais toucher aux données d'une personne
@@ -14,28 +32,28 @@ export const dynamic = 'force-dynamic';
  *     local, ni ailleurs) ;
  *   • ce qui reste pour regarder les écrans, ce sont des COMPTES DE TEST,
  *     marqués comme tels et exclus des chiffres réels ;
- *   • côté étudiant, la vue test doit se faire avec de VRAIES choses : les
- *     vraies formations, les vrais modules, les vraies leçons ;
- *   • côté staff, le propriétaire veut une vue test avec des données FICTIVES
- *     (pas les données d'étudiants réels).
+ *   • côté étudiant, la vue test se fait avec de VRAIES choses : les vraies
+ *     formations, les vrais modules, les vraies leçons ;
+ *   • côté équipe, chaque rôle a SA vue, remplie de ses seuls écrans — jamais les
+ *     données d'un membre réel.
  *
- * Cette page tient les deux premières. La troisième — un espace staff rempli de
- * données fictives — n'est pas encore construite, et elle est annoncée comme
- * telle plutôt que simulée.
+ * Cette page tient les quatre : elle prépare les comptes, montre ce que chacun
+ * ouvre, et rappelle qu'on revient par « Quitter » ou Échap, en gardant ses droits.
  */
 export default async function VueTestPage() {
   const session = await sessionProprietaire();
   if (!session) redirect('/connexion');
   const { db } = session;
 
-  const [etudiants, equipe, formations] = await Promise.all([
+  const [comptes, etudiants, equipe, formations] = await Promise.all([
+    listerComptesTest(db),
     listerEtudiants(db, '', 200, true),
     listerEquipe(db),
     listerFormations(db),
   ]);
 
-  const etudiantsTest = etudiants.filter((etudiant) => etudiant.estTest);
-  const equipeTest = equipe.filter((membre) => membre.estTest);
+  const membresReels = equipe.filter((membre) => membre.role !== 'admin').length;
+  const comptesTestEquipe = comptes.filter((compte) => compte.role === 'staff').length;
   const structures = await Promise.all(
     formations.map(async (formation) => ({ formation, modules: await lireStructure(db, formation.id) }))
   );
@@ -44,69 +62,96 @@ export default async function VueTestPage() {
     <div>
       <h1 className="mb8">Vue test</h1>
       <p className="small muted mb16">
-        Regarder le campus sans jamais emprunter le compte d&apos;une personne réelle. Un compte de
-        test est un compte ordinaire, marqué comme test : il ne compte dans aucun chiffre de la
-        plateforme.
+        Regarder le campus sans jamais emprunter le compte d&apos;une personne réelle. Un compte de test est un compte
+        ordinaire, marqué comme test : il ne compte dans aucun chiffre de la plateforme, et il ne peut pas se connecter.
       </p>
 
       <div className="banner info mb16">
         <span>
-          <strong>Aucun compte de démonstration n&apos;existe</strong> : ils ont été supprimés du code
-          comme de la base. Les anciens comptes de test se marquent, et se retirent, depuis les
-          onglets <Link href="/direction/etudiants">Étudiants</Link> et{' '}
-          <Link href="/direction/equipe">Équipe</Link>.
+          <strong>Aucun compte de démonstration n&apos;existe</strong> : ils ont été supprimés du code comme de la base.
+          Ce qui reste, ce sont les comptes de test ci-dessous — et eux seuls s&apos;ouvrent par « Tester une vue ».
+          {membresReels > 0 && (
+            <>
+              {' '}
+              Votre équipe compte {membresReels} membre{membresReels > 1 ? 's' : ''} réel
+              {membresReels > 1 ? 's' : ''} : la vue test ne les ouvre <b>jamais</b>.
+            </>
+          )}
         </span>
       </div>
 
-      <div className="card card-pad mb16">
-        <h3 className="mb8">Les comptes de test aujourd&apos;hui</h3>
-        {etudiantsTest.length === 0 && equipeTest.length === 0 ? (
-          <p className="small muted">
-            Aucun compte n&apos;est marqué comme test. Pour en préparer un : laissez la personne (ou
-            vous-même) créer un compte sur le site avec une adresse de test, puis marquez-le
-            « Marquer test » depuis l&apos;onglet concerné.
-          </p>
-        ) : (
-          <table className="dv-tbl">
-            <thead>
-              <tr>
-                <th>Compte</th>
-                <th>Rôle</th>
-                <th>Adresse</th>
-                <th>Accès</th>
+      <ComptesTest
+        comptesInitiaux={comptes.map((compte) => ({
+          id: compte.id,
+          nom: compte.nom,
+          courriel: compte.courriel,
+          libelle: compte.libelle,
+          role: compte.role,
+          roles: compte.roles,
+        }))}
+        modeles={COMPTES_TEST.map((modele) => ({
+          id: modele.id,
+          nom: modele.nom,
+          courriel: modele.courriel,
+          role: modele.role,
+          roles: modele.roles,
+        }))}
+      />
+
+      <div className="card card-pad mt16">
+        <h3 className="mb8">Ce que chaque vue d&apos;équipe ouvre</h3>
+        <p className="small muted mb16">
+          Règle du projet : « Chaque membre du staff voit uniquement ce dont il a besoin. » Ouvrir une vue d&apos;équipe
+          vous montre exactement ces écrans-là — vous gardez vos droits pendant la visite, et vous revenez par « Quitter »
+          ou la touche Échap.{' '}
+          {comptesTestEquipe === 0 && 'Préparez les comptes de test pour les essayer.'}
+        </p>
+        <table className="dv-tbl">
+          <thead>
+            <tr>
+              <th>Rôle</th>
+              <th>Écrans ouverts</th>
+            </tr>
+          </thead>
+          <tbody>
+            {ROLES.map((role) => (
+              <tr key={role}>
+                <td>
+                  <b>{LIBELLES_ROLES[role as RoleEquipe]}</b>
+                </td>
+                <td className="small muted">
+                  {sectionsPour([role as RoleEquipe])
+                    .filter((section) => section !== 'accueil')
+                    .map((section) => LIBELLES_SECTION[section] ?? section)
+                    .join(' · ') || '—'}
+                  <div className="xs faint">
+                    Écrit : {ecrituresDe(role as RoleEquipe)}
+                  </div>
+                </td>
               </tr>
-            </thead>
-            <tbody>
-              {etudiantsTest.map((etudiant) => (
-                <tr key={etudiant.id}>
-                  <td>{etudiant.nom}</td>
-                  <td>Étudiant</td>
-                  <td className="small muted">{etudiant.email}</td>
-                  <td className="small muted">
-                    {etudiant.acces.length ? etudiant.acces.map((acces) => acces.titre).join(', ') : 'aucun'}
-                  </td>
-                </tr>
-              ))}
-              {equipeTest.map((membre) => (
-                <tr key={membre.id}>
-                  <td>{membre.nom}</td>
-                  <td>{membre.role === 'admin' ? 'Propriétaire' : 'Membre du staff'}</td>
-                  <td className="small muted">{membre.email}</td>
-                  <td className="small muted">—</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        )}
+            ))}
+            <tr>
+              <td>
+                <b>Sans rôle</b>
+              </td>
+              <td className="small muted">Vue d&apos;ensemble seulement</td>
+            </tr>
+          </tbody>
+        </table>
       </div>
 
-      <div className="card card-pad mb16">
+      <div className="card card-pad mt16">
         <h3 className="mb8">Côté étudiant — avec votre vrai contenu</h3>
         <p className="small muted mb16">
-          Voici exactement ce qu&apos;un étudiant ayant accès découvrira, lu dans la base à
-          l&apos;instant. Un aperçu en lecture seule : rien n&apos;est modifié, aucune progression
-          n&apos;est écrite.
+          Voici exactement ce qu&apos;un étudiant ayant accès découvrira, lu dans la base à l&apos;instant. Un aperçu en
+          lecture seule : rien n&apos;est modifié, aucune progression n&apos;est écrite.
         </p>
+        {structures.length === 0 && (
+          <p className="small muted">
+            Aucune formation pour l&apos;instant : c&apos;est normal, la plateforme attend votre contenu. Créez votre
+            formation depuis l&apos;onglet <Link href="/direction/formations">Formations</Link>.
+          </p>
+        )}
         {structures.map(({ formation, modules }) => {
           const lecons = modules.reduce((total, module) => total + module.lecons.length, 0);
           return (
@@ -125,8 +170,8 @@ export default async function VueTestPage() {
               {lecons === 0 ? (
                 <div className="banner warn mt8" role="status">
                   <span>
-                    Aucune leçon : un étudiant verrait une page vide, c&apos;est pourquoi la
-                    formation ne peut pas être ouverte.
+                    Aucune leçon : un étudiant verrait une page vide, c&apos;est pourquoi la formation ne peut pas être
+                    ouverte.
                   </span>
                 </div>
               ) : (
@@ -151,18 +196,18 @@ export default async function VueTestPage() {
           );
         })}
       </div>
-
-      <div className="card card-pad" style={{ borderColor: 'var(--amber-soft)' }}>
-        <h3 className="mb8">Côté staff — pas encore construit</h3>
-        <p className="small muted">
-          Vous avez demandé une vue test réservée au staff, remplie de <strong>données fictives</strong>.
-          Elle n&apos;existe pas encore : le campus actuel n&apos;a pas d&apos;écran « staff » à
-          prévisualiser. Je préfère vous le dire clairement plutôt que d&apos;inventer un écran qui
-          n&apos;afficherait rien de vrai. Quand les écrans d&apos;équipe existeront (supervision des
-          conversations, certifications, avis), leur vue test sera construite avec des données
-          fictives, comme vous l&apos;avez demandé.
-        </p>
-      </div>
     </div>
   );
+}
+
+/** Ce qu'un rôle peut écrire, en clair — lu dans la même table que le serveur. */
+const LIBELLES_ECRITURE: Record<Ecriture, string> = {
+  'repondre-conversation': 'répondre aux questions',
+  'valider-conversation': 'valider les réponses de l’assistant',
+  'decider-devoir': 'corriger les devoirs',
+};
+
+function ecrituresDe(role: RoleEquipe): string {
+  const ecritures = ECRITURES_PAR_ROLE[role].map((ecriture) => LIBELLES_ECRITURE[ecriture]);
+  return ecritures.length ? ecritures.join(' · ') : 'lecture seule';
 }

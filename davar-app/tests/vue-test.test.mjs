@@ -15,7 +15,16 @@ import { mkdtempSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { applyAllMigrations } from './helpers/migrations.mjs';
-import { cibleAutorisee, listerComptesTest, peutTesterUneVue } from '../lib/server/vue-test.ts';
+import {
+  COMPTES_TEST,
+  cibleAutorisee,
+  creerComptesTest,
+  listerComptesTest,
+  peutTesterUneVue,
+  supprimerComptesTest,
+} from '../lib/server/vue-test.ts';
+import { AuthError, loginUser } from '../lib/server/auth-core.ts';
+import { vueEnsemble } from '../lib/server/direction.ts';
 
 process.env.APP_ENV = 'development';
 
@@ -95,4 +104,102 @@ test('un compte de test suspendu n’est pas ouvrable', async () => {
   const db = await baseVide();
   await ajouterUtilisateur(db, { id: 'u-test-suspendu', email: 'suspendu@davar.test', nom: 'Suspendu', estTest: 1, statut: 'suspended' });
   assert.equal(await cibleAutorisee(db, sessionDe('u-proprietaire', 'admin'), 'u-test-suspendu'), null);
+});
+
+test('les huit comptes du prototype se préparent en un geste, sans jamais de doublon', async () => {
+  const db = await baseVide();
+  const creation = await creerComptesTest(db);
+  assert.equal(creation.crees, 8, 'un étudiant et sept rôles d’équipe');
+  assert.equal(creation.total, 8);
+
+  const vues = await listerComptesTest(db);
+  assert.deepEqual(
+    vues.map((vue) => vue.id),
+    [
+      'u-test-etudiant',
+      'u-test-coach',
+      'u-test-correcteur',
+      'u-test-assistant',
+      'u-test-contenu',
+      'u-test-support',
+      'u-test-analyste',
+      'u-test-manager',
+    ],
+    'la vue étudiant d’abord, puis les rôles dans l’ordre du prototype'
+  );
+  assert.equal(vues[0].libelle, 'Vue Étudiant — Étudiant (test)');
+  assert.equal(vues[1].libelle, 'Vue Coach — Coach (test)', 'la vue porte le nom du rôle, comme le prototype');
+  assert.equal(vues[7].libelle, 'Vue Manager — Manager (test)');
+  assert.deepEqual(vues[3].roles, ['assistant']);
+  assert.equal(vues[0].courriel, 'etudiant.test@davarcampus.co', 'les adresses du prototype');
+
+  const seconde = await creerComptesTest(db);
+  assert.equal(seconde.crees, 0, 'rejouer la préparation ne crée aucun doublon');
+  assert.equal(seconde.comptes.length, 8);
+  await db.close();
+});
+
+test('un compte de test ne peut PAS se connecter, et ne compte dans aucun chiffre', async () => {
+  const db = await baseVide();
+  await ajouterUtilisateur(db, { id: 'u-reel', email: 'vrai@davar.test', nom: 'Vraie Personne' });
+  const avant = await vueEnsemble(db);
+  await creerComptesTest(db);
+  const apres = await vueEnsemble(db);
+
+  assert.equal(apres.etudiants, avant.etudiants, 'aucun étudiant réel de plus');
+  assert.equal(apres.comptesTest, 8, 'les comptes de test sont comptés À PART');
+  assert.equal(apres.membres, avant.membres, 'les vues d’équipe ne grossissent pas l’équipe réelle');
+
+  // Le code secret est calculé sur un secret aléatoire jetable : aucune clé n’ouvre.
+  const fausseCle = 'Z'.repeat(43);
+  for (const courriel of ['etudiant.test@davarcampus.co', 'coach.test@davarcampus.co', 'manager.test@davarcampus.co']) {
+    await assert.rejects(
+      () => loginUser(db, { email: courriel, verifier: fausseCle }),
+      (erreur) => erreur instanceof AuthError && erreur.code === 'invalid_credentials',
+      `${courriel} ne doit pas pouvoir se connecter`
+    );
+  }
+  await db.close();
+});
+
+test('retirer les comptes de test efface tout ce qu’ils ont laissé — et rien d’autre', async () => {
+  const db = await baseVide();
+  await creerComptesTest(db);
+  await ajouterUtilisateur(db, { id: 'u-reel', email: 'vrai@davar.test', nom: 'Vraie Personne' });
+  const maintenant = Date.now();
+
+  // Ce qu'une visite test peut laisser derrière elle.
+  await db.execute({
+    sql: `INSERT INTO user_prefs(user_id,pref_key,pref_value,updated_at_ms) VALUES ('u-test-etudiant','notifications.actives','0',?)`,
+    args: [maintenant],
+  });
+  await db.execute({
+    sql: `INSERT INTO notifications(id,user_id,kind,title,body,route,created_at_ms,read_at_ms,expires_at_ms)
+          VALUES ('ntf_test','u-test-etudiant','system','Essai',NULL,NULL,?,NULL,?)`,
+    args: [maintenant, maintenant + 86_400_000],
+  });
+  await db.execute({
+    sql: `INSERT INTO notifications(id,user_id,kind,title,body,route,created_at_ms,read_at_ms,expires_at_ms)
+          VALUES ('ntf_reel','u-reel','system','Vraie',NULL,NULL,?,NULL,?)`,
+    args: [maintenant, maintenant + 86_400_000],
+  });
+
+  const retrait = await supprimerComptesTest(db);
+  assert.equal(retrait.supprimes, 8);
+  assert.equal((await listerComptesTest(db)).length, 0);
+
+  const restes = await db.execute("SELECT COUNT(*) AS n FROM user_prefs WHERE user_id = 'u-test-etudiant'");
+  assert.equal(Number(restes.rows[0].n), 0, 'les préférences du compte de test partent avec lui');
+  const notificationsTest = await db.execute("SELECT COUNT(*) AS n FROM notifications WHERE id = 'ntf_test'");
+  assert.equal(Number(notificationsTest.rows[0].n), 0, 'la notification du compte de test aussi');
+  const notificationReelle = await db.execute("SELECT COUNT(*) AS n FROM notifications WHERE id = 'ntf_reel'");
+  assert.equal(Number(notificationReelle.rows[0].n), 1, 'celle d’une vraie personne reste intacte');
+  const vraiePersonne = await db.execute("SELECT COUNT(*) AS n FROM users WHERE id = 'u-reel'");
+  assert.equal(Number(vraiePersonne.rows[0].n), 1, 'aucune vraie personne n’est touchée');
+
+  // Les comptes marqués à la main ne sont pas des comptes du prototype : on n'y touche pas.
+  await ajouterUtilisateur(db, { id: 'u-test-manuel', email: 'manuel@davar.test', nom: 'Marqué à la main', estTest: 1 });
+  const second = await supprimerComptesTest(db);
+  assert.equal(second.supprimes, 0, 'un compte marqué à la main garde ses données');
+  await db.close();
 });
