@@ -32,6 +32,8 @@ export const LIBELLES_ROLES: Record<RoleEquipe, string> = {
 /** Les sections de l'Espace Direction, et ce que chacune ouvre. */
 export const SECTIONS = [
   'accueil',
+  'sante',
+  'assistants',
   'formations',
   'ressources',
   'devoirs',
@@ -68,9 +70,9 @@ export type SectionDirection = (typeof SECTIONS)[number];
  *     livres et les audios qu'il dépose ;
  *   - « valider une réponse de l'assistant » reste au manager : c'est un geste de
  *     supervision, pas une réponse de terrain ;
- *   - l'analyste n'a pas encore ses écrans de chiffres ; il reçoit les deux
- *     sections qui portent de vrais chiffres aujourd'hui — AVIS et CERTIFICATS.
- *     Ses écrans d'analyse reviendront avec la brique correspondante.
+ *   - l'analyste reçoit les écrans d'analyse réels : Santé technique et Analyse
+ *     des assistants ; les deux autres du prototype (Badges & distinctions,
+ *     Activité des étudiants) viendront avec leurs écrans.
  */
 export const SECTIONS_PAR_ROLE: Record<RoleEquipe, SectionDirection[]> = {
   coach: ['etudiants', 'conversations', 'devoirs'],
@@ -78,7 +80,9 @@ export const SECTIONS_PAR_ROLE: Record<RoleEquipe, SectionDirection[]> = {
   assistant: ['etudiants', 'devoirs'],
   contenu: ['formations', 'ressources', 'devoirs'],
   support: ['conversations'],
-  analyste: ['avis', 'certificats'],
+  // Périmètre du prototype pour l'analyste : les quatre écrans d'analyse. Ses
+  // écrans de chiffres (analytics, badges) arriveront avec la brique suivante.
+  analyste: ['sante', 'assistants'],
   manager: [
     'formations',
     'ressources',

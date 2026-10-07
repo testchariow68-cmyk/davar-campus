@@ -158,6 +158,40 @@ try {
   const htmlApres = await directionApres.text();
   controler('« Quitter » rend la navigation complète', htmlApres.includes('Réglages'));
 
+  // Les nouveaux écrans d'analyse : le propriétaire, puis l'analyste en vue test.
+  for (const [chemin, marqueur] of [
+    ['/direction/sante', 'Santé technique'],
+    ['/direction/assistants', 'Analyse des assistants'],
+  ]) {
+    const page = await appel(pot, chemin);
+    const html = await page.text();
+    controler(`${chemin} s’ouvre`, page.status === 200 && html.includes(marqueur), `HTTP ${page.status}`);
+  }
+
+  const entreeAnalyste = await appel(pot, '/api/direction/view-as', {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({ action: 'entrer', id: 'u-test-analyste' }),
+  });
+  controler('la vue test « Analyste » s’ouvre', entreeAnalyste.status === 200);
+  const directionAnalyste = await appel(pot, '/direction');
+  const htmlAnalyste = await directionAnalyste.text();
+  controler(
+    'l’analyste voit ses écrans et rien d’autre',
+    htmlAnalyste.includes('Analyse des assistants') &&
+      htmlAnalyste.includes('Santé technique') &&
+      !htmlAnalyste.includes('Réglages') &&
+      !htmlAnalyste.includes('Formations'),
+    'ni Réglages ni Formations pour l’analyste'
+  );
+  const pageAnalyse = await appel(pot, '/direction/assistants');
+  controler('l’analyste ouvre son écran d’analyse', pageAnalyse.status === 200, `HTTP ${pageAnalyse.status}`);
+  await appel(pot, '/api/direction/view-as', {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({ action: 'quitter' }),
+  });
+
   const retrait = await appel(pot, '/api/direction/comptes-test', {
     method: 'POST',
     headers: { 'content-type': 'application/json' },

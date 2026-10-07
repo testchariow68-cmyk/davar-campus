@@ -11,8 +11,12 @@ const ROLES_EQUIPE: Array<{ id: string; libelle: string; ouvre: string }> = [
   { id: 'assistant', libelle: 'Assistant pédagogique', ouvre: 'Étudiants, Devoirs (corriger)' },
   { id: 'contenu', libelle: 'Responsable de contenu', ouvre: 'Formations, Ressources, Devoirs' },
   { id: 'support', libelle: 'Support', ouvre: 'Conversations' },
-  { id: 'analyste', libelle: 'Analyste', ouvre: 'Avis, Certificats' },
-  { id: 'manager', libelle: 'Manager', ouvre: 'Tout, sauf Réglages, E-mails, Intégrations, Assistant virtuel' },
+  { id: 'analyste', libelle: 'Analyste', ouvre: 'Santé technique, Analyse des assistants' },
+  {
+    id: 'manager',
+    libelle: 'Manager',
+    ouvre: 'Tout, sauf les réglages du propriétaire et les quatre écrans de l’analyste',
+  },
 ];
 
 type InvitationVue = {

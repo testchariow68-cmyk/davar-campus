@@ -13,6 +13,8 @@ export const dynamic = 'force-dynamic';
 /** Les libellés de la navigation, écrits une seule fois. */
 const LIBELLES: Record<string, string> = {
   accueil: 'Vue d’ensemble',
+  sante: 'Santé technique',
+  assistants: 'Analyse des assistants',
   formations: 'Formations',
   ressources: 'Ressources',
   devoirs: 'Devoirs',
@@ -31,6 +33,8 @@ const LIBELLES: Record<string, string> = {
 };
 const CHEMINS: Record<string, string> = {
   accueil: '/direction',
+  sante: '/direction/sante',
+  assistants: '/direction/assistants',
   formations: '/direction/formations',
   ressources: '/direction/ressources',
   devoirs: '/direction/devoirs',
@@ -50,6 +54,8 @@ const CHEMINS: Record<string, string> = {
 /** Ordre d'affichage, celui du prototype : pilotage, pédagogie, communauté, système. */
 const ORDRE = [
   'accueil',
+  'sante',
+  'assistants',
   'formations',
   'ressources',
   'devoirs',
