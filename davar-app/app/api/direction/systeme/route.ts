@@ -5,6 +5,8 @@ import { ecrireReglages, lireReglages, lienSocialValide } from '@/lib/server/set
 import { creerCle, listerCles, revoquerCle } from '@/lib/server/cles-api';
 import { emailBudget, mailerConfigured, sendEmail } from '@/lib/server/mailer';
 import { CLE_URL_SHEETS, envoyerVersSheets, urlSheetsValide } from '@/lib/server/sheets';
+import { CLE_COULEURS, CLE_PALETTE } from '@/lib/server/apparence';
+import { paletteValide } from '@/lib/palette';
 import { TYPES_EXPORT, type TypeExport } from '@/lib/server/exports';
 
 export const dynamic = 'force-dynamic';
@@ -20,6 +22,8 @@ const CLES_REGLAGES = new Set([
   'social.facebook',
   'announce.text',
   'announce.active',
+  CLE_PALETTE,
+  CLE_COULEURS,
 ]);
 
 /**
@@ -47,6 +51,9 @@ export async function POST(request: Request) {
         const propre = valeur.trim().slice(0, 600);
         if (cle.startsWith('social.') && propre.length > 0 && !lienSocialValide(propre)) {
           return jsonNoStore({ error: 'lien_social_invalide', message: `Le lien ${cle.replace('social.', '')} doit être une adresse https:// valide.` }, 400);
+        }
+        if (cle === CLE_PALETTE && !paletteValide(propre)) {
+          return jsonNoStore({ error: 'palette_inconnue', message: 'Cette palette n’existe pas.' }, 400);
         }
         entrees[cle] = propre;
       }
