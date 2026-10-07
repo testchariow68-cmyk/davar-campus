@@ -17,7 +17,7 @@ const MESSAGES: Record<string, string> = {
 
 type Result = { mode: 'sent' } | { mode: 'dev'; url: string };
 
-export function SignupForm() {
+export function SignupForm({ invitation }: { invitation?: string } = {}) {
   const [displayName, setDisplayName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -58,6 +58,7 @@ export function SignupForm() {
         body: JSON.stringify({
           displayName,
           email,
+          ...(invitation ? { invitation } : {}),
           verifier,
           salt: parameters.parameters.salt,
           iterations: parameters.parameters.iterations,

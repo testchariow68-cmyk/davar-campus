@@ -12,6 +12,8 @@ import { mailerConfigured, sendVerificationEmail } from '@/lib/server/mailer';
 import { openDb } from '@/lib/server/turso';
 import { trackApiRequest } from '@/lib/server/quota';
 import { passwordAdapter } from '@/lib/server/password-service';
+import { invitationDuToken, marquerInvitationUtilisee } from '@/lib/server/invitations';
+import { normalizeEmail } from '@/lib/server/auth-core';
 
 export const dynamic = 'force-dynamic';
 
@@ -60,6 +62,16 @@ export async function POST(request: Request) {
           },
           passwordAdapter()
         );
+    // Invitation éventuelle : elle est liée à UNE adresse. Un lien détourné vers
+    // une autre adresse est refusé, jamais honoré.
+    const invitationToken = typeof body.invitation === 'string' ? body.invitation : '';
+    if (invitationToken) {
+      const invitation = await invitationDuToken(db, invitationToken);
+      if (!invitation || invitation.email !== normalizeEmail(String(body.email)))
+        return jsonNoStore({ error: 'invitation_invalide' }, 403);
+      await marquerInvitationUtilisee(db, invitation.id, registration.userId);
+    }
+
     const verifyUrl = `${origin}/verifier-email?token=${encodeURIComponent(registration.verificationToken)}`;
 
     let emailSent = false;

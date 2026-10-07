@@ -1,12 +1,13 @@
 import Link from 'next/link';
 import { AuthError, claimPurchasesForVerifiedUser, consumeEmailToken } from '@/lib/server/auth-core';
+import { appliquerInvitations } from '@/lib/server/invitations';
 import { openDb } from '@/lib/server/turso';
 
 export const metadata = { title: 'Confirmation d’adresse — Davar Académie Campus' };
 export const dynamic = 'force-dynamic';
 
 type Outcome =
-  | { kind: 'ok'; granted: number }
+  | { kind: 'ok'; granted: number; role: string | null }
   | { kind: 'invalid' }
   | { kind: 'missing' }
   | { kind: 'unavailable' };
@@ -28,7 +29,10 @@ export default async function VerifierEmailPage({
       const consumed = await consumeEmailToken(db, token, 'verify_email');
       // Rattachement immédiat des achats Chariow déjà vérifiés pour cette adresse.
       const granted = await claimPurchasesForVerifiedUser(db, consumed.userId);
-      outcome = { kind: 'ok', granted };
+      // Une invitation produit son effet ICI, comme un achat : après la preuve
+      // que l'adresse est bien celle de la personne invitée.
+      const effet = await appliquerInvitations(db, consumed.userId);
+      outcome = { kind: 'ok', granted: granted + effet.formations.length, role: effet.role };
     } catch (error) {
       outcome = error instanceof AuthError && error.code === 'invalid_token' ? { kind: 'invalid' } : { kind: 'unavailable' };
     }
@@ -45,9 +49,12 @@ export default async function VerifierEmailPage({
             <div className="banner ok" role="status">
               <span>
                 Adresse confirmée. Votre compte est actif.
+                {outcome.role === 'staff' ? ' Vous faites désormais partie de l’équipe de DAVAR ACADÉMIE.' : ''}
                 {outcome.granted > 0
-                  ? ` ${outcome.granted} formation${outcome.granted > 1 ? 's' : ''} activée${outcome.granted > 1 ? 's' : ''} par vos achats.`
-                  : ' Vos achats éventuels seront rattachés automatiquement à cette adresse.'}
+                  ? ` ${outcome.granted} formation${outcome.granted > 1 ? 's' : ''} activée${outcome.granted > 1 ? 's' : ''} pour votre compte.`
+                  : outcome.role
+                    ? ''
+                    : ' Vos achats éventuels seront rattachés automatiquement à cette adresse.'}
               </span>
             </div>
             <Link href="/connexion" className="btn mt16">Se connecter à mon campus</Link>

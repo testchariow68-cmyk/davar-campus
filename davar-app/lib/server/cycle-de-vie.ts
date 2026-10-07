@@ -337,11 +337,15 @@ export async function executerCycleDeVie(
     await journaliser(db, 'CONVERSATIONS_COACH', conversationsCoach.rows.length, 'supprimées', '12 mois — exceptions conservées', maintenant);
   }
 
-  // 6. Journaux techniques : 90 jours.
+  // 6. Invitations : un lien qui a servi ou qui a expiré ne sert plus (§16).
+  const invitations = await purger('DELETE FROM invites WHERE used_at_ms IS NOT NULL OR expires_at_ms <= ?', [maintenant]);
+  if (invitations > 0) await journaliser(db, 'INVITATIONS', invitations, 'supprimées', 'utilisées ou expirées', maintenant);
+
+  // 7. Journaux techniques : 90 jours.
   const journaux = await purger('DELETE FROM ops_events WHERE occurred_at_ms <= ?', [maintenant - cfg.techLogDays * JOUR]);
   if (journaux > 0) await journaliser(db, 'JOURNAUX_TECHNIQUES', journaux, 'supprimés', '90 jours', maintenant);
 
-  // 7. Comptes : quarantaine. On n'efface JAMAIS au premier passage.
+  // 8. Comptes : quarantaine. On n'efface JAMAIS au premier passage.
   const eligibles = await comptesEligibles(db, maintenant);
   for (const compte of eligibles) {
     const existe = await db.execute({ sql: 'SELECT id FROM purge_pending WHERE user_id = ?', args: [compte.userId] });

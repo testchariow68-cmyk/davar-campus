@@ -96,8 +96,15 @@ const MIGRATIONS = [
     ddl: 4, // 2 tables + 2 index : journal de purge et quarantaine des comptes
     creates: ['purge_log','purge_pending'],
   },
+  {
+    version: 11,
+    file: '011_invitations_transfert.sqlite.sql',
+    sha256: 'e67f64a0a4538db5f9ee7b7c990162790b59e45a44a35884b7b9fe1b45eb4293',
+    ddl: 4, // 2 tables + 2 index : invitations et transfert de propriété
+    creates: ['invites','ownership_transfers'],
+  },
 ];
-const EXPECTED_TABLE_COUNT = 44; // 42 après 009 + 2 (010 journal de purge, quarantaine)
+const EXPECTED_TABLE_COUNT = 46; // 44 après 010 + 2 (011 invitations, transfert de propriété)
 const FORBIDDEN = /\b(drop|truncate|delete\s+from)\b/i;
 
 const mode = process.argv[2];

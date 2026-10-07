@@ -21,6 +21,14 @@ const LISIBLES: Record<string, string> = {
   role_inconnu: 'Rôle inconnu.',
   statut_inconnu: 'Statut inconnu.',
   aucun_acces: 'Cette personne n’a pas cet accès.',
+  invitation_invalide: 'Cette invitation n’est plus valable.',
+  compte_existant: 'Un compte existe déjà avec cet e-mail : attribuez-lui un rôle plutôt que de l’inviter.',
+  formation_inconnue: 'Cette formation n’existe pas.',
+  deja_proprietaire: 'Vous êtes déjà propriétaire du campus.',
+  compte_inactif: 'Ce compte est suspendu : réactivez-le avant un transfert.',
+  mot_de_passe_incorrect: 'Mot de passe incorrect : rien n’a été fait.',
+  lien_invalide: 'Ce lien n’est plus valable.',
+  adresse_invalide: 'Cette adresse e-mail n’est pas valable.',
   unavailable: 'La base a refusé l’opération pour le moment. Réessayez dans un instant.',
 };
 
