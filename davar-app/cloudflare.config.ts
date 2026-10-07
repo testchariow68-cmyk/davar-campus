@@ -107,6 +107,17 @@ export default defineConfig({
       // l'adresse ne peut pas être confirmée.
       MAIL_APPS_SCRIPT_URL: bindings.secret(),
       MAIL_APPS_SCRIPT_TOKEN: bindings.secret(),
+      // Assistant virtuel : les clés des moteurs gratuits. Elles vivent ICI, côté
+      // serveur, et ne sont JAMAIS exposées au navigateur — une clé lisible depuis
+      // une page serait copiable par n'importe quel étudiant. Une seule clé suffit
+      // pour démarrer ; les autres deviennent des relais quand un quota est atteint.
+      GROQ_API_KEY: bindings.secret(),
+      GEMINI_API_KEY: bindings.secret(),
+      OPENROUTER_API_KEY: bindings.secret(),
+      HUGGINGFACE_API_KEY: bindings.secret(),
+      // Moteur personnalisé : n'est utilisé que si les deux sont posés.
+      ASSISTANT_CUSTOM_URL: bindings.secret(),
+      ASSISTANT_CUSTOM_KEY: bindings.secret(),
     },
   }),
 });

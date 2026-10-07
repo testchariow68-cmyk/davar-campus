@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { Icon } from '@/components/campus/Icon';
 import { currentSession } from '@/lib/server/auth';
+import { lireReglages } from '@/lib/server/settings';
 
 export const dynamic = 'force-dynamic';
 export const metadata = { title: "Besoin d'aide ? — Davar Académie Campus" };
@@ -17,6 +18,10 @@ export const metadata = { title: "Besoin d'aide ? — Davar Académie Campus" };
 export default async function AidePage() {
   const session = await currentSession();
   if (!session) redirect('/connexion');
+  const reglages = await lireReglages(session.db);
+  const whatsapp = reglages['support.whatsapp'];
+  const telephone = reglages['support.phone'];
+  const courriel = reglages['support.email'];
 
   return (
     <>
@@ -34,22 +39,22 @@ export default async function AidePage() {
         <div className="row" style={{ gap: 8, flexWrap: 'wrap' }}>
           <a
             className="btn sup-btn"
-            href="https://wa.me/2250585375999"
+            href={whatsapp}
             target="_blank"
             rel="noreferrer"
           >
             <Icon nom="whatsapp" taille={15} /> WhatsApp
           </a>
-          <a className="btn sup-btn" href="tel:+2250585375999">
+          <a className="btn sup-btn" href={`tel:${telephone.replace(/\s+/g, '')}`}>
             <Icon nom="phone" taille={15} /> Appeler
           </a>
-          <a className="btn sup-btn" href="mailto:support@davarcampus.co">
+          <a className="btn sup-btn" href={`mailto:${courriel}`}>
             <Icon nom="mail" taille={15} /> Écrire un e-mail
           </a>
         </div>
         <p className="small muted mt16">
-          Adresse : <strong>support@davarcampus.co</strong> · Téléphone :{' '}
-          <strong>+225 05 85 37 59 99</strong>. Ouvrez votre lien WhatsApp ou votre application
+          Adresse : <strong>{courriel}</strong> · Téléphone : <strong>{telephone}</strong>. Ouvrez votre lien
+          WhatsApp ou votre application
           d&apos;e-mail depuis cette page : le message part directement.
         </p>
       </div>

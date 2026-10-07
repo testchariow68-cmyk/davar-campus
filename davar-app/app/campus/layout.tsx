@@ -3,10 +3,12 @@ import { redirect } from 'next/navigation';
 import { Icon } from '@/components/campus/Icon';
 import { ThemeButton } from '@/components/campus/ThemeButton';
 import { UserMenu } from '@/components/campus/UserMenu';
+import { BellMenu } from '@/components/campus/BellMenu';
 import { VueTestBar } from '@/components/campus/VueTestBar';
 import { VueTestMenu } from '@/components/campus/VueTestMenu';
 import { currentSession } from '@/lib/server/auth';
 import { listerComptesTest, peutTesterUneVue } from '@/lib/server/vue-test';
+import { compterNonLues, listerNotifications } from '@/lib/server/notifications';
 
 export const dynamic = 'force-dynamic';
 
@@ -33,6 +35,11 @@ export default async function CampusLayout({ children }: { children: React.React
    *   - fermé  : le bouton « Tester une vue », et pour le propriétaire SEULEMENT.
    * Aucun autre compte ne reçoit la liste des comptes de test : elle n'est même pas lue.
    */
+  const [notifications, nonLues] = await Promise.all([
+    listerNotifications(session.db, user.id, Date.now(), 20),
+    compterNonLues(session.db, user.id, Date.now()),
+  ]);
+
   const vuesTest =
     !vueTest && peutTesterUneVue(reel)
       ? (await listerComptesTest(session.db)).map((compte) => ({ id: compte.id, libelle: compte.libelle }))
@@ -55,9 +62,22 @@ export default async function CampusLayout({ children }: { children: React.React
           <nav className="tb-nav">
             <Link href="/campus">Tableau de bord</Link>
             <Link href="/campus/formations">Mes formations</Link>
+            <Link href="/campus/questions">Mes questions</Link>
           </nav>
 
           <div className="tb-right">
+            <BellMenu
+              initiales={notifications.map((notification) => ({
+                id: notification.id,
+                kind: notification.kind,
+                titre: notification.titre,
+                corps: notification.corps,
+                route: notification.route,
+                atMs: notification.atMs,
+                lue: notification.lue,
+              }))}
+              nonLuesInitiales={nonLues}
+            />
             <ThemeButton />
             <VueTestMenu vues={vuesTest} />
             <UserMenu nom={user.displayName} email={user.email} estProprietaire={reel.role === 'admin'} />

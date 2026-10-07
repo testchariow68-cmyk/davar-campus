@@ -7,6 +7,8 @@ const LIENS = [
   { href: '/direction', libelle: "Vue d'ensemble" },
   { href: '/direction/formations', libelle: 'Formations' },
   { href: '/direction/etudiants', libelle: 'Étudiants' },
+  { href: '/direction/conversations', libelle: 'Conversations' },
+  { href: '/direction/assistant', libelle: 'Assistant virtuel' },
   { href: '/direction/equipe', libelle: 'Équipe' },
   { href: '/direction/test', libelle: 'Vue test' },
 ];

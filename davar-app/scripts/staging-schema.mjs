@@ -58,8 +58,16 @@ const MIGRATIONS = [
     ddl: 2, // 1 colonne additive + 1 index : les comptes de test sont marqués, pas déplacés
     creates: [],
   },
+  {
+    version: 6,
+    file: '006_assistant_echanges_notifications.sqlite.sql',
+    sha256: '4c40f35fb38da4243690c6227381cd49696658100b43d155df465a574a15fb22',
+    ddl: 13, // 8 tables + 4 index + 1 colonne additive : assistant, conversations, notifications, réglages
+    creates: ['assistant_config','assistant_kb','assistant_provider_days','assistant_user_days',
+      'conversations','conversation_messages','notifications','app_settings'],
+  },
 ];
-const EXPECTED_TABLE_COUNT = 16; // 9 après 001 + 5 après 002 + 2 après 003 (004 n'ajoute que des colonnes)
+const EXPECTED_TABLE_COUNT = 24; // 16 après 005 + 8 apportées par 006 (assistant, échanges, notifications, réglages)
 const FORBIDDEN = /\b(drop|truncate|delete\s+from)\b/i;
 
 const mode = process.argv[2];
