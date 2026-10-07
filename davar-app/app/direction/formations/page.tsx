@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { FormationCreator } from '@/components/direction/FormationCreator';
-import { sessionProprietaire } from '@/lib/server/direction-access';
+import { sessionSection } from '@/lib/server/direction-access';
 import { listerFormations } from '@/lib/server/direction';
 
 export const dynamic = 'force-dynamic';
@@ -10,7 +10,7 @@ const prix = (valeur: number) => `${valeur.toLocaleString('fr-FR')} FCFA`;
 
 /** Le catalogue, vu de la direction : ce qui est ouvert, ce qui est en chantier. */
 export default async function FormationsPage() {
-  const session = await sessionProprietaire();
+  const session = await sessionSection('formations');
   if (!session) redirect('/connexion');
   const formations = await listerFormations(session.db);
 

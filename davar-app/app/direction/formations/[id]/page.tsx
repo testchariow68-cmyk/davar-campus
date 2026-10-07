@@ -2,14 +2,14 @@ import Link from 'next/link';
 import { notFound, redirect } from 'next/navigation';
 import { FormationInfos } from '@/components/direction/FormationInfos';
 import { StructureEditeur } from '@/components/direction/StructureEditeur';
-import { sessionProprietaire } from '@/lib/server/direction-access';
+import { sessionSection } from '@/lib/server/direction-access';
 import { lireStructure, lireUneFormation } from '@/lib/server/direction';
 
 export const dynamic = 'force-dynamic';
 
 /** Éditeur d'une formation : ses informations, puis sa structure (modules et leçons). */
 export default async function FormationDirectionPage({ params }: { params: Promise<{ id: string }> }) {
-  const session = await sessionProprietaire();
+  const session = await sessionSection('formations');
   if (!session) redirect('/connexion');
   const { id } = await params;
 

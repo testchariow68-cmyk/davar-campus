@@ -1,6 +1,6 @@
 import { redirect } from 'next/navigation';
 import { Icon } from '@/components/campus/Icon';
-import { sessionProprietaire } from '@/lib/server/direction-access';
+import { sessionSection } from '@/lib/server/direction-access';
 import { avisEnRetard, avisRecus } from '@/lib/server/avis';
 
 export const dynamic = 'force-dynamic';
@@ -8,7 +8,7 @@ export const metadata = { title: 'Avis — Direction' };
 
 /** AVIS — les avis reçus (l’ÉCRIT uniquement) et ceux qui se font attendre. */
 export default async function AvisPage() {
-  const proprietaire = await sessionProprietaire();
+  const proprietaire = await sessionSection('avis');
   if (!proprietaire) redirect('/direction');
   const [recus, retard] = await Promise.all([avisRecus(proprietaire.db), avisEnRetard(proprietaire.db)]);
 

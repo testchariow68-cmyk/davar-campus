@@ -117,8 +117,15 @@ const MIGRATIONS = [
     ddl: 1, // 1 table : préférences personnelles
     creates: ['user_prefs'],
   },
+  {
+    version: 14,
+    file: '014_roles_equipe.sqlite.sql',
+    sha256: '953e999cbb32187287dcf978760f6a6721fdd9fc258bab3d6e8a2aa106e034c9',
+    ddl: 1, // 1 colonne ajoutée : les rôles du membre du staff
+    creates: [],
+  },
 ];
-const EXPECTED_TABLE_COUNT = 48; // 46 après 011 + 1 (012 abonnements aux réseaux)
+const EXPECTED_TABLE_COUNT = 48; // 47 après 012 + 1 (013 préférences personnelles) — 014 ajoute une colonne, pas une table
 const FORBIDDEN = /\b(drop|truncate|delete\s+from)\b/i;
 
 const mode = process.argv[2];

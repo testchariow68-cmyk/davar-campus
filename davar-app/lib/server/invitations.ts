@@ -10,6 +10,7 @@
  * Le lien n'est rangé qu'en empreinte : même avec la base, on n'entre pas.
  */
 import { hashToken, newToken, normalizeEmail, type Db } from './auth-core.ts';
+import { normaliserRoles, rolesEnLigne } from './equipe.ts';
 import { mailerConfigured, sendEmail } from './mailer.ts';
 
 function texte(valeur: unknown, defaut = ''): string {
@@ -216,7 +217,7 @@ export async function marquerInvitationUtilisee(
   return Number(resultat.rowsAffected ?? 0) > 0;
 }
 
-export type EffetInvitation = { role: string | null; formations: string[] };
+export type EffetInvitation = { role: string | null; formations: string[]; roles?: string[] };
 
 /**
  * Après confirmation de l'adresse : l'invitation produit son effet.
@@ -240,11 +241,21 @@ export async function appliquerInvitations(db: Db, userId: string, maintenant = 
 
   let nouveauRole: string | null = null;
   const formations: string[] = [];
+  const rolesAppliques = new Set<string>();
   for (const row of lignes.rows) {
     const kind = texte(row.kind);
     if (kind === 'staff' && role === 'student') {
       await db.execute({ sql: "UPDATE users SET role = 'staff' WHERE id = ? AND role = 'student'", args: [userId] });
       nouveauRole = 'staff';
+    }
+    // Les rôles choisis au moment de l'invitation ouvrent leur périmètre dès la
+    // confirmation de l'adresse — la personne n'a pas à attendre le propriétaire.
+    if (kind === 'staff') {
+      const voulus = normaliserRoles(texte(row.roles));
+      if (voulus.length) {
+        await db.execute({ sql: 'UPDATE users SET staff_roles = ? WHERE id = ?', args: [rolesEnLigne(voulus), userId] });
+        rolesAppliques.add(rolesEnLigne(voulus));
+      }
     }
     if (kind === 'student_grace') {
       const formation = texte(row.training_id);
@@ -260,5 +271,9 @@ export async function appliquerInvitations(db: Db, userId: string, maintenant = 
       }
     }
   }
-  return { role: nouveauRole, formations };
+  return {
+    role: nouveauRole,
+    formations,
+    roles: rolesAppliques.size ? [...rolesAppliques].pop()!.split(',').filter(Boolean) : [],
+  };
 }

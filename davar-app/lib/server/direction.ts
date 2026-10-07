@@ -18,6 +18,7 @@
  * le rend éprouvable directement (`npm test`).
  */
 import { newId, normalizeEmail, type Db } from './auth-core.ts';
+import { normaliserRoles, rolesEnLigne, type RoleEquipe } from './equipe.ts';
 
 const texte = (valeur: unknown) => (valeur == null ? '' : String(valeur));
 const nombre = (valeur: unknown) => (valeur == null ? 0 : Number(valeur));
@@ -518,11 +519,13 @@ export type Membre = {
   confirme: boolean;
   estTest: boolean;
   derniereConnexionMs: number | null;
+  /** Rôles du membre du staff, séparés par des virgules ('' = aucun). */
+  roles: string;
 };
 
 export async function listerEquipe(db: Db): Promise<Membre[]> {
   const resultat = await db.execute(
-    `SELECT id,email_normalized,display_name,role,status,email_verified_at_ms,last_login_at_ms,is_test
+    `SELECT id,email_normalized,display_name,role,status,email_verified_at_ms,last_login_at_ms,is_test,staff_roles
      FROM users WHERE role<>'student' AND is_test=0 ORDER BY role, email_normalized`
   );
   return resultat.rows.map((ligne) => ({
@@ -534,6 +537,7 @@ export async function listerEquipe(db: Db): Promise<Membre[]> {
     confirme: ligne.email_verified_at_ms != null,
     estTest: bool(ligne.is_test),
     derniereConnexionMs: ligne.last_login_at_ms == null ? null : nombre(ligne.last_login_at_ms),
+    roles: rolesEnLigne(normaliserRoles(typeof ligne.staff_roles === 'string' ? ligne.staff_roles : '')),
   }));
 }
 
@@ -758,4 +762,40 @@ export async function purgerContenu(db: Db, confirmation: string): Promise<Resul
     ok: true,
     message: 'Contenu vidé : formations conservées, mais plus aucun module, aucune leçon, aucun accès, aucune progression.',
   };
+}
+
+/**
+ * Attribuer les rôles d'un membre du staff. Réservé au propriétaire par la route
+ * qui appelle cette fonction. Un rôle inconnu est refusé, jamais ignoré en
+ * silence : mieux vaut une erreur claire qu'un membre à qui il manque un accès
+ * sans que personne ne le sache.
+ */
+function libellesPourMessage(roles: RoleEquipe[]): string {
+  return roles.length ? `Rôles enregistrés : ${roles.join(', ')}.` : 'Aucun rôle : accès à la vue d’ensemble seulement.';
+}
+
+export async function definirRolesEquipe(
+  db: Db,
+  email: string,
+  rolesBruts: string
+): Promise<Resultat & { roles?: RoleEquipe[] }> {
+  const courriel = normalizeEmail(email);
+  if (!courriel) return echec('adresse_invalide');
+  const morceaux = String(rolesBruts ?? '')
+    .split(/[,;]/)
+    .map((morceau) => morceau.trim().toLowerCase())
+    .filter(Boolean);
+  const inconnu = morceaux.find((morceau) => !normaliserRoles(morceau).length);
+  if (inconnu) return echec('role_inconnu');
+  const roles = normaliserRoles(rolesBruts);
+
+  const resultat = await db.execute({
+    sql: `UPDATE users SET staff_roles = ? WHERE email_normalized = ? AND role = 'staff'`,
+    args: [rolesEnLigne(roles), courriel],
+  });
+  if ((resultat.rowsAffected ?? 0) === 0) {
+    const existant = await db.execute({ sql: 'SELECT role FROM users WHERE email_normalized = ?', args: [courriel] });
+    return echec(existant.rows[0] ? 'role_inchange' : 'compte_introuvable');
+  }
+  return { ok: true, message: libellesPourMessage(roles), roles };
 }

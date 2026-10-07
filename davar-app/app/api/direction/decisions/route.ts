@@ -1,4 +1,4 @@
-import { verrouProprietaire } from '@/lib/server/direction-access';
+import { verrouEcriture, verrouProprietaire } from '@/lib/server/direction-access';
 import { jsonNoStore, readJsonBody } from '@/lib/server/http';
 import { trackApiRequest } from '@/lib/server/quota';
 import { deciderDevoir } from '@/lib/server/pedagogie';
@@ -8,19 +8,22 @@ import { notifier } from '@/lib/server/notifications';
 export const dynamic = 'force-dynamic';
 
 /**
- * LES DÉCISIONS HUMAINES — propriétaire uniquement.
- *   - un devoir : validé, ou refusé AVEC une explication obligatoire ;
- *   - un certificat : validé (il reçoit alors son code), ou refusé AVEC un motif.
+ * LES DÉCISIONS HUMAINES.
+ *   - un devoir : validé, ou refusé AVEC une explication obligatoire — le
+ *     correcteur et l'assistant pédagogique décident aussi (règle du prototype) ;
+ *   - un certificat : validé (il reçoit alors son code), ou refusé AVEC un motif —
+ *     geste de direction, réservé au propriétaire.
  * Toute décision notifie l'étudiant : personne n'attend dans le vide.
  */
 export async function POST(request: Request) {
   await trackApiRequest();
-  const verrou = await verrouProprietaire(request);
+  const body = await readJsonBody(request);
+  const action = typeof body?.action === 'string' ? body.action : '';
+  const verrou =
+    action === 'devoir' ? await verrouEcriture(request, 'decider-devoir') : await verrouProprietaire(request);
   if (!verrou.ok) return verrou.reponse;
   const { db, reel } = verrou.session;
 
-  const body = await readJsonBody(request);
-  const action = typeof body?.action === 'string' ? body.action : '';
   const id = typeof body?.id === 'string' ? body.id : '';
   const motif = typeof body?.motif === 'string' ? body.motif.trim().slice(0, 800) : '';
   if (!id) return jsonNoStore({ error: 'invalid_input' }, 400);

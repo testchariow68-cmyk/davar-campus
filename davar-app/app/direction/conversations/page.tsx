@@ -1,6 +1,6 @@
 import { redirect } from 'next/navigation';
 import { ConversationsSupervision } from '@/components/direction/ConversationsSupervision';
-import { sessionProprietaire } from '@/lib/server/direction-access';
+import { sessionSection } from '@/lib/server/direction-access';
 import { compterEnAttente, toutesConversations } from '@/lib/server/echanges';
 
 export const dynamic = 'force-dynamic';
@@ -8,7 +8,7 @@ export const metadata = { title: 'Conversations — Direction' };
 
 /** CONVERSATIONS — supervision : voir, valider, corriger, répondre à la place de l'assistant. */
 export default async function ConversationsPage() {
-  const proprietaire = await sessionProprietaire();
+  const proprietaire = await sessionSection('conversations');
   if (!proprietaire) redirect('/direction');
 
   const [fils, attente] = await Promise.all([

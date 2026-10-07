@@ -1,18 +1,24 @@
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { PurgeContenu } from '@/components/direction/PurgeContenu';
-import { sessionProprietaire } from '@/lib/server/direction-access';
+import { sessionSection } from '@/lib/server/direction-access';
 import { listerFormations, vueEnsemble } from '@/lib/server/direction';
+import { libellesDesRoles, lireRoles } from '@/lib/server/equipe';
 
 export const dynamic = 'force-dynamic';
 
 /** Vue d'ensemble : uniquement des chiffres réels, lus en base à l'instant. */
 export default async function DirectionPage() {
-  const session = await sessionProprietaire();
+  const session = await sessionSection('accueil');
   if (!session) redirect('/connexion');
   const { db } = session;
 
-  const [vue, formations] = await Promise.all([vueEnsemble(db), listerFormations(db)]);
+  const estProprietaire = session.reel.role === 'admin';
+  const [vue, formations, roles] = await Promise.all([
+    vueEnsemble(db),
+    listerFormations(db),
+    estProprietaire ? Promise.resolve([]) : lireRoles(db, session.reel.id),
+  ]);
   const lienChariow = formations.some((formation) => formation.chariowProductId);
 
   const etapes = [
@@ -35,10 +41,18 @@ export default async function DirectionPage() {
 
   return (
     <div>
-      <h1 className="mb8">Votre plateforme</h1>
+      <h1 className="mb8">{estProprietaire ? 'Votre plateforme' : 'Vue d’ensemble de l’équipe'}</h1>
       <p className="small muted mb16">
         Chiffres lus à l&apos;instant dans la base. Aucun chiffre d&apos;apparat : si la plateforme est vide, elle l&apos;annonce.
       </p>
+      {!estProprietaire && (
+        <div className="banner info mb16">
+          <span>
+            Vous êtes membre de l&apos;équipe{roles.length ? ` (${libellesDesRoles(roles).join(' · ')})` : ''} : vous voyez
+            les écrans de vos rôles. Seul le propriétaire modifie les réglages sensibles.
+          </span>
+        </div>
+      )}
 
       <div className="dv-stats mb24">
         <div className="dv-stat">
@@ -88,6 +102,7 @@ export default async function DirectionPage() {
         </div>
       )}
 
+      {estProprietaire && (
       <div className="card card-pad mb16">
         <h3 className="mb8">Vos premiers pas</h3>
         <p className="small muted mb16">
@@ -113,16 +128,22 @@ export default async function DirectionPage() {
           ))}
         </div>
       </div>
+      )}
 
       <div className="card card-pad mb16">
         <h3 className="mb8">Ce que la plateforme ne fait pas encore</h3>
         <ul className="small muted" style={{ paddingLeft: 18, lineHeight: 1.9 }}>
-          <li>Les livres et livres audio du prototype ne sont pas reportés : aucun lecteur paginé n&apos;existe côté serveur.</li>
-          <li>Les certifications, les récompenses et les avis ne sont pas encore reportés.</li>
           <li>Les paiements encaissés dans l&apos;application sont reportés ; l&apos;accès est ouvert à la main après un achat Chariow.</li>
+          <li>La vue test « côté staff », remplie de données fictives, n&apos;est pas construite.</li>
+          <li>
+            Les notifications du navigateur ne sont pas encore envoyées d&apos;elles-mêmes : la cloche du campus, elle,
+            reçoit tout.
+          </li>
+          <li>L&apos;assiduité (temps passé, régularité) et l&apos;analyse de l&apos;assistant n&apos;ont pas encore leurs écrans.</li>
         </ul>
       </div>
 
+      {estProprietaire && (
       <PurgeContenu
         contenu={{
           formations: vue.formations,
@@ -131,6 +152,7 @@ export default async function DirectionPage() {
           acces: vue.acces,
         }}
       />
+      )}
     </div>
   );
 }

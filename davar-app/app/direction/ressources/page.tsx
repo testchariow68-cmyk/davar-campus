@@ -1,6 +1,6 @@
 import { redirect } from 'next/navigation';
 import { RessourcesAdmin } from '@/components/direction/RessourcesAdmin';
-import { sessionProprietaire } from '@/lib/server/direction-access';
+import { sessionSection } from '@/lib/server/direction-access';
 import { toutesRessources } from '@/lib/server/ressources';
 import { contenanceRessources } from '@/lib/server/medias';
 import { listerFormations } from '@/lib/server/direction';
@@ -11,7 +11,7 @@ export const metadata = { title: 'Ressources — Direction' };
 
 /** RESSOURCES — livres, audios et documents : création, pages, pistes, dépôt, attribution. */
 export default async function RessourcesDirectionPage() {
-  const proprietaire = await sessionProprietaire();
+  const proprietaire = await sessionSection('ressources');
   if (!proprietaire) redirect('/direction');
 
   const [ressources, formations] = await Promise.all([

@@ -4,6 +4,17 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { messageDe, poster, type Reponse } from './api';
 
+/** Les sept rôles du prototype — mêmes libellés que dans ÉquipeOutils. */
+const ROLES_EQUIPE: Array<{ id: string; libelle: string; ouvre: string }> = [
+  { id: 'coach', libelle: 'Coach', ouvre: 'Étudiants, Conversations (répondre), Devoirs' },
+  { id: 'correcteur', libelle: 'Correcteur', ouvre: 'Devoirs (corriger), Conversations' },
+  { id: 'assistant', libelle: 'Assistant pédagogique', ouvre: 'Étudiants, Devoirs (corriger)' },
+  { id: 'contenu', libelle: 'Responsable de contenu', ouvre: 'Formations, Ressources, Devoirs' },
+  { id: 'support', libelle: 'Support', ouvre: 'Conversations' },
+  { id: 'analyste', libelle: 'Analyste', ouvre: 'Avis, Certificats' },
+  { id: 'manager', libelle: 'Manager', ouvre: 'Tout, sauf Réglages, E-mails, Intégrations, Assistant virtuel' },
+];
+
 type InvitationVue = {
   id: string;
   email: string;
@@ -41,7 +52,8 @@ export function EquipeAvancee({
   const [enCours, setEnCours] = useState<string | null>(null);
   const [lien, setLien] = useState<string | null>(null);
 
-  const [invitation, setInvitation] = useState({ email: '', kind: 'staff', formationId: '', message: '' });
+  const [invitation, setInvitation] = useState({ email: '', kind: 'staff', formationId: '', roles: '', message: '' });
+  const rolesVoulus = invitation.roles ? invitation.roles.split(',').filter(Boolean) : [];
   const [transfertForm, setTransfertForm] = useState({ email: '', motDePasse: '' });
 
   async function agir(corps: Record<string, unknown>, cle: string) {
@@ -99,6 +111,41 @@ export function EquipeAvancee({
               Accès gracieux étudiant
             </label>
           </div>
+          {invitation.kind === 'staff' && (
+            <div>
+              <div className="xs faint mb4">Ses rôles — ils s’ouvriront dès qu’elle confirmera son adresse.</div>
+              <div className="row" style={{ gap: 6, flexWrap: 'wrap', marginBottom: 10 }}>
+                {ROLES_EQUIPE.map((role) => {
+                  const actif = rolesVoulus.includes(role.id);
+                  return (
+                    <button
+                      key={role.id}
+                      type="button"
+                      className="dv-mini"
+                      style={
+                        actif
+                          ? { borderColor: 'var(--violet)', color: 'var(--violet)', background: 'var(--violet-soft)' }
+                          : undefined
+                      }
+                      title={role.ouvre}
+                      aria-pressed={actif}
+                      onClick={() =>
+                        setInvitation({
+                          ...invitation,
+                          roles: (actif
+                            ? rolesVoulus.filter((id) => id !== role.id)
+                            : [...rolesVoulus, role.id]
+                          ).join(','),
+                        })
+                      }
+                    >
+                      {role.libelle}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
           {invitation.kind === 'student_grace' && (
             <select
               className="inp"

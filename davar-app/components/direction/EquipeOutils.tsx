@@ -6,6 +6,7 @@ import { messageDe, poster } from './api';
 
 type MembreVue = {
   id: string;
+  roles: string;
   email: string;
   nom: string;
   role: string;
@@ -16,6 +17,24 @@ type MembreVue = {
 };
 
 const LIBELLES: Record<string, string> = { admin: 'Propriétaire', staff: 'Membre du staff', student: 'Étudiant' };
+
+/** Les sept rôles du prototype, et ce que chacun ouvre — écrit noir sur blanc. */
+const ROLES_EQUIPE: Array<{ id: string; libelle: string; ouvre: string }> = [
+  { id: 'coach', libelle: 'Coach', ouvre: 'Étudiants, Conversations (répondre), Devoirs' },
+  { id: 'correcteur', libelle: 'Correcteur', ouvre: 'Devoirs (corriger), Conversations' },
+  { id: 'assistant', libelle: 'Assistant pédagogique', ouvre: 'Étudiants, Devoirs (corriger)' },
+  { id: 'contenu', libelle: 'Responsable de contenu', ouvre: 'Formations, Ressources, Devoirs' },
+  { id: 'support', libelle: 'Support', ouvre: 'Conversations' },
+  { id: 'analyste', libelle: 'Analyste', ouvre: 'Avis, Certificats' },
+  { id: 'manager', libelle: 'Manager', ouvre: 'Tout, sauf Réglages, E-mails, Intégrations, Assistant virtuel' },
+];
+
+function rolesDe(valeur: string): string[] {
+  return (valeur ?? '')
+    .split(',')
+    .map((morceau) => morceau.trim())
+    .filter(Boolean);
+}
 
 /**
  * Nommer son équipe. Règle du projet : le propriétaire est unique.
@@ -94,6 +113,36 @@ export function EquipeOutils({ equipe, suggestions }: { equipe: MembreVue[]; sug
                   <td>
                     <div className="small muted">{LIBELLES[membre.role] ?? membre.role}</div>
                     {membre.estTest ? <span className="dv-tag">compte de test</span> : null}
+                    {membre.role === 'staff' && (
+                      <div className="row" style={{ gap: 4, flexWrap: 'wrap', marginTop: 6 }}>
+                        {ROLES_EQUIPE.map((role) => {
+                          const actif = rolesDe(membre.roles).includes(role.id);
+                          return (
+                            <button
+                              key={role.id}
+                              type="button"
+                              className="dv-mini"
+                              style={
+                                actif
+                                  ? { borderColor: 'var(--violet)', color: 'var(--violet)', background: 'var(--violet-soft)' }
+                                  : undefined
+                              }
+                              title={role.ouvre}
+                              aria-pressed={actif}
+                              disabled={enCours}
+                              onClick={() => {
+                                const suivants = actif
+                                  ? rolesDe(membre.roles).filter((r) => r !== role.id)
+                                  : [...rolesDe(membre.roles), role.id];
+                                agir({ action: 'roles-equipe', email: membre.email, roles: suivants.join(',') });
+                              }}
+                            >
+                              {role.libelle}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    )}
                   </td>
                   <td className="small muted">
                     <button
@@ -110,6 +159,13 @@ export function EquipeOutils({ equipe, suggestions }: { equipe: MembreVue[]; sug
           </table>
         </div>
       )}
+
+      <div className="banner info mb16">
+        <span>
+          Chaque membre du staff ne voit que les écrans de ses rôles — c&apos;est la règle du projet. Sans aucun rôle, une
+          personne ne voit que sa vue d&apos;ensemble. Les rôles se posent et se retirent d&apos;un clic ci-dessus.
+        </span>
+      </div>
 
       <div className="card card-pad">
         <h4 className="mb8">Nommer quelqu&apos;un</h4>

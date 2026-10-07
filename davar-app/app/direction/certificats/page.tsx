@@ -1,6 +1,6 @@
 import { redirect } from 'next/navigation';
 import { DecisionsListe } from '@/components/direction/DecisionsListe';
-import { sessionProprietaire } from '@/lib/server/direction-access';
+import { sessionSection } from '@/lib/server/direction-access';
 import { demandesEnAttente } from '@/lib/server/certificats';
 
 export const dynamic = 'force-dynamic';
@@ -8,7 +8,7 @@ export const metadata = { title: 'Certificats — Direction' };
 
 /** CERTIFICATS — chaque demande est une décision humaine. Valider délivre un code. */
 export default async function CertificatsDirectionPage() {
-  const proprietaire = await sessionProprietaire();
+  const proprietaire = await sessionSection('certificats');
   if (!proprietaire) redirect('/direction');
   const demandes = await demandesEnAttente(proprietaire.db);
 

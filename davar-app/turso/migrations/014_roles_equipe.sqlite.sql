@@ -1,0 +1,11 @@
+-- 014 — Rôles de l'équipe : la colonne qui donne à chaque membre son périmètre.
+--
+-- Pourquoi maintenant : le propriétaire nomme un membre du staff, mais le
+-- prototype ne donne PAS les mêmes écrans à tout le monde (`staffAccess()` :
+-- le coach voit les conversations et les évaluations, le correcteur corrige, le
+-- responsable de contenu construit les formations, le support répond…).
+--
+-- La colonne est unique et textuelle, comme `invites.roles` : les rôles y sont
+-- séparés par des virgules ('' = aucun rôle = accès à sa seule vue d'ensemble).
+-- Additif : aucune table existante n'est modifiée, aucune donnée n'est perdue.
+ALTER TABLE users ADD COLUMN staff_roles TEXT NOT NULL DEFAULT '';

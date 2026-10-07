@@ -1,6 +1,6 @@
 import { redirect } from 'next/navigation';
 import { DecisionsListe } from '@/components/direction/DecisionsListe';
-import { sessionProprietaire } from '@/lib/server/direction-access';
+import { sessionSection } from '@/lib/server/direction-access';
 import { devoirsEnAttente } from '@/lib/server/pedagogie';
 
 export const dynamic = 'force-dynamic';
@@ -12,7 +12,7 @@ function quand(atMs: number): string {
 
 /** DEVOIRS — les évaluations ouvertes rendues par les étudiants, à corriger à la main. */
 export default async function DevoirsPage() {
-  const proprietaire = await sessionProprietaire();
+  const proprietaire = await sessionSection('devoirs');
   if (!proprietaire) redirect('/direction');
   const devoirs = await devoirsEnAttente(proprietaire.db);
 

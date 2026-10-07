@@ -1,5 +1,5 @@
 import { AssistantConfig } from '@/components/direction/AssistantConfig';
-import { sessionProprietaire } from '@/lib/server/direction-access';
+import { sessionSection } from '@/lib/server/direction-access';
 import { formationsAssociees, lireConfig } from '@/lib/server/assistant';
 import { cleDisponible } from '@/lib/server/ai-providers';
 import { FOURNISSEURS, type Fournisseur } from '@/lib/server/assistant';
@@ -14,7 +14,7 @@ export const metadata = { title: 'Assistant virtuel — Direction' };
  * identité affichée, base de connaissances par formation, supervision humaine.
  */
 export default async function AssistantDirectionPage() {
-  const proprietaire = await sessionProprietaire();
+  const proprietaire = await sessionSection('assistant');
   if (!proprietaire) redirect('/direction');
 
   const [config, formations] = await Promise.all([

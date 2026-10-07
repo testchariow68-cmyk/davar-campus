@@ -1,4 +1,4 @@
-import { verrouProprietaire } from '@/lib/server/direction-access';
+import { verrouEcriture, verrouSupervision } from '@/lib/server/direction-access';
 import { jsonNoStore, readJsonBody } from '@/lib/server/http';
 import { trackApiRequest } from '@/lib/server/quota';
 import { marquerResolue, repondreCommeCoach, validerReponseIA } from '@/lib/server/echanges';
@@ -6,15 +6,18 @@ import { notifier } from '@/lib/server/notifications';
 
 export const dynamic = 'force-dynamic';
 
-/** Supervision des conversations : répondre en coach, valider ou clore. Propriétaire uniquement. */
+/** Supervision des conversations : répondre en coach, valider ou clore.
+ *  Le coach et le manager répondent ; valider la réponse de l'assistant et clore
+ *  restent des gestes de supervision (propriétaire ou manager). */
 export async function POST(request: Request) {
   await trackApiRequest();
-  const verrou = await verrouProprietaire(request);
+  const body = await readJsonBody(request);
+  const action = typeof body?.action === 'string' ? body.action : '';
+
+  const verrou = action === 'repondre' ? await verrouEcriture(request, 'repondre-conversation') : await verrouSupervision(request);
   if (!verrou.ok) return verrou.reponse;
   const { db } = verrou.session;
 
-  const body = await readJsonBody(request);
-  const action = typeof body?.action === 'string' ? body.action : '';
   const conversationId = typeof body?.conversationId === 'string' ? body.conversationId : '';
   if (!conversationId) return jsonNoStore({ error: 'invalid_input' }, 400);
   const maintenant = Date.now();

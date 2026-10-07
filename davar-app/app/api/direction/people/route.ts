@@ -3,8 +3,10 @@ import { jsonNoStore, linkOrigin, readJsonBody } from '@/lib/server/http';
 import { trackApiRequest } from '@/lib/server/quota';
 import {
   accorderAcces,
+  listerEquipe,
   basculerCompteTest,
   definirRole,
+  definirRolesEquipe,
   definirStatut,
   purgerContenu,
   retirerAcces,
@@ -39,6 +41,30 @@ export async function POST(request: Request) {
       case 'revoke-access':
         resultat = await retirerAcces(db, email, formation);
         break;
+      case 'roles-equipe': {
+        const attribution = await definirRolesEquipe(db, email, String(body?.roles ?? ''));
+        if (!attribution.ok) {
+          const messages: Record<string, string> = {
+            adresse_invalide: 'Cette adresse e-mail n’est pas valable.',
+            role_inconnu: 'Rôle inconnu.',
+            compte_introuvable: 'Aucun compte ne correspond à cette adresse.',
+            role_inchange: 'Cette personne n’est pas membre du staff : attribuez-lui d’abord ce rôle.',
+          };
+          return jsonNoStore(
+            { ok: false, erreur: attribution.erreur, message: messages[attribution.erreur] ?? 'Attribution impossible.' },
+            400
+          );
+        }
+        const libelles = (attribution.roles ?? []).map((role) => role);
+        return jsonNoStore({
+          ok: true,
+          message: libelles.length
+            ? `Rôles enregistrés : ${libelles.join(', ')}.`
+            : 'Aucun rôle : cette personne ne verra que sa vue d’ensemble.',
+          equipe: await listerEquipe(db),
+        });
+      }
+
       case 'set-status':
         resultat = await definirStatut(db, email, String(body?.statut ?? ''));
         break;

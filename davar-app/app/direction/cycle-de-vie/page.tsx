@@ -1,6 +1,6 @@
 import { redirect } from 'next/navigation';
 import { CycleDeVieAdmin } from '@/components/direction/CycleDeVieAdmin';
-import { sessionProprietaire } from '@/lib/server/direction-access';
+import { sessionSection } from '@/lib/server/direction-access';
 import { CONFIG_CYCLE_DE_VIE, POLITIQUES, etatCycleDeVie, journalDePurge } from '@/lib/server/cycle-de-vie';
 
 export const dynamic = 'force-dynamic';
@@ -12,7 +12,7 @@ export const metadata = { title: 'Cycle de vie — Direction' };
  * jamais toute seule. La matrice des politiques est publiée telle quelle.
  */
 export default async function CycleDeViePage() {
-  const proprietaire = await sessionProprietaire();
+  const proprietaire = await sessionSection('cycle');
   if (!proprietaire) redirect('/direction');
 
   const [rapport, journal] = await Promise.all([

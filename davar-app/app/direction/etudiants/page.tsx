@@ -1,13 +1,13 @@
 import { redirect } from 'next/navigation';
 import { EtudiantsOutils } from '@/components/direction/EtudiantsOutils';
-import { sessionProprietaire } from '@/lib/server/direction-access';
+import { sessionSection } from '@/lib/server/direction-access';
 import { listerEtudiants, listerFormations } from '@/lib/server/direction';
 
 export const dynamic = 'force-dynamic';
 
 /** Les étudiants : qui ils sont, ce qu'ils ont, et les gestes que la direction peut faire. */
 export default async function EtudiantsPage() {
-  const session = await sessionProprietaire();
+  const session = await sessionSection('etudiants');
   if (!session) redirect('/connexion');
 
   const [etudiants, formations] = await Promise.all([

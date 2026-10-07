@@ -1,7 +1,7 @@
 import { redirect } from 'next/navigation';
 import { EquipeAvancee } from '@/components/direction/EquipeAvancee';
 import { EquipeOutils } from '@/components/direction/EquipeOutils';
-import { sessionProprietaire } from '@/lib/server/direction-access';
+import { sessionSection } from '@/lib/server/direction-access';
 import { listerEquipe, listerEtudiants, listerFormations } from '@/lib/server/direction';
 import { listerInvitations } from '@/lib/server/invitations';
 import { transfertEnAttente } from '@/lib/server/transfert';
@@ -10,7 +10,7 @@ export const dynamic = 'force-dynamic';
 
 /** L'équipe : qui dirige, qui aide. Le propriétaire reste unique. */
 export default async function EquipePage() {
-  const session = await sessionProprietaire();
+  const session = await sessionSection('equipe');
   if (!session) redirect('/connexion');
 
   const [equipe, etudiants, formations, invitations, transfert] = await Promise.all([
