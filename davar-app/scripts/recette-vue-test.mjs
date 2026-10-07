@@ -166,6 +166,14 @@ try {
     ['/direction/badges', 'Badges &amp; distinctions'],
     ['/direction/activite', 'Activité des étudiants'],
   ];
+  for (const [chemin, marqueur] of [
+    ['/direction/ventes', 'Ventes'],
+    ['/direction/recompenses', 'Récompenses'],
+  ]) {
+    const page = await appel(pot, chemin);
+    const html = await page.text();
+    controler(`${chemin} s’ouvre`, page.status === 200 && html.includes(marqueur), `HTTP ${page.status}`);
+  }
   const pageVentes = await appel(pot, '/direction/ventes');
   const htmlVentes = await pageVentes.text();
   controler(
@@ -200,9 +208,9 @@ try {
   // même pas dans sa navigation. (Le propriétaire, lui, garde ses droits pendant
   // la visite — c'est voulu : la vue test change l'affichage, pas les droits.)
   controler(
-    'l’analyste ne voit pas les Ventes dans sa navigation',
-    !htmlAnalyste.includes('href="/direction/ventes"'),
-    'les finances ne sont pas un écran d’analyse'
+    'l’analyste ne voit ni Ventes ni Récompenses dans sa navigation',
+    !htmlAnalyste.includes('href="/direction/ventes"') && !htmlAnalyste.includes('href="/direction/recompenses"'),
+    'les finances et les distinctions à la main ne sont pas des écrans d’analyse'
   );
   await appel(pot, '/api/direction/view-as', {
     method: 'POST',

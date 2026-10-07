@@ -44,6 +44,7 @@ export const SECTIONS = [
   'conversations',
   'avis',
   'certificats',
+  'recompenses',
   'ventes',
   'cycle',
   'equipe',
@@ -96,6 +97,7 @@ export const SECTIONS_PAR_ROLE: Record<RoleEquipe, SectionDirection[]> = {
     'conversations',
     'avis',
     'certificats',
+    'recompenses',
     'ventes',
     'cycle',
     'equipe',
@@ -103,7 +105,7 @@ export const SECTIONS_PAR_ROLE: Record<RoleEquipe, SectionDirection[]> = {
 };
 
 /** Ce qu'un rôle peut ÉCRIRE (le reste de son périmètre est en lecture). */
-export type Ecriture = 'repondre-conversation' | 'valider-conversation' | 'decider-devoir';
+export type Ecriture = 'repondre-conversation' | 'valider-conversation' | 'decider-devoir' | 'attribuer-distinction';
 
 export const ECRITURES_PAR_ROLE: Record<RoleEquipe, Ecriture[]> = {
   coach: ['repondre-conversation'],
@@ -112,7 +114,7 @@ export const ECRITURES_PAR_ROLE: Record<RoleEquipe, Ecriture[]> = {
   contenu: [],
   support: [],
   analyste: [],
-  manager: ['repondre-conversation', 'valider-conversation', 'decider-devoir'],
+  manager: ['repondre-conversation', 'valider-conversation', 'decider-devoir', 'attribuer-distinction'],
 };
 
 /**

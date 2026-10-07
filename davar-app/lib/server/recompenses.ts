@@ -11,6 +11,7 @@
  * direction le décide — les deux sont journalisées par la date.
  */
 import type { Db } from './auth-core';
+import { notifier } from './notifications.ts';
 
 function texte(valeur: unknown, defaut = ''): string {
   return typeof valeur === 'string' ? valeur : defaut;
@@ -151,12 +152,20 @@ export async function installerCatalogue(db: Db, formations: Array<{ id: string;
 
 export async function attribuerBadge(
   db: Db,
-  options: { userId: string; badgeId: string; trainingId?: string | null; source?: 'auto' | 'manuel'; awardedBy?: string | null },
+  options: {
+    userId: string;
+    badgeId: string;
+    trainingId?: string | null;
+    source?: 'auto' | 'manuel';
+    awardedBy?: string | null;
+    /** Le motif d'une attribution À LA MAIN. Une règle automatique n'en a pas. */
+    note?: string | null;
+  },
   maintenant = Date.now()
 ): Promise<boolean> {
   const resultat = await db.execute({
-    sql: `INSERT INTO badge_awards(id, user_id, badge_id, training_id, source, awarded_by, at_ms)
-          VALUES (?,?,?,?,?,?,?)
+    sql: `INSERT INTO badge_awards(id, user_id, badge_id, training_id, source, awarded_by, note, at_ms)
+          VALUES (?,?,?,?,?,?,?,?)
           ON CONFLICT(user_id, badge_id) DO NOTHING`,
     args: [
       `baw_${maintenant.toString(36)}${Math.random().toString(36).slice(2, 8)}`,
@@ -165,10 +174,30 @@ export async function attribuerBadge(
       options.trainingId ?? null,
       options.source ?? 'auto',
       options.awardedBy ?? null,
+      options.note ?? null,
       maintenant,
     ],
   });
-  return (resultat.rowsAffected ?? 0) > 0;
+  if ((resultat.rowsAffected ?? 0) === 0) return false;
+
+  // Le prototype prévient toujours l'étudiant : « Nouvelle distinction » suivi
+  // de la phrase du badge. On fait pareil — c'est la reconnaissance qui compte.
+  const badge = await db.execute({
+    sql: 'SELECT name, short_text FROM badge_defs WHERE id = ?',
+    args: [options.badgeId],
+  });
+  const nom = texte(badge.rows[0]?.name);
+  const phrase = texte(badge.rows[0]?.short_text);
+  if (nom) {
+    await notifier(db, {
+      userId: options.userId,
+      kind: 'badge',
+      titre: 'Nouvelle distinction',
+      corps: phrase ? `${nom} — ${phrase}` : nom,
+      route: '/campus/distinctions',
+    }, maintenant);
+  }
+  return true;
 }
 
 export type BadgeObtenu = DefinitionBadge & { obtenuLeMs: number; source: string };

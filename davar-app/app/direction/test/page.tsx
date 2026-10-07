@@ -23,6 +23,7 @@ const LIBELLES_SECTION: Record<string, string> = {
   conversations: 'Conversations',
   avis: 'Avis',
   certificats: 'Certificats',
+  recompenses: 'Récompenses',
   ventes: 'Ventes',
   cycle: 'Cycle de vie',
   equipe: 'Équipe',
@@ -211,6 +212,7 @@ const LIBELLES_ECRITURE: Record<Ecriture, string> = {
   'repondre-conversation': 'répondre aux questions',
   'valider-conversation': 'valider les réponses de l’assistant',
   'decider-devoir': 'corriger les devoirs',
+  'attribuer-distinction': 'attribuer une distinction à la main',
 };
 
 function ecrituresDe(role: RoleEquipe): string {

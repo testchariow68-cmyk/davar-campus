@@ -124,8 +124,15 @@ const MIGRATIONS = [
     ddl: 1, // 1 colonne ajoutée : les rôles du membre du staff
     creates: [],
   },
+  {
+    version: 15,
+    file: '015_motif_badges.sqlite.sql',
+    sha256: 'd7f3077f9443562fc1174eab92fb1c241ec84ebbb10730ba2b2226e9cb1e01da',
+    ddl: 1, // 1 colonne ajoutée : le motif d'une attribution manuelle
+    creates: [],
+  },
 ];
-const EXPECTED_TABLE_COUNT = 48; // 47 après 012 + 1 (013 préférences personnelles) — 014 ajoute une colonne, pas une table
+const EXPECTED_TABLE_COUNT = 48; // 47 après 012 + 1 (013 préférences personnelles) — 014 et 015 ajoutent des colonnes, pas une table
 const FORBIDDEN = /\b(drop|truncate|delete\s+from)\b/i;
 
 const mode = process.argv[2];
