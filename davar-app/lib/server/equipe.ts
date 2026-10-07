@@ -32,6 +32,7 @@ export const LIBELLES_ROLES: Record<RoleEquipe, string> = {
 /** Les sections de l'Espace Direction, et ce que chacune ouvre. */
 export const SECTIONS = [
   'accueil',
+  'analytics',
   'sante',
   'assistants',
   'badges',
@@ -74,9 +75,9 @@ export type SectionDirection = (typeof SECTIONS)[number];
  *     livres et les audios qu'il dépose ;
  *   - « valider une réponse de l'assistant » reste au manager : c'est un geste de
  *     supervision, pas une réponse de terrain ;
- *   - l'analyste reçoit les QUATRE écrans d'analyse du prototype : Santé
- *     technique, Analyse des assistants, Badges & distinctions et Activité des
- *     étudiants — et rien d'autre.
+ *   - l'analyste reçoit les CINQ écrans d'analyse du prototype : Analytics,
+ *     Santé technique, Analyse des assistants, Badges & distinctions et Activité
+ *     des étudiants — et rien d'autre.
  */
 export const SECTIONS_PAR_ROLE: Record<RoleEquipe, SectionDirection[]> = {
   coach: ['etudiants', 'conversations', 'devoirs'],
@@ -84,9 +85,10 @@ export const SECTIONS_PAR_ROLE: Record<RoleEquipe, SectionDirection[]> = {
   assistant: ['etudiants', 'devoirs'],
   contenu: ['formations', 'ressources', 'devoirs'],
   support: ['conversations'],
-  // Les quatre écrans d'analyse du prototype, dans son ordre.
-  analyste: ['sante', 'assistants', 'badges', 'activite'],
+  // Les écrans d'analyse du prototype, dans son ordre.
+  analyste: ['analytics', 'sante', 'assistants', 'badges', 'activite'],
   manager: [
+    'analytics',
     'formations',
     'ressources',
     'devoirs',

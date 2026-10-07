@@ -160,6 +160,7 @@ try {
 
   // Les nouveaux écrans d'analyse : le propriétaire, puis l'analyste en vue test.
   const ECRANS_ANALYSE = [
+    ['/direction/analytics', 'Analytics'],
     ['/direction/sante', 'Santé technique'],
     ['/direction/assistants', 'Analyse des assistants'],
     ['/direction/badges', 'Badges &amp; distinctions'],
@@ -193,7 +194,7 @@ try {
       !htmlAnalyste.includes('Formations'),
     'ni Réglages ni Formations pour l’analyste'
   );
-  const pageAnalyse = await appel(pot, '/direction/assistants');
+  const pageAnalyse = await appel(pot, '/direction/analytics');
   controler('l’analyste ouvre son écran d’analyse', pageAnalyse.status === 200, `HTTP ${pageAnalyse.status}`);
   // Les finances restent au propriétaire et au manager : l'analyste ne les voit
   // même pas dans sa navigation. (Le propriétaire, lui, garde ses droits pendant

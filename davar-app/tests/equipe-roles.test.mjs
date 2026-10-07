@@ -53,13 +53,15 @@ test('chaque rôle ouvre son périmètre, et rien de plus', () => {
   assert.deepEqual(sectionsPour(['correcteur']), ['accueil', 'devoirs', 'conversations']);
   assert.deepEqual(
     sectionsPour(['analyste']),
-    ['accueil', 'sante', 'assistants', 'badges', 'activite'],
-    'l’analyste reçoit les quatre écrans d’analyse du prototype — et rien d’autre'
+    ['accueil', 'analytics', 'sante', 'assistants', 'badges', 'activite'],
+    'l’analyste reçoit les écrans d’analyse du prototype — et rien d’autre'
   );
   assert.deepEqual(sectionsPour(['contenu']), ['accueil', 'formations', 'ressources', 'devoirs']);
 
   const manager = sectionsPour(['manager']);
   assert.ok(manager.includes('equipe') && manager.includes('cycle'));
+  assert.ok(manager.includes('analytics') && manager.includes('ventes'), 'le manager tient les chiffres et les ventes');
+  assert.ok(!manager.includes('sante') && !manager.includes('assistants'), 'les écrans d’analyse restent à l’analyste');
   assert.ok(!manager.includes('reglages') && !manager.includes('emails'), 'les gestes du propriétaire restent au propriétaire');
   assert.ok(!manager.includes('assistant'), 'la personnalité de l’assistant reste au propriétaire');
 

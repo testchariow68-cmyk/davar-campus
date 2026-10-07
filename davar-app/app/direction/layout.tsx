@@ -13,6 +13,7 @@ export const dynamic = 'force-dynamic';
 /** Les libellés de la navigation, écrits une seule fois. */
 const LIBELLES: Record<string, string> = {
   accueil: 'Vue d’ensemble',
+  analytics: 'Analytics',
   sante: 'Santé technique',
   assistants: 'Analyse des assistants',
   badges: 'Badges & distinctions',
@@ -36,6 +37,7 @@ const LIBELLES: Record<string, string> = {
 };
 const CHEMINS: Record<string, string> = {
   accueil: '/direction',
+  analytics: '/direction/analytics',
   sante: '/direction/sante',
   assistants: '/direction/assistants',
   badges: '/direction/badges',
@@ -60,6 +62,7 @@ const CHEMINS: Record<string, string> = {
 /** Ordre d'affichage, celui du prototype : pilotage, pédagogie, communauté, système. */
 const ORDRE = [
   'accueil',
+  'analytics',
   'sante',
   'assistants',
   'badges',

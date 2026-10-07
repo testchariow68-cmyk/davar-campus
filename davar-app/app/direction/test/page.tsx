@@ -11,6 +11,7 @@ export const dynamic = 'force-dynamic';
 /** Le libellé d'une section, tel qu'il apparaît dans la navigation de la Direction. */
 const LIBELLES_SECTION: Record<string, string> = {
   accueil: 'Vue d’ensemble',
+  analytics: 'Analytics',
   sante: 'Santé technique',
   assistants: 'Analyse des assistants',
   badges: 'Badges & distinctions',
