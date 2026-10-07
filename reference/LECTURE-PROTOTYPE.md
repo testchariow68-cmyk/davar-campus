@@ -19,6 +19,16 @@
 | ZIP imbriqués (`*-staging-worker*.zip`, etc.) | ~4 Mo | **Non conservé** : versions antérieures de ce que le dépôt contient déjà |
 | `davar-app/.env.local` | — | **Non conservé** : contient un marqueur de secret (`whsec_dev_test_secret_a_remplacer`). Vérifié : **ce n'est pas un vrai secret**, aucun identifiant réel ne fuit. À retirer quand même du ZIP public. |
 
+L'archive d'origine est **conservée telle quelle** à la racine du dépôt, sous son
+nom exact — `workspace-01a10e9f-b31a-7076-9432-4ee5051bcb82.zip` (17,7 Mo) : vous
+pouvez toujours l'ouvrir et la comparer. Tout ce qui en a été trié vit dans
+`reference/`, et rien n'a été modifié à l'intérieur de l'archive.
+
+⚠️ Cette archive contient, dans l'ancienne copie `davar-app/.env.local`, un
+**marqueur de secret de démonstration** (`whsec_dev_test_secret_a_remplacer`).
+Vérifié : ce n'est **pas** un vrai secret — aucun identifiant réel ne fuit. À
+retirer si l'archive est un jour republiée ailleurs.
+
 ---
 
 ## 2. Le prototype en chiffres — la mesure de l'écart
