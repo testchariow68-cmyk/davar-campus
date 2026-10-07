@@ -89,8 +89,15 @@ const MIGRATIONS = [
     ddl: 4, // 2 tables + 2 index : clés d'accès révocables, journal des exports
     creates: ['api_keys','exports_log'],
   },
+  {
+    version: 10,
+    file: '010_cycle_de_vie.sqlite.sql',
+    sha256: '803a31621cdf45e0eaab7e68c7dc03cd5f6eee26c0eb871f6c213992eac4832e',
+    ddl: 4, // 2 tables + 2 index : journal de purge et quarantaine des comptes
+    creates: ['purge_log','purge_pending'],
+  },
 ];
-const EXPECTED_TABLE_COUNT = 42; // 37 après 007 + 3 (008 livres/audios/reprise) + 2 (009 clés/journal)
+const EXPECTED_TABLE_COUNT = 44; // 42 après 009 + 2 (010 journal de purge, quarantaine)
 const FORBIDDEN = /\b(drop|truncate|delete\s+from)\b/i;
 
 const mode = process.argv[2];

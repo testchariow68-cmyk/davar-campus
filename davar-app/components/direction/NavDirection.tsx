@@ -17,6 +17,7 @@ const LIENS = [
   { href: '/direction/emails', libelle: 'E-mails' },
   { href: '/direction/integrations', libelle: 'Intégrations' },
   { href: '/direction/reglages', libelle: 'Réglages' },
+  { href: '/direction/cycle-de-vie', libelle: 'Cycle de vie' },
   { href: '/direction/equipe', libelle: 'Équipe' },
   { href: '/direction/test', libelle: 'Vue test' },
 ];
