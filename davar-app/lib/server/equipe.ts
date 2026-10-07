@@ -34,6 +34,8 @@ export const SECTIONS = [
   'accueil',
   'sante',
   'assistants',
+  'badges',
+  'activite',
   'formations',
   'ressources',
   'devoirs',
@@ -70,9 +72,9 @@ export type SectionDirection = (typeof SECTIONS)[number];
  *     livres et les audios qu'il dépose ;
  *   - « valider une réponse de l'assistant » reste au manager : c'est un geste de
  *     supervision, pas une réponse de terrain ;
- *   - l'analyste reçoit les écrans d'analyse réels : Santé technique et Analyse
- *     des assistants ; les deux autres du prototype (Badges & distinctions,
- *     Activité des étudiants) viendront avec leurs écrans.
+ *   - l'analyste reçoit les QUATRE écrans d'analyse du prototype : Santé
+ *     technique, Analyse des assistants, Badges & distinctions et Activité des
+ *     étudiants — et rien d'autre.
  */
 export const SECTIONS_PAR_ROLE: Record<RoleEquipe, SectionDirection[]> = {
   coach: ['etudiants', 'conversations', 'devoirs'],
@@ -80,9 +82,8 @@ export const SECTIONS_PAR_ROLE: Record<RoleEquipe, SectionDirection[]> = {
   assistant: ['etudiants', 'devoirs'],
   contenu: ['formations', 'ressources', 'devoirs'],
   support: ['conversations'],
-  // Périmètre du prototype pour l'analyste : les quatre écrans d'analyse. Ses
-  // écrans de chiffres (analytics, badges) arriveront avec la brique suivante.
-  analyste: ['sante', 'assistants'],
+  // Les quatre écrans d'analyse du prototype, dans son ordre.
+  analyste: ['sante', 'assistants', 'badges', 'activite'],
   manager: [
     'formations',
     'ressources',

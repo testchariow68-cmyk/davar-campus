@@ -53,8 +53,8 @@ test('chaque rôle ouvre son périmètre, et rien de plus', () => {
   assert.deepEqual(sectionsPour(['correcteur']), ['accueil', 'devoirs', 'conversations']);
   assert.deepEqual(
     sectionsPour(['analyste']),
-    ['accueil', 'sante', 'assistants'],
-    'l’analyste reçoit les écrans d’analyse — et rien d’autre'
+    ['accueil', 'sante', 'assistants', 'badges', 'activite'],
+    'l’analyste reçoit les quatre écrans d’analyse du prototype — et rien d’autre'
   );
   assert.deepEqual(sectionsPour(['contenu']), ['accueil', 'formations', 'ressources', 'devoirs']);
 

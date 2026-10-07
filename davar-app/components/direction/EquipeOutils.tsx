@@ -25,7 +25,7 @@ const ROLES_EQUIPE: Array<{ id: string; libelle: string; ouvre: string }> = [
   { id: 'assistant', libelle: 'Assistant pédagogique', ouvre: 'Étudiants, Devoirs (corriger)' },
   { id: 'contenu', libelle: 'Responsable de contenu', ouvre: 'Formations, Ressources, Devoirs' },
   { id: 'support', libelle: 'Support', ouvre: 'Conversations' },
-  { id: 'analyste', libelle: 'Analyste', ouvre: 'Santé technique, Analyse des assistants' },
+  { id: 'analyste', libelle: 'Analyste', ouvre: 'Les quatre écrans d’analyse, et rien d’autre' },
   {
     id: 'manager',
     libelle: 'Manager',

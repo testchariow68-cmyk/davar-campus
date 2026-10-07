@@ -159,10 +159,13 @@ try {
   controler('« Quitter » rend la navigation complète', htmlApres.includes('Réglages'));
 
   // Les nouveaux écrans d'analyse : le propriétaire, puis l'analyste en vue test.
-  for (const [chemin, marqueur] of [
+  const ECRANS_ANALYSE = [
     ['/direction/sante', 'Santé technique'],
     ['/direction/assistants', 'Analyse des assistants'],
-  ]) {
+    ['/direction/badges', 'Badges &amp; distinctions'],
+    ['/direction/activite', 'Activité des étudiants'],
+  ];
+  for (const [chemin, marqueur] of ECRANS_ANALYSE) {
     const page = await appel(pot, chemin);
     const html = await page.text();
     controler(`${chemin} s’ouvre`, page.status === 200 && html.includes(marqueur), `HTTP ${page.status}`);
@@ -178,8 +181,7 @@ try {
   const htmlAnalyste = await directionAnalyste.text();
   controler(
     'l’analyste voit ses écrans et rien d’autre',
-    htmlAnalyste.includes('Analyse des assistants') &&
-      htmlAnalyste.includes('Santé technique') &&
+    ECRANS_ANALYSE.every(([, marqueur]) => htmlAnalyste.includes(marqueur)) &&
       !htmlAnalyste.includes('Réglages') &&
       !htmlAnalyste.includes('Formations'),
     'ni Réglages ni Formations pour l’analyste'

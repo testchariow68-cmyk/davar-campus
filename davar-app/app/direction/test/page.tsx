@@ -13,6 +13,8 @@ const LIBELLES_SECTION: Record<string, string> = {
   accueil: 'Vue d’ensemble',
   sante: 'Santé technique',
   assistants: 'Analyse des assistants',
+  badges: 'Badges & distinctions',
+  activite: 'Activité des étudiants',
   formations: 'Formations',
   ressources: 'Ressources',
   devoirs: 'Devoirs',
