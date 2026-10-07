@@ -66,8 +66,17 @@ const MIGRATIONS = [
     creates: ['assistant_config','assistant_kb','assistant_provider_days','assistant_user_days',
       'conversations','conversation_messages','notifications','app_settings'],
   },
+  {
+    version: 7,
+    file: '007_pedagogie_certificats_recompenses.sqlite.sql',
+    sha256: '52f551f6466762c47fffd5a104c7f4004f2b37cc710fec9f1f45df0bd162fa33',
+    ddl: 23, // exercices, évaluations, devoirs, certificats, badges, avis, ressources
+    creates: ['lesson_exercises','lesson_assessments','quiz_questions','quiz_answers','assessment_attempts',
+      'submissions','certificate_requests','certificates','badge_defs','badge_awards','reviews',
+      'resources','resource_allocations'],
+  },
 ];
-const EXPECTED_TABLE_COUNT = 24; // 16 après 005 + 8 apportées par 006 (assistant, échanges, notifications, réglages)
+const EXPECTED_TABLE_COUNT = 37; // 24 après 006 + 13 apportées par 007 (cœur pédagogique, certificats, récompenses)
 const FORBIDDEN = /\b(drop|truncate|delete\s+from)\b/i;
 
 const mode = process.argv[2];

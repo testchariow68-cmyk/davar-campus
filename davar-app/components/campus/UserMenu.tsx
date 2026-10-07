@@ -52,6 +52,19 @@ export function UserMenu({
             <div style={{ fontWeight: 700, fontSize: 13.5 }}>{nom}</div>
             <div className="xs muted">{email}</div>
           </div>
+          {!estProprietaire && (
+            <>
+              <a className="dd-item" href="/campus/distinctions">
+                <Icon nom="award" taille={15} /> Mes distinctions
+              </a>
+              <a className="dd-item" href="/campus/ressources">
+                <Icon nom="book" taille={15} /> Mes ressources
+              </a>
+              <a className="dd-item" href="/campus/avis">
+                <Icon nom="quote" taille={15} /> Mes avis
+              </a>
+            </>
+          )}
           {estProprietaire && (
             <a className="dd-item" href="/direction">
               <Icon nom="shieldCheck" taille={15} /> Direction

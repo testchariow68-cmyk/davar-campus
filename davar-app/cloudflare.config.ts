@@ -118,6 +118,10 @@ export default defineConfig({
       // Moteur personnalisé : n'est utilisé que si les deux sont posés.
       ASSISTANT_CUSTOM_URL: bindings.secret(),
       ASSISTANT_CUSTOM_KEY: bindings.secret(),
+      // Ressources (livres, audios, documents) : adresse de base du stockage.
+      // Tant qu'elle n'est pas posée, l'application DIT que le fichier n'est pas
+      // encore déposé — elle ne fait jamais semblant de l'ouvrir.
+      RESOURCES_BASE_URL: bindings.secret(),
     },
   }),
 });

@@ -5,7 +5,7 @@
    prototype (trait 1,8 · taille par défaut 18 · classe « ic »). C'est ce qui
    garantit que chaque écran reconstruit ressemble exactement au prototype.
    ============================================================================ */
-type NomIcone =
+export type NomIcone =
 'home' | 'cap' | 'book' | 'layers' | 'play' | 'pause' | 'file' | 'download' | 'video' | 'message' | 'sparkles' | 'bell' | 'award' | 'check' | 'checkCircle' | 'x' | 'clock' | 'lock' | 'unlock' | 'chevR' | 'chevL' | 'chevD' | 'search' | 'plus' | 'edit' | 'trash' | 'users' | 'user' | 'settings' | 'shield' | 'chart' | 'card' | 'star' | 'alert' | 'refresh' | 'send' | 'eye' | 'logout' | 'upload' | 'mic' | 'sliders' | 'menu' | 'external' | 'expand' | 'calendar' | 'target' | 'zap' | 'globe' | 'key' | 'mail' | 'phone' | 'arrowR' | 'wallet' | 'trend' | 'clipboard' | 'list' | 'grid' | 'paperclip' | 'bot' | 'dot' | 'filter' | 'shieldCheck' | 'sun' | 'moon' | 'camera' | 'fingerprint' | 'quote' | 'back' | 'headset' | 'doc' | 'link' | 'image' | 'instagram' | 'tiktok' | 'facebook' | 'youtube' | 'linkedin' | 'xsocial' | 'whatsapp' | 'telegram' | 'rw_door' | 'rw_path' | 'rw_lines' | 'rw_resume' | 'rw_circle' | 'rw_seal';
 
 const TRACES: Record<string, React.ReactNode> = {

@@ -1,12 +1,14 @@
 import Link from 'next/link';
 import { notFound, redirect } from 'next/navigation';
 import { AssistantPanel } from '@/components/campus/AssistantPanel';
+import { ExerciceBloc } from '@/components/campus/ExerciceBloc';
 import { Icon } from '@/components/campus/Icon';
 import { SupportFab } from '@/components/campus/SupportFab';
 import { LessonList } from '@/components/LessonList';
 import { currentSession } from '@/lib/server/auth';
 import { getTrainingApercu, getTrainingForUser } from '@/lib/server/campus';
 import { lireConfig, nomAssistant } from '@/lib/server/assistant';
+import { pedagogieDeFormation } from '@/lib/server/pedagogie';
 import { lireReglages } from '@/lib/server/settings';
 
 export const dynamic = 'force-dynamic';
@@ -36,7 +38,13 @@ export default async function FormationPage({ params }: { params: Promise<{ id: 
   if (!training) notFound();
 
   const percent = training.lessonCount === 0 ? 0 : Math.round((training.completedCount / training.lessonCount) * 100);
-  const [config, reglages] = await Promise.all([lireConfig(session.db), lireReglages(session.db)]);
+  const [config, reglages, pedagogie] = await Promise.all([
+    lireConfig(session.db),
+    lireReglages(session.db),
+    // Vue test : on montre l'entraînement réel, mais rien ne s'enregistre (l'API le refuse).
+    pedagogieDeFormation(session.db, session.user.id, training.id),
+  ]);
+  const pedagogieParModule = new Map(pedagogie.map((entree) => [entree.moduleId, entree]));
   const nom = nomAssistant(config);
   const apercu = session.vueTest !== null;
 
@@ -85,6 +93,35 @@ export default async function FormationPage({ params }: { params: Promise<{ id: 
           <div className="mt16">
             <LessonList lessons={module.lessons} />
           </div>
+
+          {(() => {
+            const entrainement = pedagogieParModule.get(module.id);
+            if (!entrainement) return null;
+            return (
+              <>
+                {entrainement.exercices.map((entree) => (
+                  <ExerciceBloc
+                    key={entree.exercice.id}
+                    exercice={{
+                      ...entree.exercice,
+                      questions: entree.exercice.questions.map((question) => ({ ...question, explication: question.explain })),
+                    }}
+                    evaluation={null}
+                  />
+                ))}
+                {entrainement.evaluations.map((entree) => (
+                  <ExerciceBloc
+                    key={entree.evaluation.id}
+                    exercice={null}
+                    evaluation={{
+                      ...entree.evaluation,
+                      questions: entree.evaluation.questions.map((question) => ({ ...question, explication: question.explain })),
+                    }}
+                  />
+                ))}
+              </>
+            );
+          })()}
 
           <div className="col mt16" style={{ gap: 6, alignItems: 'center' }}>
             <AssistantPanel
