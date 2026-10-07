@@ -5,9 +5,9 @@
 > figure, en détail, à plusieurs endroits. Ce document les rassemble en un seul, **sans rien
 > inventer** : chaque règle porte sa source exacte (fichier et ligne) pour être vérifiable.
 >
-> **Ce document décrit ce qui doit être construit. Il ne décrit pas ce qui existe.**
-> Dans l'application, l'assistant n'existe pas encore : `CONFORMITE-DOCUMENTS.md`
-> porte la mention « ❌ à porter ».
+> **Ce document décrit ce que le propriétaire a ÉCRIT.** L'état réel de l'application
+> est en § 6, tenu à jour : au 7 octobre 2026, l'assistant est **branché de bout en
+> bout** — il ne manque que la clé d'un moteur gratuit, à poser côté serveur.
 
 ---
 
@@ -167,20 +167,24 @@ sera respectée.
 
 ## 6. Ce qui existe aujourd'hui, dit sans arrondir
 
-| Élément | Prototype | Application |
+| Élément | Prototype | Application (7 octobre 2026) |
 |---|---|---|
-| Écran de configuration (fournisseur, nom, photo, langue, température) | ✅ | ❌ **rien** |
-| Chaîne de secours entre fournisseurs gratuits | ✅ | ❌ **rien** |
-| Base de connaissances par formation | ✅ | ❌ **rien** |
-| Panneau de discussion étudiant (assistant + coach) | ✅ | ❌ **rien** |
-| Historique « Mes questions » | ✅ | ❌ **rien** |
-| Transcription des avis audio | ✅ | ❌ **rien** |
-| Colonne `assistant_name` en base | — | ⚠️ une trace d'un ancien plan, **jamais utilisée** |
+| Écran de configuration (moteurs, nom, langue, température, plafond) | ✅ | ✅ **construit** — Direction → Assistant virtuel |
+| Chaîne de secours entre fournisseurs gratuits | ✅ | ✅ **construite** — bascule automatique sur quota, bouton de simulation pour la vérifier |
+| Base de connaissances par formation | ✅ | ✅ **construite** — association par formation, isolation vérifiée par test |
+| Panneau de discussion étudiant (assistant + coach) | ✅ | ✅ **construit** — mêmes classes que le prototype, deux onglets |
+| Historique « Mes questions » | ✅ | ✅ **construit** — avec les durées de conservation |
+| Supervision du coach (valider, corriger, répondre) | ✅ | ✅ **construite** — Direction → Conversations |
+| Notifications (cloche, 48 h après lecture) | ✅ | ✅ **construites** |
+| Clé d'API hors du navigateur | ✅ | ✅ **respecté** — 6 liaisons serveur déclarées |
+| **Clé d'un moteur réellement posée** | — | ⚠️ **à faire par le propriétaire** : sans clé, l'assistant le dit honnêtement et renvoie au coach |
+| **Index vectoriel** (recherche du passage pertinent) | ✅ décrit | ⚠️ à venir : aujourd'hui les contenus sont transmis par extraits ; suffisant tant que les formations restent modestes |
+| Photo de l'assistant | ✅ | ⚠️ à venir (le nom, la langue et la couleur sont déjà là) |
+| Transcription des avis audio | ✅ | ⚠️ à venir (le choix du moteur est déjà enregistré) |
 
 Dans le prototype lui-même, la réponse « intelligente » est un texte figé tiré au hasard
-(`aiAnswer()`, `views-student.js` l. 1639) : **aucun appel à un vrai moteur n'y existe**. Le
-prototype décrit la configuration ; il ne la fait pas fonctionner. C'est normal, et c'est
-précisément le travail à faire.
+(`aiAnswer()`, `views-student.js` l. 1639) : aucun appel à un vrai moteur n'y existe. Le
+prototype décrit la configuration ; l'application, elle, la fait fonctionner.
 
 ---
 
@@ -192,17 +196,18 @@ contenu réel passe donc avant, ou en même temps.
 
 Ordre proposé, du plus utile au plus fin :
 
-1. **Vos contenus réels dans la plateforme** — modules, leçons, vidéos, exercices.
-2. **Le panneau de discussion** côté étudiant, avec le nom configurable et la ligne de contexte
-   (module + formation), et l'onglet « Coach humain » à 48 h.
-3. **Le branchement du moteur** — un fournisseur gratuit au départ (Groq recommandé : vos
-   échanges ne servent pas à entraîner leurs modèles), clé **côté serveur**, avec un **plafond
-   de questions par étudiant et par jour** : c'est ce plafond qui protège vos quotas.
-4. **La chaîne de secours** entre fournisseurs, quand la charge le justifiera.
-5. **La base de connaissances par formation**, avec l'index vectoriel et son isolation stricte.
-6. **L'écran de configuration complet** dans la Direction, pour que vous régliez tout vous-même.
-7. **La supervision coach** — voir, valider, corriger, répondre à la place.
-8. **La transcription des avis audio** — Whisper dans le navigateur d'abord (zéro coût).
+1. ✅ **Le panneau de discussion** côté étudiant, avec le nom configurable et la ligne de
+   contexte, et l'onglet « Coach humain » à 48 h — **fait**.
+2. ✅ **Le branchement du moteur** — clé **côté serveur**, **plafond de questions par étudiant
+   et par jour** — **fait**. Il reste à poser **une** clé gratuite (Groq recommandé).
+3. ✅ **La chaîne de secours** entre fournisseurs — **faite**.
+4. ✅ **La base de connaissances par formation**, avec son isolation stricte — **faite**.
+   L'**index vectoriel** viendra quand le volume de contenus le justifiera.
+5. ✅ **L'écran de configuration complet** dans la Direction — **fait**.
+6. ✅ **La supervision coach** — voir, valider, corriger, répondre — **faite**.
+7. ⏳ **La transcription des avis audio** — Whisper dans le navigateur d'abord (zéro coût).
+8. ⏳ **Vos contenus réels** — vos modules et leçons, que vous importerez vous-même.
+   L'assistant s'en nourrira à la seconde où ils seront là.
 
 ---
 
