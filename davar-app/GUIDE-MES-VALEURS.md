@@ -11,6 +11,46 @@
 
 ---
 
+## 0 bis. Où vit ce fichier — et ce qu'on n'en fait JAMAIS
+
+| | |
+|---|---|
+| **Son nom exact** | `.env.local` (le point au début fait partie du nom) |
+| **Son emplacement exact** | à la racine du dossier `davar-app`, donc : `davar-app\.env.local` |
+| **Un autre nom ?** | Il **ne sera pas lu** par l'application. C'est le nom qui compte, pas le contenu. |
+| **Est-il dans GitHub ?** | **Non, et il ne doit JAMAIS y être.** Le dépôt est public : publié, ce fichier donnerait à n'importe qui votre base, vos e-mails et votre stockage. |
+
+**Est-ce « le même fichier » sur toutes vos machines ?** Le **chemin** est le même
+partout, mais chaque machine a **sa propre copie** : le fichier est volontairement
+**exclu** du dépôt, donc il ne voyage pas avec le code. Pour le transporter d'un
+ordinateur à l'autre : **Drive, clé USB ou gestionnaire de mots de passe** — jamais
+Git.
+
+> ⚠️ **Ne faites jamais ça :** `git add -f .env.local` puis `push`. Le `-f`
+> (« forcer ») est la seule façon d'y arriver, et c'est exactement la commande à
+> ne pas taper. Un test du dépôt (`tests/secrets-jamais-versionnes.test.mjs`)
+> refuse d'ailleurs tout fichier de secrets suivi par git, et vérifie qu'aucune
+> valeur ressemblant à une vraie clé n'existe dans le code publié.
+
+**Et pour la mise en service, rien de tout cela ne passe par GitHub** : les mêmes
+noms se saisissent dans **Cloudflare → votre Worker → Settings → Variables and
+Secrets**, en **Secret**. Le code, lui, est déjà publié.
+
+### Obtenir le fichier sur votre machine, sans rien installer de plus
+
+1. Sur GitHub : **Code → Download ZIP** (ou `git clone` si vous avez git), puis
+   décompressez le dossier `davar-app`.
+2. Dans un terminal, placez-vous dans ce dossier et lancez :
+   `npm install`, puis `npm run env:local`
+   → le fichier `davar-app\.env.local` est **créé pour vous**, avec les trois clés
+   déjà fabriquées et la liste de ce qui manque.
+3. Complétez-le avec les valeurs des sections 1 à 5 de ce guide (ou partez du
+   fichier `A-COLLER-DANS-env-local.txt` que je vous ai préparé — même contenu,
+   à recopier sous le nom `.env.local`).
+4. Vérifiez : `npm run recette:services`.
+
+---
+
 ## 0. Avant de commencer — 1 minute
 
 Dans le dossier `davar-app`, ouvrez un terminal et lancez :
