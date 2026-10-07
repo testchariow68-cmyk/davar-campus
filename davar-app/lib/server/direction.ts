@@ -507,7 +507,7 @@ export type Membre = {
 export async function listerEquipe(db: Db): Promise<Membre[]> {
   const resultat = await db.execute(
     `SELECT id,email_normalized,display_name,role,status,email_verified_at_ms,last_login_at_ms,is_test
-     FROM users WHERE role<>'student' ORDER BY role, email_normalized`
+     FROM users WHERE role<>'student' AND is_test=0 ORDER BY role, email_normalized`
   );
   return resultat.rows.map((ligne) => ({
     id: texte(ligne.id),
@@ -592,11 +592,19 @@ export type Etudiant = {
   leconsTerminees: number;
 };
 
-export async function listerEtudiants(db: Db, recherche = '', limite = 100): Promise<Etudiant[]> {
+/**
+ * Liste des étudiants. Les COMPTES DE TEST en sont exclus par défaut : ils ne
+ * doivent apparaître que dans l'espace « Vue test », jamais mêlés aux personnes
+ * réelles (décision du propriétaire, 6 octobre 2026).
+ * `inclureTests` n'est utilisé que par la page Vue test.
+ */
+export async function listerEtudiants(db: Db, recherche = '', limite = 100, inclureTests = false): Promise<Etudiant[]> {
   const terme = `%${recherche.trim().toLowerCase()}%`;
   const resultat = await db.execute({
     sql: `SELECT id,email_normalized,display_name,status,email_verified_at_ms,created_at_ms,is_test
-          FROM users WHERE role='student' AND (?='%%' OR email_normalized LIKE ? OR LOWER(display_name) LIKE ?)
+          FROM users
+          WHERE role='student' AND ${inclureTests ? '1=1' : 'is_test=0'}
+            AND (?='%%' OR email_normalized LIKE ? OR LOWER(display_name) LIKE ?)
           ORDER BY is_test, created_at_ms DESC LIMIT ?`,
     args: [terme, terme, terme, Math.min(Math.max(limite, 1), 500)],
   });

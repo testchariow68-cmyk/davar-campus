@@ -15,7 +15,7 @@
 | `davar-app/` | **La vraie application** (Next.js + Turso) — à finaliser. | Drive `davar-app/` **et** dépôt GitHub |
 | `site/` | **Vitrine publique** (SEO, sans lien vers l'app) : « la plateforme est privée, on y entre uniquement après achat ». | Drive `site/` |
 
-Deux domaines séparés : vitrine publique d'un côté, application privée de l'autre.
+Un seul domaine : l'application privée. La vente se fait sur la page officielle du propriétaire, hors de ce dépôt.
 
 ## 2. Décisions figées par vos documents
 

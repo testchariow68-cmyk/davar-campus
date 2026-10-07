@@ -78,7 +78,20 @@ export async function getTrainingForUser(db: Db, userId: string, trainingId: str
     args: [userId, trainingId],
   });
   if (enrolled.rows.length === 0) return null;
+  return lireContenuFormation(db, trainingId, userId);
+}
 
+/**
+ * Lecture du contenu d'une formation, sans contrôle d'inscription : réservée à deux
+ * usages internes — `getTrainingForUser` (après vérification du droit) et l'aperçu
+ * d'une vue test. `userId` à null signifie « aucune progression » : la jointure ne
+ * rencontre alors aucune ligne, tout est à zéro, et rien n'est écrit.
+ */
+async function lireContenuFormation(
+  db: Db,
+  trainingId: string,
+  userId: string | null
+): Promise<TrainingDetail | null> {
   const trainingRow = await db.execute({
     sql: 'SELECT id, title, description FROM trainings WHERE id = ?',
     args: [trainingId],
@@ -97,7 +110,7 @@ export async function getTrainingForUser(db: Db, userId: string, trainingId: str
           LEFT JOIN lesson_completions c ON c.lesson_id = l.id AND c.user_id = ?
           WHERE m.training_id = ?
           ORDER BY m.position, l.position`,
-    args: [userId, trainingId],
+    args: [userId ?? '', trainingId],
   });
 
   const modules: Module[] = [];
@@ -169,4 +182,44 @@ export async function setLessonCompletion(
     await db.execute({ sql: 'DELETE FROM lesson_completions WHERE user_id = ? AND lesson_id = ?', args: [userId, lessonId] });
   }
   return true;
+}
+
+/* ---------------------------------------------------------------- vue test */
+
+/**
+ * APERÇU D'UNE VUE TEST.
+ *
+ * Un compte de test n'est inscrit à rien — et ne doit jamais rien écrire dans le vrai.
+ * Mais la vue test doit montrer le contenu RÉEL du propriétaire : ses formations, ses
+ * modules, ses leçons, ses vidéos, ses exercices. On lit donc le catalogue tel qu'il est,
+ * avec une progression à zéro. Aucune écriture n'est possible par ce chemin.
+ */
+export async function listTrainingsApercu(db: Db): Promise<EnrolledTraining[]> {
+  const result = await db.execute(
+    `SELECT t.id, t.title, t.description,
+            (SELECT COUNT(*) FROM course_modules m JOIN course_lessons l ON l.module_id = m.id
+              WHERE m.training_id = t.id) AS lesson_count
+     FROM trainings t
+     WHERE t.published = 1
+     ORDER BY t.title`
+  );
+  const liste: EnrolledTraining[] = [];
+  for (const row of result.rows) {
+    const id = text(row.id);
+    const title = text(row.title);
+    if (!id || !title) continue;
+    liste.push({
+      id,
+      title,
+      description: text(row.description),
+      lessonCount: num(row.lesson_count),
+      completedCount: 0,
+    });
+  }
+  return liste;
+}
+
+/** Contenu complet d'une formation, en lecture seule, pour une vue test. */
+export async function getTrainingApercu(db: Db, trainingId: string): Promise<TrainingDetail | null> {
+  return lireContenuFormation(db, trainingId, null);
 }

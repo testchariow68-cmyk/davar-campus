@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { LogoutButton } from '@/components/LogoutButton';
 import { NavDirection } from '@/components/direction/NavDirection';
+import { VueTestBar } from '@/components/campus/VueTestBar';
 import { currentSession } from '@/lib/server/auth';
 import { sessionProprietaire } from '@/lib/server/direction-access';
 
@@ -33,6 +34,8 @@ export default async function DirectionLayout({ children }: { children: React.Re
   }
 
   return (
+    <>
+      {proprietaire.vueTest && <VueTestBar nom={proprietaire.user.displayName} />}
     <div className="container" style={{ paddingTop: 24, paddingBottom: 56 }}>
       <header className="row between" style={{ flexWrap: 'wrap', gap: 12 }}>
         <div className="row" style={{ gap: 12 }}>
@@ -45,7 +48,7 @@ export default async function DirectionLayout({ children }: { children: React.Re
           </span>
         </div>
         <nav className="row" style={{ gap: 8, flexWrap: 'wrap' }}>
-          <span className="small muted">{proprietaire.user.displayName}</span>
+          <span className="small muted">{proprietaire.reel.displayName}</span>
           <Link href="/campus" className="btn btn-ghost">
             Mon campus
           </Link>
@@ -59,5 +62,6 @@ export default async function DirectionLayout({ children }: { children: React.Re
 
       <main>{children}</main>
     </div>
+    </>
   );
 }

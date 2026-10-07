@@ -7,6 +7,10 @@
  * existe déjà. Les trois autres ont été retirées du catalogue faute de lien
  * d'achat : une formation visible mais non achetable serait un mensonge.
  *
+ * PRIX (propriétaire, 6 octobre 2026) : 39 900 FCFA. Ce prix sert à VOS DOSSIERS
+ * et à votre page de vente — il n'est JAMAIS affiché dans l'application : la
+ * personne achète sur votre page, puis entre ici avec son adresse d'achat.
+ *
  * LIEN D'ACHAT VÉRIFIÉ : le propriétaire a confirmé le 6 octobre 2026 que
  * `https://d-ueo.mychariow.co/prd_6wx1czzp/checkout` est bien le bon lien de
  * checkout de cette formation, et que `prd_6wx1czzp` est bien le produit qui lui
@@ -37,7 +41,7 @@ export const TRAININGS: Training[] = [
     mono: "OR",
     hue: 268,
     hours: 12,
-    price: 45000,
+    price: 39900,
     level: "Tous niveaux",
     chariowUrl: "https://d-ueo.mychariow.co/prd_6wx1czzp/checkout",
   },

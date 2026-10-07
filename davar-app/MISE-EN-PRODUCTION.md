@@ -334,4 +334,4 @@ explicite `--demo`, réservé aux essais hors ligne.
 3. Porter la **V4 étudiante** (l'exemple de dashboard n'étant pas venu, je m'appuie sur le
    prototype et vos notes, et vous corrigez).
 4. Exercices, évaluations, certificats, récompenses, administration, temps réel.
-5. La **vitrine publique** `site/` (SEO), absente du dépôt.
+5. Aucune page publique de vente dans ce dépôt : la vente se fait sur la page Chariow du propriétaire.

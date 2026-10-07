@@ -1,71 +1,159 @@
 import Link from 'next/link';
-import { currentSession } from '@/lib/server/auth';
-import { listUserTrainings } from '@/lib/server/campus';
 import { redirect } from 'next/navigation';
+import { Icon } from '@/components/campus/Icon';
+import { currentSession } from '@/lib/server/auth';
+import { listTrainingsApercu, listUserTrainings } from '@/lib/server/campus';
+import { depuis, modulesConsultes, salutation } from '@/lib/server/campus-recents';
 
-export const metadata = { title: 'Mon campus — Davar Académie' };
 export const dynamic = 'force-dynamic';
+export const metadata = { title: 'Tableau de bord — Davar Académie Campus' };
 
-/** Espace étudiant : uniquement les formations avec un droit vérifié en base. */
-export default async function CampusPage() {
-  const session = await currentSession();
-  if (!session) redirect('/connexion');
-
-  let trainings: Awaited<ReturnType<typeof listUserTrainings>> = [];
-  let unavailable = false;
-  try {
-    trainings = await listUserTrainings(session.db, session.user.id);
-  } catch {
-    unavailable = true;
-  }
-
+/** Barre de progression — mêmes classes et même libellé que le prototype. */
+function Progression({ pourcent }: { pourcent: number }) {
   return (
     <div>
-      <h1 style={{ fontSize: 24, marginTop: 8 }}>Bonjour {session.user.displayName.split(' ')[0]} 👋</h1>
-
-      {unavailable ? (
-        <div className="banner err mt16" role="alert">
-          <span>Impossible de lire vos formations pour le moment. Réessayez dans un instant.</span>
-        </div>
-      ) : trainings.length === 0 ? (
-        <section className="card card-pad mt16">
-          <h2 style={{ fontSize: 18 }}>Aucune formation active sur ce compte</h2>
-          <div className="banner info mt16">
-            <span>
-              L’accès se rattache au compte après un achat sur notre boutique Chariow : il faut que
-              l’adresse e-mail du compte soit confirmée et qu’elle soit la même que celle utilisée
-              pour l’achat. Si votre accès n’apparaît pas, écrivez-nous : nous l’ouvrons à la main.
-            </span>
-          </div>
-          <Link href="/" className="btn btn-primary mt16">Voir les formations</Link>
-        </section>
-      ) : (
-        <div className="grid g2 mt16">
-          {trainings.map((training) => {
-            const percent = training.lessonCount === 0 ? 0 : Math.round((training.completedCount / training.lessonCount) * 100);
-            return (
-              <article className="card card-pad" key={training.id}>
-                <h2 style={{ fontSize: 18 }}>{training.title}</h2>
-                {training.description && <p className="muted small">{training.description}</p>}
-                <p className="small muted">
-                  {training.lessonCount === 0
-                    ? 'Contenu en préparation.'
-                    : `${training.completedCount} / ${training.lessonCount} leçons terminées`}
-                </p>
-                <div
-                  aria-hidden="true"
-                  style={{ height: 8, borderRadius: 99, background: 'var(--violet-soft)', overflow: 'hidden' }}
-                >
-                  <div style={{ width: `${percent}%`, height: '100%', background: 'var(--grad)' }} />
-                </div>
-                <Link href={`/campus/formation/${training.id}`} className="btn btn-primary mt16">
-                  Ouvrir la formation
-                </Link>
-              </article>
-            );
-          })}
-        </div>
-      )}
+      <div className="pbar">
+        <i style={{ width: `${pourcent}%` }} />
+      </div>
+      <div className="xs faint mt4">{pourcent} % terminé</div>
     </div>
+  );
+}
+
+/**
+ * TABLEAU DE BORD ÉTUDIANT — reconstruction fidèle de `vDashboard()` du prototype.
+ *
+ * Même salutation selon l'heure, même en-tête de page, même carte « Reprendre ma
+ * formation », mêmes « Consultés récemment », puis « Mes formations ».
+ *
+ * Écart assumé et visible : les cartes du prototype qui reposent sur des parties
+ * pas encore construites (notifications push, assistant, motivation de la
+ * semaine, certificats) ne sont pas affichées. Chacune reviendra avec la brique
+ * correspondante — jamais avant.
+ */
+export default async function CampusDashboard() {
+  const session = await currentSession();
+  if (!session) redirect('/connexion');
+  const { db, user } = session;
+
+  const [formations, recents] = await Promise.all([
+    session.vueTest ? listTrainingsApercu(db) : listUserTrainings(db, user.id),
+    session.vueTest ? Promise.resolve([]) : modulesConsultes(db, user.id),
+  ]);
+
+  const avecProgression = formations.map((formation) => ({
+    formation,
+    pourcent:
+      formation.lessonCount === 0 ? 0 : Math.round((formation.completedCount / formation.lessonCount) * 100),
+  }));
+  // « Reprendre » : la première formation commencée mais pas terminée, comme le prototype.
+  const aReprendre = avecProgression.find(({ pourcent }) => pourcent > 0 && pourcent < 100) ?? null;
+  const prenom = user.displayName.split(' ')[0] || user.displayName;
+
+  return (
+    <>
+      <div className="page-head">
+        <div>
+          <h1>
+            {salutation()}, {prenom} 👋
+          </h1>
+          <p>Voici l&apos;état de votre campus aujourd&apos;hui.</p>
+        </div>
+      </div>
+
+      {formations.length === 0 ? (
+        <div className="card card-pad">
+          <div className="empty">
+            <Icon nom="cap" taille={26} />
+            <h3 className="mt16">Votre campus est prêt</h3>
+            <p className="muted small mt8">
+              Aucune formation n&apos;est encore rattachée à votre compte. Si vous venez d&apos;acheter,
+              vérifiez que l&apos;adresse de votre compte est bien <strong>confirmée</strong> et
+              qu&apos;elle est identique à celle de votre achat. Dans le moindre doute, écrivez-nous :
+              la direction ouvre l&apos;accès à la main.
+            </p>
+            <Link href="/campus/aide" className="btn btn-primary mt16">
+              <Icon nom="headset" taille={15} /> Écrire à la direction
+            </Link>
+          </div>
+        </div>
+      ) : (
+        <>
+          {aReprendre && (
+            <div className="card" style={{ overflow: 'hidden', marginBottom: 22 }}>
+              <div className="row" style={{ padding: 20, flexWrap: 'wrap', gap: 16 }}>
+                <div className="wrap" style={{ minWidth: 220 }}>
+                  <div className="eyebrow">Reprendre ma formation</div>
+                  <h3 style={{ fontSize: 16, margin: '3px 0 8px' }}>{aReprendre.formation.title}</h3>
+                  <Progression pourcent={aReprendre.pourcent} />
+                </div>
+                <Link
+                  href={`/campus/formation/${aReprendre.formation.id}`}
+                  className="btn btn-primary"
+                  style={{ marginLeft: 'auto' }}
+                >
+                  <Icon nom="play" taille={15} /> Continuer
+                </Link>
+              </div>
+            </div>
+          )}
+
+          <div className="card mb24">
+            <div className="card-head">
+              <h3>Mes formations</h3>
+              <Link href="/campus/formations" className="small">
+                Tout voir
+              </Link>
+            </div>
+            {avecProgression.map(({ formation, pourcent }) => (
+              <Link
+                key={formation.id}
+                href={`/campus/formation/${formation.id}`}
+                className="res-item"
+              >
+                <span className={`step-ico ${pourcent >= 100 ? 's-done' : pourcent > 0 ? 's-cur' : ''}`}>
+                  <Icon nom={pourcent >= 100 ? 'checkCircle' : 'play'} taille={14} />
+                </span>
+                <div className="wrap">
+                  <b style={{ fontSize: 13.5 }}>{formation.title}</b>
+                  <div className="xs faint">
+                    {formation.completedCount} sur {formation.lessonCount} leçon
+                    {formation.lessonCount > 1 ? 's' : ''} terminée
+                    {formation.completedCount > 1 ? 's' : ''}
+                  </div>
+                </div>
+                <Icon nom="chevR" taille={15} className="faint" />
+              </Link>
+            ))}
+          </div>
+
+          <div className="card">
+            <div className="card-head">
+              <h3>Consultés récemment</h3>
+            </div>
+            {recents.length === 0 ? (
+              <div className="empty small">Commencez un module pour le retrouver ici.</div>
+            ) : (
+              recents.map((recent) => (
+                <Link
+                  key={recent.moduleId}
+                  href={`/campus/formation/${recent.formationId}`}
+                  className="res-item"
+                >
+                  <span className="step-ico s-cur">
+                    <Icon nom="play" taille={14} />
+                  </span>
+                  <div className="wrap">
+                    <b style={{ fontSize: 13 }}>{recent.moduleTitre}</b>
+                    <div className="xs faint">{recent.formationTitre}</div>
+                  </div>
+                  <span className="xs faint">{depuis(recent.quandMs)}</span>
+                </Link>
+              ))
+            )}
+          </div>
+        </>
+      )}
+    </>
   );
 }

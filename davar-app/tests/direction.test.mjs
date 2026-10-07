@@ -285,9 +285,14 @@ test('les comptes de test sont marqués et exclus des chiffres réels', async ()
   assert.equal(apres.etudiants, 1, 'un compte de test ne doit pas gonfler le chiffre des étudiants');
   assert.equal(apres.comptesTest, 1);
 
+  /* La liste ordinaire ne montre QUE de vraies personnes : les comptes de test
+     n'apparaissent que dans l'espace « Vue test », réservé au propriétaire. */
   const liste = await listerEtudiants(db);
-  assert.equal(liste.find((etudiant) => etudiant.email === 'test@davar.test').estTest, true);
+  assert.equal(liste.find((etudiant) => etudiant.email === 'test@davar.test'), undefined);
   assert.equal(liste.find((etudiant) => etudiant.email === 'reel@davar.test').estTest, false);
+
+  const listeVueTest = await listerEtudiants(db, '', 100, true);
+  assert.equal(listeVueTest.find((etudiant) => etudiant.email === 'test@davar.test').estTest, true);
 
   const retour = await basculerCompteTest(db, 'test@davar.test', false);
   assert.equal(retour.ok, true);

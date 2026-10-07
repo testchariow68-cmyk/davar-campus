@@ -5,7 +5,7 @@
 
 | # | Décision | État | Preuve dans le code |
 |---|----------|------|---------------------|
-| 1 | Deux domaines séparés : app (8080) + vitrine sans app (8081) | ✅ | Serveurs actifs, 200 |
+| 1 | Campus servi seul (un domaine, une application privée) | ✅ | Serveur actif, 200 |
 | 2 | Chariow hors app (lien externe) / Flutterwave in-app / Money Fusion prioritaire pays couverts | ✅ | `window.open(chariow_url,'_blank')` · `api.flutterwave.com` · routage pays |
 | 3 | CinetPay BANNI | ✅ | 0 occurrence dans tout le code |
 | 4 | JAMAIS le mot « RGPD » (formulation libre à la place) | ✅ | 0 occurrence — pied d’e-mail : « Vos données vous appartiennent… » |

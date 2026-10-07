@@ -11,6 +11,8 @@ export async function POST(request: Request) {
   if (!isSameOrigin(request)) return jsonNoStore({ error: 'origin_refused' }, 403);
   const session = await currentSession();
   if (!session) return jsonNoStore({ error: 'unauthenticated' }, 401);
+  // Une vue test est en LECTURE SEULE : elle ne doit jamais écrire dans la vraie progression.
+  if (session.vueTest) return jsonNoStore({ error: 'vue_test_lecture_seule' }, 403);
   const body = await readJsonBody(request);
   if (!body || typeof body.lessonId !== 'string')
     return jsonNoStore({ error: 'invalid_input' }, 400);

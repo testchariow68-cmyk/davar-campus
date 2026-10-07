@@ -11,7 +11,8 @@
 | Reçu | Volume | Décision |
 |---|---|---|
 | `davar-campus/` — le prototype complet | 5,4 Mo | **Conservé** : `reference/prototype-campus/` (code, style, assets, documents) |
-| `site/` — la vitrine publique | 1,9 Mo | **Conservé** : `vitrine/` — c'est la présentation officielle, prête à déployer |
+| `site/` — l'ancienne vitrine publique | 1,9 Mo | **SUPPRIMÉE** (propriétaire, 6 octobre 2026) : « j'ai ma page de vente, je n'ai pas besoin d'un site » |
+| `davar-campus/SEO.md` — plan de référencement de la vitrine | — | **SUPPRIMÉ** : il ne décrivait que la vitrine ; le garder aurait induit en erreur |
 | `uploads/` — captures d'écran de travail | 4,5 Mo | **Non conservé** : ce sont des captures de mise au point, pas une référence |
 | `.config/.wrangler/logs/` — journaux | 65 Ko | **Non conservé** : journaux de machine, aucun intérêt |
 | `davar-app/` (ancienne copie) | 2,4 Mo | **Non conservé** : l'application du dépôt est plus récente et plus complète |
@@ -27,7 +28,7 @@
 | `views-admin.js` | 2 726 | 162 | Administration complète |
 | `views-student.js` | 2 123 | 136 | Parcours étudiant |
 | `views-campus.js` | 977 | 79 | Campus, catalogue, achats |
-| `data.js` | 717 | 28 | Modèle de données (localStorage) |
+| `data.js` | 620 | 28 | Modèle de données (localStorage) — 717 lignes reçues, nettoyées depuis |
 | `lifecycle.js` | 352 | 17 | Cycle de vie et purge |
 | `ui.js` | 298 | 42 | Interface |
 | `rewards.js` | 278 | 20 | Récompenses et badges |
@@ -35,7 +36,7 @@
 | `icons.js` | 94 | 1 | Icônes |
 | `emails.js` | 51 | 2 | E-mails |
 | `security-client.js` | 36 | 3 | Sécurité côté navigateur |
-| **Total** | **≈ 7 900** | **≈ 490** | |
+| **Total** | **≈ 7 800** | **≈ 490** | |
 
 ### Écrans identifiés dans le prototype
 
@@ -110,12 +111,27 @@ c'est précisément ce que le prototype ne pouvait pas faire (il ne partage rien
 
 ---
 
-## 5. Deux points à trancher par le propriétaire
+## 5. Décisions prises par le propriétaire (6 octobre 2026)
 
-1. **La vitrine annonce 5 formations, une seule est achetable.** Les quatre autres (Marketing
-   Digital, Anglais professionnel, Excel, Créer son entreprise) sont présentées en cartes, **sans
-   prix ni bouton d'achat** — c'est donc moins trompeur que le catalogue de l'application, qui
-   affichait des prix. Mais les documents structurés déclarent quatre « Course » de plus. Décision
-   attendue : les garder comme annonce, ou n'annoncer que la formation vendable ?
-2. **Le domaine de la vitrine est un marqueur.** `davar-academie.pages.dev` doit être remplacé
-   partout par le domaine définitif avant la mise en ligne (le fichier le dit lui-même en tête).
+1. **Une seule formation est vendable : « Devenir un excellent orateur ».** Décision du propriétaire
+   (6 octobre 2026) : les quatre autres (Marketing Digital, Anglais professionnel, Excel, Créer son
+   entreprise) sont **retirées** de l'application. Le prix (39 900 FCFA) n'apparaît jamais dans
+   l'application : il est porté par la page de vente officielle.
+2. **Le domaine.** `davar-academie.pages.dev` est un marqueur à remplacer par le domaine définitif
+   le jour de la mise en ligne.
+
+### Ce que la copie de travail du prototype a de moins que le dossier reçu
+
+Le prototype n'est pas modifié dans son comportement : les écrans, le style et les icônes sont
+repris tels quels. Trois nettoyages seulement, tous commandés par le propriétaire :
+
+1. **`SEO.md` retiré** : il ne décrivait que la vitrine, supprimée.
+2. **Quatre formations retirées de `js/data.js`** (Marketing Digital, Excel & Analyse de données,
+   Créer son entreprise, Anglais professionnel) : seule « Devenir un excellent orateur » subsiste,
+   exactement comme dans l'application. Les retirer du fichier de travail évite qu'une copie les
+   réintroduise un jour.
+3. **Prix corrigé** : `39 900 FCFA` (et non 45 000).
+
+**Une seule divergence assumée avec le prototype** : là où il affichait un prix sur la carte d'une
+formation, l'application n'en affiche aucun. Le propriétaire l'a décidé ainsi : l'achat se fait sur
+sa page de vente, le prix n'a rien à faire dans le campus.

@@ -2,7 +2,7 @@ import Link from 'next/link';
 import { notFound, redirect } from 'next/navigation';
 import { LessonList } from '@/components/LessonList';
 import { currentSession } from '@/lib/server/auth';
-import { getTrainingForUser } from '@/lib/server/campus';
+import { getTrainingApercu, getTrainingForUser } from '@/lib/server/campus';
 
 export const dynamic = 'force-dynamic';
 
@@ -14,7 +14,10 @@ export default async function FormationPage({ params }: { params: Promise<{ id: 
 
   let training: Awaited<ReturnType<typeof getTrainingForUser>> = null;
   try {
-    training = await getTrainingForUser(session.db, session.user.id, id);
+    // Vue test : même contenu réel, en lecture seule (aucune progression, aucune écriture).
+    training = session.vueTest
+      ? await getTrainingApercu(session.db, id)
+      : await getTrainingForUser(session.db, session.user.id, id);
   } catch {
     return (
       <div className="banner err" role="alert">

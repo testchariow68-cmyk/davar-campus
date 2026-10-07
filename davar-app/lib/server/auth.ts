@@ -8,6 +8,7 @@ import { openDb } from './turso';
 import { resolveSession, revokeSession, type Db, type SessionUser } from './auth-core';
 import { isDevelopment } from './http';
 import { flushCounters } from './quota.ts';
+import { resoudreVueTest } from './vue-test-cookie';
 
 export { isDevelopment };
 
@@ -47,7 +48,22 @@ export async function clearSessionCookie(): Promise<void> {
   jar.set(SESSION_COOKIE, '', { httpOnly: true, sameSite: 'lax', secure: !isDevelopment(), path: '/', maxAge: 0 });
 }
 
-export type ActiveSession = { user: SessionUser; token: string; db: Db };
+/**
+ * Session courante.
+ *   - `user`   : la personne EFFECTIVE — le compte de test quand une vue test est ouverte ;
+ *   - `reel`   : la personne réellement connectée, toujours elle-même ;
+ *   - `vueTest`: le compte de test affiché, ou null.
+ * Les écrans du campus s'affichent avec `user` ; tout ce qui touche aux droits (Espace
+ * Direction, actions réservées) lit `reel`, afin que le propriétaire « garde ses droits »
+ * pendant une vue test, exactement comme le prototype le promettait.
+ */
+export type ActiveSession = {
+  user: SessionUser;
+  reel: SessionUser;
+  vueTest: SessionUser | null;
+  token: string;
+  db: Db;
+};
 
 /** Session courante ou null. Aucune exception ne fuit vers la page appelante. */
 export async function currentSession(): Promise<ActiveSession | null> {
@@ -58,9 +74,12 @@ export async function currentSession(): Promise<ActiveSession | null> {
     const db = await openDb();
     // Vidage des compteurs de quota accumulés (1 écriture Turso pour N requêtes).
     await flushCounters(db);
-    const user = await resolveSession(db, token);
-    if (!user) return null;
-    return { user, token, db };
+    const reel = await resolveSession(db, token);
+    if (!reel) return null;
+    // La vue test n'est résolue que pour le propriétaire : pour tout autre compte, le
+    // cookie est ignoré — les comptes de test restent invisibles au reste du monde.
+    const vueTest = await resoudreVueTest(db, reel);
+    return { user: vueTest ?? reel, reel, vueTest, token, db };
   } catch {
     return null;
   }

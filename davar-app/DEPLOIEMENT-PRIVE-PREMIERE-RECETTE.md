@@ -130,7 +130,7 @@ suivante, après votre retour sur cette première recette.
 2. Puis je porte le **cœur pédagogique réel** (chapitres, modules, leçons, lecteur vidéo R2 signé,
    progression verrouillée à 100 %, enrichissement silencieux), comme vos documents le prescrivent.
 3. Ensuite : exercices et évaluations, certifications, récompenses, administration, temps réel.
-4. L'ouverture publique et la vitrine `site/` viendront en dernier, après revue explicite.
+4. L'ouverture publique viendra en dernier, après revue explicite du propriétaire.
 
 ## Rappels de sécurité
 

@@ -159,113 +159,16 @@ function seedState() {
     ],
     trainings: [
       {
-        id: 't-marketing', code: 'MD-101', abbr: 'MKT', title: 'Marketing Digital — Fondamentaux', mono: 'MD',
-        desc: 'Maîtrisez les canaux digitaux, construisez une stratégie de contenu et mesurez vos performances comme un professionnel.',
-        longDesc: 'Une formation complète pour comprendre le marketing digital, choisir ses canaux, produire du contenu qui convertit et piloter ses résultats avec des indicateurs clairs. Études de cas 100 % adaptées au marché africain.',
-        level: 'Débutant → Intermédiaire', hours: 14, price: 45000, published: true, hue: 268, students: 128, rating: 4.8,
-        chariow_url: 'https://chariow.com/checkout/davar-mkt-101',
-        chapters: [
-          {
-            id: 'c1', title: 'Comprendre le marketing digital',
-            modules: [
-              { id: 'm1-1', title: 'Introduction et enjeux', duration: '12:40', ratio: '16:9', text: 'Le marketing digital regroupe l’ensemble des techniques utilisées pour promouvoir une activité sur les canaux numériques. Pour une entreprise en Côte d’Ivoire, c’est aujourd’hui le levier le plus rentable pour toucher sa clientèle.\n\nDans ce module, nous posons le vocabulaire essentiel : audience, canal, conversion, fidélisation.', resources: [{ name: 'Guide du marketing digital (PDF)', type: 'pdf', size: '2,4 Mo' }, { name: 'Fiche vocabulaire essentiel', type: 'doc', size: '640 Ko' }], extraVideos: [] },
-              { id: 'm1-2', title: 'Les canaux digitaux', duration: '18:22', ratio: '16:9', text: 'Réseaux sociaux, moteur de recherche, e-mail, WhatsApp Business : chaque canal a un rôle précis dans le parcours client.', resources: [{ name: 'Comparatif des canaux (PDF)', type: 'pdf', size: '1,8 Mo' }], extraVideos: [{ title: 'Interview : stratège digitale à Abidjan', duration: '8:12', ratio: '16:9' }] }
-            ],
-            exercise: {
-              id: 'ex-c1', title: 'Exercice — Vérifiez vos acquis', intro: 'Cet exercice vous permet de pratiquer. Il ne bloque pas votre progression.',
-              questions: [
-                { type: 'single', q: 'Quel est l’objectif principal du marketing digital ?', opts: ['Distribuer des flyers plus rapidement', 'Attirer, convertir et fidéliser via les canaux numériques', 'Remplacer totalement la vente physique', 'Réduire les effectifs de l’entreprise'], correct: 1, expl: 'Le marketing digital couvre tout le parcours : attirer une audience, la convertir en clients, puis la fidéliser.' },
-                { type: 'single', q: 'Quel canal est le plus adapté pour toucher une audience professionnelle B2B ?', opts: ['TikTok', 'Snapchat', 'LinkedIn', 'Les SMS groupés'], correct: 2, expl: 'LinkedIn reste le canal de référence pour les audiences professionnelles et B2B.' },
-                { type: 'multi', q: 'Parmi ces éléments, lesquels font partie du SEO ? (plusieurs réponses)', opts: ['Les mots-clés', 'Les backlinks', 'Le contenu de qualité', 'L’achat d’abonnés'], correct: [0, 1, 2], expl: 'Le SEO repose sur les mots-clés, la qualité du contenu et les liens entrants. L’achat d’abonnés n’a aucun effet sur le référencement.' },
-                { type: 'multi', q: 'Quels indicateurs mesurent l’engagement d’une publication ? (plusieurs réponses)', opts: ['Le taux de clic', 'Les partages', 'Les commentaires', 'Le nombre d’employés de l’entreprise'], correct: [0, 1, 2], expl: 'Clics, partages et commentaires traduisent l’engagement réel de l’audience.' }
-              ]
-            }
-          },
-          {
-            id: 'c2', title: 'Réseaux sociaux & contenu',
-            modules: [
-              { id: 'm2-1', title: 'Choisir ses plateformes (format mobile)', duration: '9:05', ratio: '9:16', text: 'Module pensé pour le mobile : choisissez 1 à 2 plateformes maximum, là où se trouve réellement votre audience.', resources: [], extraVideos: [] },
-              { id: 'm2-2', title: 'Créer un calendrier éditorial', duration: '21:15', ratio: '16:9', text: 'Le calendrier éditorial est votre plan de vol : fréquence, piliers de contenu, objectifs de chaque publication.\n\nSans calendrier, la publication devient irrégulière et l’algorithme ne vous pousse plus.', resources: [{ name: 'Modèle de calendrier éditorial (Excel)', type: 'doc', size: '310 Ko' }, { name: 'Checklist avant publication (PDF)', type: 'pdf', size: '480 Ko' }, { name: 'Exemples de visuels performants', type: 'img', size: '3,1 Mo' }], extraVideos: [{ title: 'Démonstration : remplir son calendrier', duration: '6:48', ratio: '16:9' }, { title: 'Short : l’erreur n°1 des débutants', duration: '0:52', ratio: '9:16' }] },
-              { id: 'm2-3', title: 'Étude de cas : une marque locale', duration: '16:03', ratio: '4:3', text: 'Comment une marque de jus locaux à Abidjan est passée de 400 à 21 000 abonnés en 6 mois avec un budget quasi nul.', resources: [{ name: 'Synthèse de l’étude de cas (PDF)', type: 'pdf', size: '1,2 Mo' }], extraVideos: [] }
-            ],
-            assessment: {
-              id: 'ev-c2', title: 'Évaluation — Réseaux sociaux & contenu', type: 'quiz', minScore: 80, duration: '10 min',
-              intro: 'Évaluation bloquante : vous devez obtenir au moins 80 % pour débloquer le chapitre suivant.',
-              questions: [
-                { type: 'single', q: 'Quel est le rôle principal d’un calendrier éditorial ?', opts: ['Publier quand l’inspiration vient', 'Planifier, structurer et suivre ses publications dans le temps', 'Remplacer la publicité payante', 'Augmenter automatiquement le nombre d’abonnés'], correct: 1, expl: 'Le calendrier éditorial sert à planifier et structurer la publication pour maintenir la régularité.' },
-                { type: 'single', q: 'Quel format capte le mieux l’attention sur les réseaux sociaux en 2026 ?', opts: ['Les longs articles', 'La vidéo courte verticale', 'Les diaporamas de 40 images', 'Les liens sans visuel'], correct: 1, expl: 'La vidéo courte verticale domine largement l’attention sur les plateformes sociales.' },
-                { type: 'multi', q: 'Quels éléments doivent figurer dans un bon calendrier éditorial ? (plusieurs réponses)', opts: ['La fréquence de publication', 'Les piliers de contenu', 'L’objectif de chaque publication', 'La masse salariale de l’équipe'], correct: [0, 1, 2], expl: 'Fréquence, piliers de contenu et objectifs sont les trois colonnes d’un calendrier utile.' },
-                { type: 'single', q: 'Quel est le meilleur moment pour publier ?', opts: ['Toujours à 18 h', 'Celui indiqué par les statistiques de votre audience', 'Uniquement le dimanche', 'Peu importe, l’algorithme corrige tout'], correct: 1, expl: 'Le bon horaire dépend de votre audience : vos statistiques (insights) sont la seule source fiable.' },
-                { type: 'multi', q: 'Quels indicateurs suivre pour mesurer l’engagement ? (plusieurs réponses)', opts: ['Le taux de clic', 'Les enregistrements et partages', 'Les commentaires', 'Le nombre de pages du site web'], correct: [0, 1, 2], expl: 'Clics, enregistrements, partages et commentaires mesurent l’engagement réel.' }
-              ]
-            }
-          },
-          {
-            id: 'c3', title: 'Publicité & mesure des résultats',
-            modules: [
-              { id: 'm3-1', title: 'Introduction à la publicité payante', duration: '19:30', ratio: '16:9', text: 'Budgets, ciblage, création publicitaire : les fondamentaux pour lancer une première campagne rentable.', resources: [{ name: 'Grille de budget publicitaire (PDF)', type: 'pdf', size: '900 Ko' }], extraVideos: [] },
-              { id: 'm3-2', title: 'Mesurer ses performances', duration: '15:47', ratio: '16:9', text: 'CTR, CPC, taux de conversion : apprenez à lire vos tableaux de bord et à prendre des décisions basées sur les données.', resources: [{ name: 'Tableau de bord modèle (Excel)', type: 'doc', size: '420 Ko' }], extraVideos: [{ title: 'Tutoriel : lire un rapport de campagne', duration: '7:20', ratio: '16:9' }] }
-            ],
-            assessment: {
-              id: 'ev-c3', title: 'Travail final — Calendrier éditorial', type: 'submission', minScore: null, duration: 'Travail pratique',
-              intro: 'Créez un calendrier éditorial de 2 semaines pour une marque fictive de votre choix (3 piliers de contenu, fréquence, objectifs). Soumettez votre travail au format PDF ou document. Un coach corrigera votre soumission.',
-              accepts: 'PDF, DOC, audio ou vidéo — 25 Mo max.'
-            }
-          }
-        ]
-      },
-      {
-        id: 't-excel', code: 'EX-201', abbr: 'EXD', title: 'Excel & Analyse de données', mono: 'EX',
-        desc: 'Des bases solides aux tableaux de bord : maîtrisez l’outil n°1 de l’analyse de données en entreprise.',
-        longDesc: 'Formules, tableaux croisés dynamiques, graphiques et tableaux de bord décisionnels. Une compétence immédiatement rentable.',
-        level: 'Tous niveaux', hours: 10, price: 35000, published: true, hue: 210, students: 214, rating: 4.9,
-        chariow_url: 'https://chariow.com/checkout/davar-exd-201',
-        chapters: [
-          { id: 'c1', title: 'Les fondamentaux', modules: [
-            { id: 'm1-1', title: 'Interface et bonnes pratiques', duration: '10:12', ratio: '16:9', text: 'Ruban, feuilles, formats : partir sur de bonnes bases.', resources: [{ name: 'Raccourcis clavier essentiels (PDF)', type: 'pdf', size: '350 Ko' }], extraVideos: [] },
-            { id: 'm1-2', title: 'Formules indispensables', duration: '24:08', ratio: '16:9', text: 'SOMME, RECHERCHEX, SI : les formules qui couvrent 90 % des besoins.', resources: [{ name: 'Cahier d’exercices (Excel)', type: 'doc', size: '1,1 Mo' }], extraVideos: [] }
-          ] },
-          { id: 'c2', title: 'Analyser et présenter', modules: [
-            { id: 'm2-1', title: 'Tableaux croisés dynamiques', duration: '22:40', ratio: '16:9', text: 'Résumer des milliers de lignes en quelques clics.', resources: [], extraVideos: [{ title: 'Cas pratique : ventes mensuelles', duration: '9:34', ratio: '16:9' }] },
-            { id: 'm2-2', title: 'Tableaux de bord', duration: '18:05', ratio: '16:9', text: 'Construire un tableau de bord clair pour décider vite.', resources: [{ name: 'Modèle de dashboard (Excel)', type: 'doc', size: '780 Ko' }], extraVideos: [] }
-          ] }
-        ]
-      },
-      {
-        id: 't-entreprendre', code: 'CE-301', abbr: 'CEC', title: 'Créer son entreprise en Côte d’Ivoire', mono: 'CE',
-        chariow_url: 'https://chariow.com/checkout/davar-cec-301',
-        desc: 'De l’idée au registre de commerce : formalités, financement, fiscalité et premiers clients.',
-        longDesc: 'Le parcours complet pour créer et formaliser son entreprise en Côte d’Ivoire : statut juridique, CEPICI, fiscalité, business plan et stratégie de lancement.',
-        level: 'Débutant', hours: 12, price: 55000, published: true, hue: 38, students: 96, rating: 4.7,
-        chapters: [
-          { id: 'c1', title: 'Valider son idée', modules: [
-            { id: 'm1-1', title: 'De l’idée au projet', duration: '14:20', ratio: '16:9', text: 'Étudier son marché avant d’investir.', resources: [], extraVideos: [] },
-            { id: 'm1-2', title: 'Le business model', duration: '17:55', ratio: '16:9', text: 'Construire un modèle économique solide.', resources: [{ name: 'Canevas business model (PDF)', type: 'pdf', size: '540 Ko' }], extraVideos: [] }
-          ] },
-          { id: 'c2', title: 'Formalités & lancement', modules: [
-            { id: 'm2-1', title: 'Statuts juridiques et CEPICI', duration: '20:10', ratio: '16:9', text: 'Choisir son statut et immatriculer son entreprise.', resources: [{ name: 'Checklist des pièces (PDF)', type: 'pdf', size: '410 Ko' }], extraVideos: [] },
-            { id: 'm2-2', title: 'Trouver ses premiers clients', duration: '16:42', ratio: '16:9', text: 'Les 30 premiers jours : action commerciale terrain et digital.', resources: [], extraVideos: [] }
-          ] }
-        ]
-      },
-      {
-        id: 't-anglais', code: 'AN-401', abbr: 'ANG', title: 'Anglais professionnel', mono: 'AN',
-        desc: 'Réunions, e-mails, entretiens : l’anglais dont vous avez vraiment besoin au travail.',
-        longDesc: 'Un programme orienté situations réelles : réunions, appels, e-mails professionnels et négociation. Avec exercices audio et mise en pratique.',
-        level: 'Intermédiaire', hours: 20, price: 40000, published: true, hue: 155, students: 152, rating: 4.6,
-        chariow_url: 'https://chariow.com/checkout/davar-ang-401',
-        chapters: [
-          { id: 'c1', title: 'Communiquer au quotidien', modules: [
-            { id: 'm1-1', title: 'Se présenter professionally', duration: '11:30', ratio: '16:9', text: 'Les formules clés pour se présenter en contexte professionnel.', resources: [], extraVideos: [] },
-            { id: 'm1-2', title: 'Réunions et appels', duration: '15:20', ratio: '16:9', text: 'Participer, donner son avis, conclure.', resources: [{ name: 'Lexique réunion (PDF)', type: 'pdf', size: '320 Ko' }], extraVideos: [] }
-          ] }
-        ]
-      },
-      {
+      /* DÉCISION DU PROPRIÉTAIRE (6 octobre 2026) : quatre formations retirées —
+         Marketing Digital, Excel & Analyse de données, Créer son entreprise, Anglais
+         professionnel. Seule « Devenir un excellent orateur » subsiste. Le fichier
+         d'origine les contenait ; elles sont retirées ici pour qu'aucune copie de
+         travail ne les réintroduise un jour. */
         id: 't-orateur', code: 'OR-101', abbr: 'ORA', title: 'Devenir un excellent orateur', mono: 'OR',
         desc: 'La formation signature DAVAR : vaincre le trac, structurer un discours, captiver n’importe quel auditoire.',
         longDesc: 'Le programme phare de DAVAR Académie. Pas à pas : gestion du trac, structure du message, travail de la voix et du corps, figures de rhétorique, gestion des questions. Chaque module est illustré par une vidéo principale filmée par nos coachs.',
-        level: 'Tous niveaux', hours: 12, price: 45000, published: false, hue: 268, students: 0, rating: null,
+        /* Prix réel : 39 900 FCFA — porté par la page de vente officielle, JAMAIS affiché dans l'application. */
+        level: 'Tous niveaux', hours: 12, price: 39900, published: false, hue: 268, students: 0, rating: null,
         chariow_url: 'https://d-ueo.mychariow.co/prd_6wx1czzp/checkout',
         chapters: [
           {

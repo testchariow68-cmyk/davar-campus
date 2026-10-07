@@ -1,6 +1,9 @@
 import type { Metadata } from "next";
 import { Splash } from "@/components/Splash";
 import "./globals.css";
+// Base de style du PROTOTYPE, chargée après : c'est elle qui porte la
+// ressemblance à 100 % demandée par le propriétaire (voir prototype.css).
+import "./prototype.css";
 
 export const metadata: Metadata = {
   title: "Davar Académie Campus",
@@ -11,8 +14,12 @@ export const metadata: Metadata = {
   manifest: "/manifest.webmanifest",
 };
 
-/** Amorce : thème clair/sombre (système par défaut, persistant) + Inter */
-const themeScript = `(function(){try{var t=localStorage.getItem('davar-theme');if(!t)t=window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light';document.documentElement.dataset.theme=t;}catch(e){}})();`;
+/**
+ * Amorce du thème — réglage du PROTOTYPE : le mode SOMBRE est celui par défaut,
+ * et le choix de la personne est mémorisé (clé `davar_theme`, la même que dans
+ * le prototype, pour rester compatible).
+ */
+const themeScript = `(function(){try{var t=localStorage.getItem('davar_theme');if(!t)t='dark';document.documentElement.dataset.theme=t;}catch(e){document.documentElement.dataset.theme='dark';}})();`;
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (

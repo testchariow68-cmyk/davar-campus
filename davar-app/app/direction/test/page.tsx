@@ -29,7 +29,7 @@ export default async function VueTestPage() {
   const { db } = session;
 
   const [etudiants, equipe, formations] = await Promise.all([
-    listerEtudiants(db),
+    listerEtudiants(db, '', 200, true),
     listerEquipe(db),
     listerFormations(db),
   ]);

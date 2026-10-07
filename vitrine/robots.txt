@@ -1,5 +1,0 @@
-# Site vitrine Davar Académie — domaine définitif à préciser au déploiement
-User-agent: *
-Allow: /
-
-Sitemap: https://davar-academie.pages.dev/sitemap.xml

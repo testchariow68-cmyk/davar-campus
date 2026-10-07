@@ -10,7 +10,7 @@
 | Chemin | Rôle |
 |---|---|
 | `index.html` | Coquille de l'application (page unique, écran d'ouverture 4 s, thème sombre par défaut) |
-| `js/` | **Le comportement** : 11 fichiers, ≈ 7 900 lignes, ≈ 490 fonctions |
+| `js/` | **Le comportement** : 11 fichiers, ≈ 7 800 lignes, ≈ 490 fonctions (`js/data.js` est la seule copie nettoyée : une formation subsiste, cf. `../LECTURE-PROTOTYPE.md` § 5) |
 | `style.css` | La feuille de style du prototype |
 | `assets/` | Logos, icônes, échantillon audio, modèle de certificat |
 | `security/` | Trois modules de sécurité côté navigateur (détection de robots, agents, URL signées) |

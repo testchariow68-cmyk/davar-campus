@@ -1,37 +1,82 @@
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
-import { LogoutButton } from '@/components/LogoutButton';
+import { Icon } from '@/components/campus/Icon';
+import { ThemeButton } from '@/components/campus/ThemeButton';
+import { UserMenu } from '@/components/campus/UserMenu';
+import { VueTestBar } from '@/components/campus/VueTestBar';
+import { VueTestMenu } from '@/components/campus/VueTestMenu';
 import { currentSession } from '@/lib/server/auth';
+import { listerComptesTest, peutTesterUneVue } from '@/lib/server/vue-test';
 
 export const dynamic = 'force-dynamic';
 
 /**
- * Verrou serveur : la session est validée en base (jeton haché) à chaque requête.
- * Aucune donnée de formation n'est rendue avant cette vérification.
+ * COQUILLE DU CAMPUS — reconstruction fidèle de `studentShell()` du prototype.
+ *
+ * Même structure que le prototype, au même endroit :
+ *   barre supérieure (marque + navigation + thème + compte), puis la page.
+ *
+ * Ce qui n'est pas encore repris est VOLONTAIREMENT absent plutôt que simulé :
+ * la cloche de notifications, le bandeau d'annonces, le ticker social, les
+ * fenêtres de discussion et la bulle flottante du prototype dépendent de parties
+ * du campus qui n'existent pas encore côté serveur. Ils seront ajoutés avec
+ * elles, à l'identique — un bouton qui n'ouvre rien serait un mensonge.
  */
 export default async function CampusLayout({ children }: { children: React.ReactNode }) {
   const session = await currentSession();
   if (!session) redirect('/connexion');
+  const { user, reel, vueTest } = session;
+
+  /**
+   * Vue test : deux affichages, jamais confondus.
+   *   - ouvert : le bandeau « Vue test : … » avec Quitter, et le bouton disparaît ;
+   *   - fermé  : le bouton « Tester une vue », et pour le propriétaire SEULEMENT.
+   * Aucun autre compte ne reçoit la liste des comptes de test : elle n'est même pas lue.
+   */
+  const vuesTest =
+    !vueTest && peutTesterUneVue(reel)
+      ? (await listerComptesTest(session.db)).map((compte) => ({ id: compte.id, libelle: compte.libelle }))
+      : [];
 
   return (
-    <div className="container" style={{ paddingTop: 24, paddingBottom: 56 }}>
-      <header className="row between" style={{ flexWrap: 'wrap', gap: 12 }}>
-        <Link href="/campus" className="brand" style={{ textDecoration: 'none' }}>
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/logo-structure.png" alt="Davar Académie" className="brand-img" />
-        </Link>
-        <nav className="row" style={{ gap: 8, flexWrap: 'wrap' }}>
-          <span className="small muted">{session.user.displayName}</span>
-          <Link href="/" className="btn btn-ghost">Catalogue</Link>
-          {session.user.role === 'admin' && (
-            <Link href="/direction" className="btn">
-              Direction
-            </Link>
-          )}
-          <LogoutButton />
-        </nav>
+    <>
+      {vueTest && <VueTestBar nom={user.displayName} />}
+
+      <header className="topbar">
+        <div className="tb-inner">
+          <Link className="brand" href="/campus">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img className="brand-img" src="/logo-structure.png" alt="Davar Académie" />
+            <div className="brand-txt">
+              DAVAR<span>Académie</span>
+            </div>
+          </Link>
+
+          <nav className="tb-nav">
+            <Link href="/campus">Tableau de bord</Link>
+            <Link href="/campus/formations">Mes formations</Link>
+          </nav>
+
+          <div className="tb-right">
+            <ThemeButton />
+            <VueTestMenu vues={vuesTest} />
+            <UserMenu nom={user.displayName} email={user.email} estProprietaire={reel.role === 'admin'} />
+          </div>
+        </div>
       </header>
-      <main className="mt16">{children}</main>
-    </div>
+
+      <main className="container">{children}</main>
+
+      <footer className="container" style={{ paddingBottom: 40 }}>
+        <div className="row between small muted" style={{ gap: 10, flexWrap: 'wrap' }}>
+          <span>
+            <Icon nom="lock" taille={13} /> Espace privé — DAVAR ACADÉMIE
+          </span>
+          <Link href="/campus/aide" className="row" style={{ gap: 5 }}>
+            <Icon nom="headset" taille={13} /> Besoin d&apos;aide ?
+          </Link>
+        </div>
+      </footer>
+    </>
   );
 }
