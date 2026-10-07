@@ -22,6 +22,7 @@ const LIBELLES_SECTION: Record<string, string> = {
   conversations: 'Conversations',
   avis: 'Avis',
   certificats: 'Certificats',
+  ventes: 'Ventes',
   cycle: 'Cycle de vie',
   equipe: 'Équipe',
   assistant: 'Assistant virtuel',

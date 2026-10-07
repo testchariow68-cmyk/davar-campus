@@ -165,6 +165,13 @@ try {
     ['/direction/badges', 'Badges &amp; distinctions'],
     ['/direction/activite', 'Activité des étudiants'],
   ];
+  const pageVentes = await appel(pot, '/direction/ventes');
+  const htmlVentes = await pageVentes.text();
+  controler(
+    '/direction/ventes s’ouvre',
+    pageVentes.status === 200 && htmlVentes.includes('Ventes'),
+    `HTTP ${pageVentes.status}`
+  );
   for (const [chemin, marqueur] of ECRANS_ANALYSE) {
     const page = await appel(pot, chemin);
     const html = await page.text();
@@ -188,6 +195,14 @@ try {
   );
   const pageAnalyse = await appel(pot, '/direction/assistants');
   controler('l’analyste ouvre son écran d’analyse', pageAnalyse.status === 200, `HTTP ${pageAnalyse.status}`);
+  // Les finances restent au propriétaire et au manager : l'analyste ne les voit
+  // même pas dans sa navigation. (Le propriétaire, lui, garde ses droits pendant
+  // la visite — c'est voulu : la vue test change l'affichage, pas les droits.)
+  controler(
+    'l’analyste ne voit pas les Ventes dans sa navigation',
+    !htmlAnalyste.includes('href="/direction/ventes"'),
+    'les finances ne sont pas un écran d’analyse'
+  );
   await appel(pot, '/api/direction/view-as', {
     method: 'POST',
     headers: { 'content-type': 'application/json' },

@@ -43,6 +43,7 @@ export const SECTIONS = [
   'conversations',
   'avis',
   'certificats',
+  'ventes',
   'cycle',
   'equipe',
   'assistant',
@@ -64,6 +65,7 @@ export type SectionDirection = (typeof SECTIONS)[number];
  *   support     → conversations
  *   analyste    → analytics, santé, assistants, badges, activité
  *   manager     → tout sauf la configuration, les e-mails, les exports et l'assistant
+ *                 (il tient les VENTES, comme dans le prototype)
  *
  * Transposition assumée, écran par écran :
  *   - « exercices » et « évaluations » du prototype sont réunis dans DEVOIRS
@@ -92,6 +94,7 @@ export const SECTIONS_PAR_ROLE: Record<RoleEquipe, SectionDirection[]> = {
     'conversations',
     'avis',
     'certificats',
+    'ventes',
     'cycle',
     'equipe',
   ],
