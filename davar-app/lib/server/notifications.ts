@@ -4,8 +4,13 @@
  * Règle du propriétaire, écrite dans le cycle de vie du prototype :
  *   « Notifications lues — disparaissent 48 heures après leur lecture. »
  * Une notification non lue ne disparaît pas : elle attend d'être vue.
+ *
+ * Le profil de chaque personne porte un interrupteur : celui qui a coupé les
+ * notifications n'en reçoit plus — sauf les alertes de SÉCURITÉ, qui touchent
+ * son compte et qu'on ne peut pas lui cacher.
  */
 import type { Db } from './auth-core';
+import { notificationsAcceptees } from './profil.ts';
 
 const JOUR_MS = 24 * 60 * 60 * 1000;
 export const DISPARITION_APRES_LECTURE_MS = 2 * JOUR_MS;
@@ -38,6 +43,8 @@ export async function notifier(
   options: { userId: string; kind?: string; titre: string; corps?: string | null; route?: string | null },
   maintenant = Date.now()
 ): Promise<void> {
+  const kind = options.kind ?? 'system';
+  if (!(await notificationsAcceptees(db, options.userId, kind))) return;
   const id = `ntf_${maintenant.toString(36)}${Math.random().toString(36).slice(2, 10)}`;
   await db.execute({
     sql: `INSERT INTO notifications(id, user_id, kind, title, body, route, created_at_ms, read_at_ms, expires_at_ms)
@@ -45,7 +52,7 @@ export async function notifier(
     args: [
       id,
       options.userId,
-      options.kind ?? 'system',
+      kind,
       options.titre,
       options.corps ?? null,
       options.route ?? null,

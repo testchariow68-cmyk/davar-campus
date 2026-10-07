@@ -70,6 +70,9 @@ export function UserMenu({
               <Icon nom="shieldCheck" taille={15} /> Direction
             </a>
           )}
+          <a className="dd-item" href="/campus/profil">
+            <Icon nom="user" taille={15} /> Profil & paramètres
+          </a>
           <div className="dd-sep" />
           <form action="/api/auth/logout" method="post">
             <button className="dd-item" type="submit" style={{ width: '100%', textAlign: 'left' }}>

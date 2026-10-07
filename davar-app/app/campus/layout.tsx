@@ -10,6 +10,8 @@ import { VueTestMenu } from '@/components/campus/VueTestMenu';
 import { currentSession } from '@/lib/server/auth';
 import { listerComptesTest, peutTesterUneVue } from '@/lib/server/vue-test';
 import { compterNonLues, listerNotifications } from '@/lib/server/notifications';
+import { lirePreferences } from '@/lib/server/profil';
+import { EchelleAffichage } from '@/components/campus/EchelleAffichage';
 import { lireReglages } from '@/lib/server/settings';
 import { annonceDepuisReglages, annonceViseLUtilisateur, plateformesNonSuivies } from '@/lib/server/social';
 
@@ -36,10 +38,11 @@ export default async function CampusLayout({ children }: { children: React.React
    *   - fermé  : le bouton « Tester une vue », et pour le propriétaire SEULEMENT.
    * Aucun autre compte ne reçoit la liste des comptes de test : elle n'est même pas lue.
    */
-  const [notifications, nonLues, reglages] = await Promise.all([
+  const [notifications, nonLues, reglages, preferences] = await Promise.all([
     listerNotifications(session.db, user.id, Date.now(), 20),
     compterNonLues(session.db, user.id, Date.now()),
     lireReglages(session.db),
+    lirePreferences(session.db, user.id),
   ]);
   const annonceBrute = annonceDepuisReglages(reglages);
   const annonce = annonceViseLUtilisateur(annonceBrute, reel.role) ? annonceBrute : null;
@@ -53,6 +56,7 @@ export default async function CampusLayout({ children }: { children: React.React
 
   return (
     <>
+      <EchelleAffichage echelle={preferences.echelle} />
       {vueTest && <VueTestBar nom={user.displayName} />}
 
       <header className="topbar">

@@ -110,8 +110,15 @@ const MIGRATIONS = [
     ddl: 2, // 1 table + 1 index : confirmation d'abonnement aux réseaux
     creates: ['social_subscriptions'],
   },
+  {
+    version: 13,
+    file: '013_preferences_utilisateur.sqlite.sql',
+    sha256: 'e6e983b49a67e4e1bf56cece01cb7d6634bcbd7187db584ae1f5fd0bb6ced600',
+    ddl: 1, // 1 table : préférences personnelles
+    creates: ['user_prefs'],
+  },
 ];
-const EXPECTED_TABLE_COUNT = 47; // 46 après 011 + 1 (012 abonnements aux réseaux)
+const EXPECTED_TABLE_COUNT = 48; // 46 après 011 + 1 (012 abonnements aux réseaux)
 const FORBIDDEN = /\b(drop|truncate|delete\s+from)\b/i;
 
 const mode = process.argv[2];
