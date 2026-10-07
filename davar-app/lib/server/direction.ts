@@ -276,6 +276,7 @@ export type Lecon = {
   kind: string;
   resourceUrl: string;
   durationMin: number | null;
+  content: string;
   terminees: number;
 };
 export type Module = { id: string; position: number; title: string; summary: string; lecons: Lecon[] };
@@ -286,7 +287,7 @@ export async function lireStructure(db: Db, formationId: string): Promise<Module
     args: [formationId],
   });
   const lecons = await db.execute({
-    sql: `SELECT l.id, l.module_id, l.position, l.title, l.kind, l.resource_url, l.duration_min,
+    sql: `SELECT l.id, l.module_id, l.position, l.title, l.kind, l.resource_url, l.duration_min, l.content_text,
                  (SELECT COUNT(*) FROM lesson_completions c WHERE c.lesson_id=l.id) AS terminees
           FROM course_lessons l JOIN course_modules m ON m.id=l.module_id
           WHERE m.training_id=? ORDER BY l.position`,
@@ -304,6 +305,7 @@ export async function lireStructure(db: Db, formationId: string): Promise<Module
         position: nombre(lecon.position),
         title: texte(lecon.title),
         kind: texte(lecon.kind),
+        content: texte(lecon.content_text) ?? '',
         resourceUrl: texte(lecon.resource_url),
         durationMin: lecon.duration_min == null ? null : nombre(lecon.duration_min),
         terminees: nombre(lecon.terminees),
@@ -405,13 +407,26 @@ export async function deplacerModule(db: Db, moduleId: string, sens: 'haut' | 'b
 
 const TYPES_LECON = ['video', 'text', 'exercise', 'live'];
 
+/**
+ * Le texte d'une leçon : c'est ce que l'assistant lit pour répondre sans réciter.
+ * Borné volontairement — un extrait utile, pas un livre entier dans chaque réponse.
+ */
+const LONGUEUR_CONTENU_MAX = 6000;
+
+function texteContenu(valeur: string): string | null {
+  const propre = (valeur ?? '').trim();
+  if (propre.length === 0) return null;
+  return propre.slice(0, LONGUEUR_CONTENU_MAX);
+}
+
 export async function ajouterLecon(
   db: Db,
   moduleId: string,
   titre: string,
   type: string,
   duree: number | null,
-  ressource: string
+  ressource: string,
+  contenu = ''
 ): Promise<Resultat> {
   const propre = titre.trim();
   if (propre.length < 2 || propre.length > 160) return echec('titre_invalide');
@@ -427,8 +442,8 @@ export async function ajouterLecon(
     args: [moduleId],
   });
   await db.execute({
-    sql: 'INSERT INTO course_lessons(id,module_id,position,title,kind,resource_url,duration_min) VALUES (?,?,?,?,?,?,?)',
-    args: [newId('les'), moduleId, nombre(suivant.rows[0]?.p), propre, genre, url || null, minutes],
+    sql: 'INSERT INTO course_lessons(id,module_id,position,title,kind,resource_url,duration_min,content_text) VALUES (?,?,?,?,?,?,?,?)',
+    args: [newId('les'), moduleId, nombre(suivant.rows[0]?.p), propre, genre, url || null, minutes, texteContenu(contenu)],
   });
   return {
     ok: true,
@@ -442,7 +457,8 @@ export async function modifierLecon(
   titre: string,
   type: string,
   duree: number | null,
-  ressource: string
+  ressource: string,
+  contenu = ''
 ): Promise<Resultat> {
   const propre = titre.trim();
   if (propre.length < 2 || propre.length > 160) return echec('titre_invalide');
@@ -452,8 +468,8 @@ export async function modifierLecon(
   const url = ressource.trim().slice(0, 500);
   if (url && !/^https:\/\//i.test(url)) return echec('ressource_non_https');
   const resultat = await db.execute({
-    sql: 'UPDATE course_lessons SET title=?, kind=?, resource_url=?, duration_min=? WHERE id=?',
-    args: [propre, genre, url || null, minutes, leconId],
+    sql: 'UPDATE course_lessons SET title=?, kind=?, resource_url=?, duration_min=?, content_text=? WHERE id=?',
+    args: [propre, genre, url || null, minutes, texteContenu(contenu), leconId],
   });
   if (!resultat.rowsAffected) return echec('lecon_introuvable');
   return { ok: true, message: 'Leçon enregistrée.' };

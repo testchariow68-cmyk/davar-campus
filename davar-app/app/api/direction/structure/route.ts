@@ -43,10 +43,10 @@ export async function POST(request: Request) {
         resultat = await deplacerModule(db, id, body?.sens === 'bas' ? 'bas' : 'haut');
         break;
       case 'add-lesson':
-        resultat = await ajouterLecon(db, id, String(body?.titre ?? ''), String(body?.type ?? 'video'), duree, String(body?.ressource ?? ''));
+        resultat = await ajouterLecon(db, id, String(body?.titre ?? ''), String(body?.type ?? 'video'), duree, String(body?.ressource ?? ''), String(body?.contenu ?? ''));
         break;
       case 'update-lesson':
-        resultat = await modifierLecon(db, id, String(body?.titre ?? ''), String(body?.type ?? 'video'), duree, String(body?.ressource ?? ''));
+        resultat = await modifierLecon(db, id, String(body?.titre ?? ''), String(body?.type ?? 'video'), duree, String(body?.ressource ?? ''), String(body?.contenu ?? ''));
         break;
       case 'delete-lesson':
         resultat = await supprimerLecon(db, id);

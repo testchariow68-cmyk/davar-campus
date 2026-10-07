@@ -19,6 +19,7 @@ type LeconVue = {
   kind: string;
   resourceUrl: string;
   durationMin: number | null;
+  content: string;
   terminees: number;
 };
 type ModuleVue = { id: string; position: number; title: string; summary: string; lecons: LeconVue[] };
@@ -33,8 +34,8 @@ function ChampsLecon({
   onChange,
   prefixe,
 }: {
-  valeur: { titre: string; type: string; duree: string; ressource: string };
-  onChange: (valeur: { titre: string; type: string; duree: string; ressource: string }) => void;
+  valeur: { titre: string; type: string; duree: string; ressource: string; contenu: string };
+  onChange: (valeur: { titre: string; type: string; duree: string; ressource: string; contenu: string }) => void;
   prefixe: string;
 }) {
   return (
@@ -75,6 +76,7 @@ function LigneLecon({ lecon, disabled, agir }: { lecon: LeconVue; disabled: bool
     type: lecon.kind,
     duree: lecon.durationMin == null ? '' : String(lecon.durationMin),
     ressource: lecon.resourceUrl,
+    contenu: lecon.content,
   });
 
   if (edition)
@@ -86,7 +88,7 @@ function LigneLecon({ lecon, disabled, agir }: { lecon: LeconVue; disabled: bool
             className="btn btn-primary"
             disabled={disabled}
             onClick={async () => {
-              await agir({ action: 'update-lesson', id: lecon.id, titre: valeur.titre, type: valeur.type, duree: valeur.duree, ressource: valeur.ressource });
+              await agir({ action: 'update-lesson', id: lecon.id, titre: valeur.titre, type: valeur.type, duree: valeur.duree, ressource: valeur.ressource, contenu: valeur.contenu });
               setEdition(false);
             }}
           >
@@ -148,7 +150,7 @@ function BlocModule({ module, disabled, agir }: { module: ModuleVue; disabled: b
   const [titre, setTitre] = useState(module.title);
   const [resume, setResume] = useState(module.summary);
   const [ajout, setAjout] = useState(false);
-  const [lecon, setLecon] = useState({ titre: '', type: 'video', duree: '', ressource: '' });
+  const [lecon, setLecon] = useState({ titre: '', type: 'video', duree: '', ressource: '', contenu: '' });
 
   return (
     <div className="dv-mod">
@@ -225,8 +227,8 @@ function BlocModule({ module, disabled, agir }: { module: ModuleVue; disabled: b
                 className="btn btn-primary"
                 disabled={disabled || lecon.titre.trim().length < 2}
                 onClick={async () => {
-                  await agir({ action: 'add-lesson', id: module.id, titre: lecon.titre, type: lecon.type, duree: lecon.duree, ressource: lecon.ressource });
-                  setLecon({ titre: '', type: 'video', duree: '', ressource: '' });
+                  await agir({ action: 'add-lesson', id: module.id, titre: lecon.titre, type: lecon.type, duree: lecon.duree, ressource: lecon.ressource, contenu: lecon.contenu });
+                  setLecon({ titre: '', type: 'video', duree: '', ressource: '', contenu: '' });
                   setAjout(false);
                 }}
               >
