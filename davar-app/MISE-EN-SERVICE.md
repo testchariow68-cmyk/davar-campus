@@ -303,3 +303,10 @@ en gardant la fidélité au prototype (95 vues) comme règle de conduite.
   l'envoi lui-même viendra avec le service d'envoi.
 - **Pulse Chariow** — circuit codé et testé en local, drapeau fermé : à n'activer
   qu'après la recette sur le compte marchand.
+
+Ces quatre branchements se vérifient **sur la machine du propriétaire**, sans jamais
+transmettre un secret : `npm run recette:services` (voir `MISE-EN-PRODUCTION.md`, section 4).
+Le script interroge les quatre services réels et n'affiche que des verdicts — un service en
+attente n'est pas un échec, un service branché qui ne répond pas en est un. Les valeurs mal
+collées (identifiant de compte, nom du seau, adresse du relais, jeton) sont nommées avant tout
+appel réseau : ce sont elles qui produisent des pannes silencieuses.

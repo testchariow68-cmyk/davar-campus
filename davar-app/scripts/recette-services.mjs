@@ -1,0 +1,306 @@
+/* RECETTE DES SERVICES — vérifier, sur VOTRE machine, que les quatre services
+ * sont vraiment branchés. Ce script ne prouve rien par politesse : il parle aux
+ * vrais services, et il n'affiche JAMAIS la valeur d'un secret.
+ *
+ * Ce qu'il vérifie, et comment :
+ *   1. BASE     — la connexion répond, les migrations sont appliquées, la
+ *                 dernière version est lue. Refus si l'origine est inconnue.
+ *   2. STOCKAGE — un vrai aller-retour dans le seau : dépôt signé, relecture
+ *                 signée, puis vérification du contenu. La preuve est un petit
+ *                 fichier `recette/preuve-….txt` laissé dans le seau (vous pouvez
+ *                 le supprimer depuis le tableau de bord : 100 octets).
+ *   3. E-MAILS  — deux contrôles SANS envoyer d'e-mail : le relais répond en
+ *                 ligne, et le jeton est accepté (un envoi avec une adresse
+ *                 invalide est refusé APRÈS la vérification du jeton). L'envoi
+ *                 réel n'a lieu que si vous le demandez : `--email vous@exemple.com`.
+ *   4. CHARIOW  — l'état du drapeau et la présence des quatre valeurs. Aucun
+ *                 appel au marchand : la recette Pulse se fait à la main, plus tard.
+ *
+ * SORTIE : uniquement des verdicts (« posée », « absente », « relié », « refusé »),
+ * jamais une valeur. Un service non configuré n'est PAS un échec : c'est un état.
+ * Un service configuré qui ne répond pas, lui, fait sortir le script en erreur.
+ *
+ * Usage :
+ *   npm run recette:services
+ *   npm run recette:services -- --email vous@exemple.com     (envoi réel, en plus)
+ */
+import { readFileSync, readdirSync } from 'node:fs';
+import { createHash } from 'node:crypto';
+import { createClient } from '@libsql/client';
+import { configStockage, clePropre, urlDepot, urlLecture } from '../lib/server/stockage.ts';
+import { mailerConfigured, mailerKind, sendEmail } from '../lib/server/mailer.ts';
+
+/* ------------------------------------------------------------ environnement */
+
+// `.env.local` vit à la racine de davar-app/. On le charge sans jamais l'afficher.
+try {
+  process.loadEnvFile(new URL('../.env.local', import.meta.url));
+} catch {
+  console.log('Note : aucun .env.local lisible — les valeurs doivent venir de l’environnement.');
+}
+
+const args = process.argv.slice(2);
+const destinataireEssai = (() => {
+  const index = args.indexOf('--email');
+  return index >= 0 ? (args[index + 1] ?? '').trim() : '';
+})();
+
+/** Présence d'une valeur, sans jamais en révéler le contenu. */
+const posee = (nom) => (process.env[nom] ?? '').trim().length > 0;
+const etat = (nom) => `${nom} : ${posee(nom) ? 'posée' : 'ABSENTE'}`;
+
+let echecs = 0;
+function controler(nom, condition, detail = '') {
+  console.log(`${condition ? '  OK   ' : 'ÉCHEC '} ${nom}${detail ? ` — ${detail}` : ''}`);
+  if (!condition) echecs += 1;
+}
+
+/* ----------------------------------------------------------------- 1. base */
+
+async function verifierBase() {
+  console.log('\n1. BASE DE DONNÉES');
+  console.log(`   ${etat('TURSO_DATABASE_URL')} · ${etat('TURSO_AUTH_TOKEN')}`);
+  const url = (process.env.TURSO_DATABASE_URL ?? '').trim();
+  if (!url) {
+    console.log('   → en attente : aucune base visée. En local, dev-data suffit.');
+    return;
+  }
+  const hebergee = /^(libsql|https?):\/\//.test(url);
+  if (hebergee && !posee('TURSO_AUTH_TOKEN')) {
+    controler('la base hébergée a son jeton', false, 'TURSO_AUTH_TOKEN est absente');
+    return;
+  }
+  let db = null;
+  try {
+    db = createClient({ url, authToken: posee('TURSO_AUTH_TOKEN') ? process.env.TURSO_AUTH_TOKEN : undefined });
+    const sonde = await db.execute('SELECT 1 AS ok');
+    controler('la base répond', Number(sonde.rows[0]?.ok) === 1, hebergee ? 'base hébergée' : 'base locale');
+  } catch (erreur) {
+    controler('la base répond', false, `refus de la base (${erreur?.code ?? 'erreur'})`);
+    return;
+  }
+  try {
+    const tables = await db.execute(
+      "SELECT COUNT(*) AS n FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%'"
+    );
+    console.log(`   → ${Number(tables.rows[0]?.n)} table(s) en base`);
+  } catch {
+    console.log('   → nombre de tables illisible (base non migrée ?)');
+  }
+  try {
+    // `schema_migrations` porte (version, checksum, installed_at_ms) : le nom du
+    // fichier n'y est pas, mais l'empreinte SHA-256 y est — et c'est elle qui
+    // compte. On la compare au fichier de migration du dépôt : une base migrée
+    // depuis un AUTRE fichier se voit immédiatement.
+    const migrations = await db.execute('SELECT version, checksum FROM schema_migrations ORDER BY version DESC LIMIT 1');
+    const version = Number(migrations.rows[0]?.version ?? 0);
+    controler('les migrations sont appliquées', version >= 16, `dernière version ${version || 'aucune'} — le manifeste en attend 16`);
+    const dossier = new URL('../turso/migrations/', import.meta.url);
+    const fichier = readdirSync(dossier).find((nom) => nom.startsWith(`${String(version).padStart(3, '0')}_`));
+    const empreinte = fichier
+      ? createHash('sha256').update(readFileSync(new URL(fichier, dossier))).digest('hex')
+      : '';
+    const enBase = String(migrations.rows[0]?.checksum ?? '');
+    controler(
+      'l’empreinte de la dernière migration est celle du fichier du dépôt',
+      Boolean(fichier) && empreinte === enBase,
+      fichier ? (empreinte === enBase ? `${fichier} — identique` : `${fichier} — DIFFÉRENTE`) : 'fichier de migration introuvable'
+    );
+  } catch (erreur) {
+    controler('l’empreinte de la dernière migration est celle du fichier du dépôt', false, `lecture impossible (${erreur?.name ?? 'erreur'})`);
+  }
+  await db.close();
+}
+
+/* ------------------------------------------------------------- 2. stockage */
+
+async function verifierStockage() {
+  console.log('\n2. STOCKAGE DES FICHIERS (R2)');
+  for (const nom of ['R2_ACCOUNT_ID', 'R2_ACCESS_KEY_ID', 'R2_SECRET_ACCESS_KEY', 'R2_BUCKET']) console.log(`   ${etat(nom)}`);
+  const config = configStockage();
+  if (!config) {
+    // Le piège le plus probable : les quatre noms sont là, mais la valeur ne
+    // passe pas le format. On le dit NOMMÉMENT — sans jamais montrer la valeur.
+    const toutes = ['R2_ACCOUNT_ID', 'R2_ACCESS_KEY_ID', 'R2_SECRET_ACCESS_KEY', 'R2_BUCKET'].every(posee);
+    if (!toutes) {
+      console.log('   → en attente : dépôt et lecture restent refusés, proprement.');
+      return;
+    }
+    const compte = (process.env.R2_ACCOUNT_ID ?? '').trim();
+    controler(
+      'l’identifiant de compte a le bon format',
+      /^[a-f0-9]{32}$/i.test(compte),
+      'attendu : les 32 caractères hexadécimaux de l’identifiant de compte Cloudflare (ni le nom du compte, ni un jeton d’API)'
+    );
+    controler('le nom du seau est utilisable', /^[a-z0-9][a-z0-9-]{1,61}[a-z0-9]$/.test((process.env.R2_BUCKET ?? '').trim()),
+      'attendu : minuscules, chiffres et tirets (R2 refuse les majuscules et les points)');
+    controler('la clé d’accès S3 est complète', (process.env.R2_ACCESS_KEY_ID ?? '').trim().length >= 16 && (process.env.R2_SECRET_ACCESS_KEY ?? '').trim().length >= 16,
+      'attendu : une clé d’API S3 créée dans R2 (différente du jeton d’API Cloudflare)');
+    return;
+  }
+  const cle = clePropre(`recette/preuve-${Date.now().toString(36)}.txt`);
+  const adresseDepot = await urlDepot(cle, 300);
+  if (!adresseDepot) {
+    controler('une adresse de dépôt est produite', false);
+    return;
+  }
+  const contenu = 'DAVAR — fichier de preuve de la recette des services. Sans contenu personnel.';
+  try {
+    const depot = await fetch(adresseDepot, { method: 'PUT', body: contenu, signal: AbortSignal.timeout(15000) });
+    controler('le dépôt signé est accepté par le seau', depot.ok, `HTTP ${depot.status}`);
+    if (!depot.ok) return;
+    const adresseLecture = await urlLecture(cle, 120);
+    const lecture = await fetch(adresseLecture, { signal: AbortSignal.timeout(15000) });
+    const relu = lecture.ok ? await lecture.text() : '';
+    controler('la relecture signée rend le même contenu', relu === contenu, `HTTP ${lecture.status}`);
+    console.log(`   → preuve laissée dans le seau : ${cle} (${contenu.length} octets, supprimable à la main)`);
+  } catch (erreur) {
+    controler('le seau répond', false, `échec réseau (${erreur?.name ?? 'erreur'})`);
+  }
+}
+
+/* -------------------------------------------------------------- 3. e-mails */
+
+async function verifierEmails() {
+  console.log('\n3. ENVOI DES E-MAILS');
+  console.log(`   MAILER_KIND : ${mailerKind()}`);
+  const mode = mailerKind();
+
+  if (mode === 'none') {
+    if (posee('MAIL_APPS_SCRIPT_URL') || posee('MAIL_APPS_SCRIPT_TOKEN') || posee('BREVO_API_KEY')) {
+      controler(
+        'le mode d’envoi est déclaré',
+        false,
+        'des valeurs sont posées mais MAILER_KIND ne les nomme pas (« apps_script » ou « brevo »)'
+      );
+      return;
+    }
+    console.log('   → en attente : aucune inscription réelle ne partira (l’application refuse plutôt que de mentir).');
+    return;
+  }
+
+  // Les formats d'abord : une valeur mal collée est l'échec le plus probable, et
+  // il est silencieux côté application. Ici, on le nomme.
+  let structureValide = true;
+  if (mode === 'apps_script') {
+    const url = (process.env.MAIL_APPS_SCRIPT_URL ?? '').trim();
+    let https = false;
+    try {
+      https = new URL(url).protocol === 'https:';
+    } catch {
+      https = false;
+    }
+    if (!https) {
+      controler('l’adresse du relais est bien en https', false, 'copiez l’« URL de l’application Web » terminée par /exec');
+      structureValide = false;
+    }
+    const jeton = (process.env.MAIL_APPS_SCRIPT_TOKEN ?? '').trim();
+    if (jeton.length < 16) {
+      controler('le jeton du relais fait au moins 16 caractères', false, 'c’est la propriété DAVAR_MAIL_SECRET du script');
+      structureValide = false;
+    }
+  } else {
+    const cle = (process.env.BREVO_API_KEY ?? '').trim();
+    if (cle.length < 20) {
+      controler('la clé Brevo est posée', false, 'clé d’API Brevo attendue (en-tête api-key)');
+      structureValide = false;
+    }
+    const expediteur = (process.env.MAIL_FROM_EMAIL ?? '').trim();
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(expediteur)) {
+      controler('l’adresse d’expédition est valide', false, 'elle doit être vérifiée chez le fournisseur');
+      structureValide = false;
+    }
+  }
+  if (!structureValide) return;
+
+  controler('la configuration d’envoi est complète', mailerConfigured());
+
+  if (mode === 'apps_script') {
+    const url = (process.env.MAIL_APPS_SCRIPT_URL ?? '').trim();
+    const jeton = (process.env.MAIL_APPS_SCRIPT_TOKEN ?? '').trim();
+    // a. Le relais est-il en ligne et public ? Un GET suffit : le script répond
+    //    sans rien envoyer et sans exposer le moindre secret.
+    try {
+      const reponse = await fetch(url, { method: 'GET', signal: AbortSignal.timeout(15000) });
+      const texte = await reponse.text();
+      controler(
+        'le relais Google répond en ligne',
+        reponse.ok && texte.includes('relais e-mail DAVAR actif'),
+        reponse.ok ? 'déploiement accessible' : `HTTP ${reponse.status} — le déploiement est-il publié « pour tout le monde » ?`
+      );
+    } catch {
+      controler('le relais Google répond en ligne', false, 'injoignable');
+    }
+    // b. Le jeton est-il accepté ? Le script vérifie le jeton AVANT le
+    //    destinataire : on envoie une adresse volontairement invalide, donc
+    //    aucun e-mail ne partira, quoi qu'il arrive.
+    try {
+      const reponse = await fetch(url, {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ secret: jeton, to: 'invalide', subject: 'recette', text: 'recette' }),
+        signal: AbortSignal.timeout(15000),
+      });
+      const texte = await reponse.text();
+      const refuse = texte.includes('non autorisé') || texte.includes('jeton non configuré');
+      controler(
+        'le jeton du relais est accepté',
+        !refuse,
+        refuse ? 'le jeton ne correspond pas à DAVAR_MAIL_SECRET' : 'jeton reconnu — l’adresse d’essai a été refusée, aucun e-mail n’est parti'
+      );
+    } catch {
+      controler('le jeton du relais est accepté', false, 'réponse illisible');
+    }
+  }
+
+  if (destinataireEssai) {
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(destinataireEssai)) {
+      controler('envoi d’essai', false, 'adresse invalide');
+      return;
+    }
+    try {
+      await sendEmail({
+        to: destinataireEssai,
+        subject: 'DAVAR — essai d’envoi',
+        text: 'Cet essai prouve que le campus peut envoyer un e-mail. Si vous le lisez, le relais fonctionne.',
+      });
+      controler('un vrai e-mail d’essai part', true, 'regardez la boîte de réception (et les indésirables)');
+    } catch (erreur) {
+      controler('un vrai e-mail d’essai part', false, `refusé (${erreur?.name ?? 'erreur'})`);
+    }
+  } else {
+    console.log('   (aucun envoi réel ici : « npm run recette:services -- --email vous@exemple.com » en déclenche un)');
+  }
+}
+
+/* ------------------------------------------------------------- 4. Chariow */
+
+function verifierChariow() {
+  console.log('\n4. VENTE CHARIOW (PULSE)');
+  for (const nom of ['CHARIOW_PULSE_SECRET', 'CHARIOW_PULSE_ID', 'CHARIOW_API_KEY', 'CHARIOW_STORE_ID'])
+    console.log(`   ${etat(nom)}`);
+  const actif = (process.env.CHARIOW_ENABLE_PULSE ?? 'false').trim() === 'true';
+  console.log(`   CHARIOW_ENABLE_PULSE : ${actif ? 'true' : 'false'}`);
+  const toutes = ['CHARIOW_PULSE_SECRET', 'CHARIOW_PULSE_ID', 'CHARIOW_API_KEY', 'CHARIOW_STORE_ID'].every(posee);
+  if (!toutes) console.log('   → en attente : le webhook reste fermé, aucune livraison ne peut être perdue.');
+  if (toutes && !actif)
+    console.log('   → prêt mais FERMÉ, et c’est voulu : la recette sur le compte marchand vient d’abord.');
+  if (actif)
+    console.log('   → OUVERT : chaque livraison reçue est vérifiée par signature puis relue chez le marchand.');
+  console.log('   Aucun appel au marchand n’a été fait par cette recette.');
+}
+
+/* ------------------------------------------------------------------ suite */
+
+console.log('RECETTE DES SERVICES — verdicts seulement, jamais une valeur.');
+await verifierBase();
+await verifierStockage();
+await verifierEmails();
+verifierChariow();
+
+console.log(
+  echecs === 0
+    ? '\nRECETTE : tout ce qui est configuré répond. Ce qui est en attente reste annoncé comme tel dans l’application.'
+    : `\nRECETTE : ${echecs} service(s) configuré(s) ne répondent pas — voir les lignes ÉCHEC ci-dessus.`
+);
+process.exit(echecs === 0 ? 0 : 1);

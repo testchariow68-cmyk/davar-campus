@@ -103,7 +103,7 @@ Deux outils pour cela :
 # 0. Récupérer la version à jour du code (branche arena/09f3da07-davar-campus), puis :
 npm ci
 npm run rehearsal:staging        # répétition locale de la migration — doit finir par « RÉUSSITE »
-npm test                         # 63 tests — doivent tous passer
+npm test                         # 178 tests — doivent tous passer
 
 # 1. Schéma de la base de PRODUCTION (inspection d'abord, écriture ensuite)
 & .\scripts\run-production-schema.ps1
@@ -120,21 +120,73 @@ npx cf deploy                    # publication réelle
 Puis, dans le tableau de bord Cloudflare → Worker `davar-campus-production-2026` →
 **Settings → Variables and Secrets**, à saisir en **Secret** :
 
-| Nom | Contenu |
-|---|---|
-| `TURSO_DATABASE_URL` | URL libsql de la base de production |
-| `TURSO_AUTH_TOKEN` | le jeton applicatif lecture-écriture créé à l'étape 3a |
-| `AUTH_PARAMS_SECRET` | chaîne aléatoire de 32 caractères minimum |
-| `AUTH_VERIFIER_PEPPER` | chaîne aléatoire de 16 caractères minimum |
-| `APP_DIAGNOSTIC_TOKEN` | chaîne aléatoire de 32 caractères minimum |
-| `MAIL_APPS_SCRIPT_URL` | l'URL `/exec` de votre script Google Apps Script (étape 3b) |
-| `MAIL_APPS_SCRIPT_TOKEN` | le secret `DAVAR_MAIL_SECRET` de ce script (16 caractères minimum) |
+| Nom | Contenu | Obligatoire pour |
+|---|---|---|
+| `TURSO_DATABASE_URL` | URL libsql de la base de production | le campus entier |
+| `TURSO_AUTH_TOKEN` | le jeton applicatif lecture-écriture créé à l'étape 3a | le campus entier |
+| `AUTH_PARAMS_SECRET` | chaîne aléatoire de 32 caractères minimum | les comptes |
+| `AUTH_VERIFIER_PEPPER` | chaîne aléatoire de 16 caractères minimum | les comptes |
+| `APP_DIAGNOSTIC_TOKEN` | chaîne aléatoire de 32 caractères minimum | le diagnostic |
+| `MAIL_APPS_SCRIPT_URL` | l'URL `/exec` de votre script Google Apps Script (étape 3b) | l'inscription |
+| `MAIL_APPS_SCRIPT_TOKEN` | le secret `DAVAR_MAIL_SECRET` de ce script (16 caractères minimum) | l'inscription |
+| `R2_ACCOUNT_ID` | l'identifiant de compte Cloudflare : **32 caractères hexadécimaux** (ni le nom du compte, ni un jeton d'API) | livres, audios, photos |
+| `R2_ACCESS_KEY_ID` | une **clé d'API S3** R2 (R2 → Manage API Tokens), pas un jeton d'API Cloudflare | livres, audios, photos |
+| `R2_SECRET_ACCESS_KEY` | le secret de cette clé S3 (affiché **une seule fois** à sa création) | livres, audios, photos |
+| `R2_BUCKET` | le nom du seau, en minuscules et tirets (R2 refuse les majuscules et les points) | livres, audios, photos |
+| `CHARIOW_PULSE_ID` | l'identifiant `pulse_…` du webhook | le circuit d'achat |
+| `CHARIOW_STORE_ID` | l'identifiant `str_…` de la boutique | le circuit d'achat |
+| `CHARIOW_PULSE_SECRET` | le secret de signature `whsec_…` du webhook | le circuit d'achat |
+| `CHARIOW_API_KEY` | la clé `sk_…` (relecture de la livraison chez le marchand) | le circuit d'achat |
+| `GROQ_API_KEY` | clé Groq (palier gratuit) — **facultatif** | l'assistant |
+| `GEMINI_API_KEY` | clé Google AI Studio — **facultatif** | l'assistant |
 
-`DAVAR_MAILER` est facultatif : sans lui, le relais **Google Apps Script** est utilisé. Une valeur
+**Ne saisissez PAS `MAILER_KIND` ni `APP_PUBLIC_ORIGIN` dans le tableau de bord** : ces deux
+valeurs sont écrites par la configuration au moment du déploiement, à partir de `DAVAR_MAILER` et
+`DAVAR_PUBLIC_ORIGIN` (voir la commande ci-dessus). `MAILER_KIND` vaut `apps_script` par défaut,
+sans rien régler ; `DAVAR_MAILER` n'existe que pour repasser à Brevo un jour, et une valeur
 inconnue fait **échouer la construction** plutôt que d'envoyer un e-mail par un chemin non prévu.
+`CHARIOW_ENABLE_PULSE` reste `false` : on l'ouvrira après la recette sur le compte marchand.
+
+`BREVO_API_KEY` et `MAIL_FROM_EMAIL` ne servent **que** si vous repassez à Brevo : avec le relais
+Google Apps Script, laissez-les vides.
+
+### Vérifier vos branchements vous-même — `npm run recette:services`
+
+Avant de saisir quoi que ce soit dans Cloudflare, mettez vos valeurs dans
+`davar-app/.env.local` (fichier **jamais** envoyé sur GitHub, ignoré par git), puis :
+
+```powershell
+npm run recette:services
+# et, si vous voulez recevoir un vrai e-mail d'essai en plus (facultatif) :
+npm run recette:services -- --email vous@exemple.com
+```
+
+Le script parle aux quatre services et n'affiche **que des verdicts** (« posée », « absente »,
+« relié », « refusé ») : **jamais la valeur d'un secret, jamais un extrait**. Vous pouvez donc me
+copier sa sortie sans rien exposer.
+
+| Ce qui est vérifié | Comment, exactement |
+|---|---|
+| **Base Turso** | la connexion répond, le nombre de tables, la dernière migration appliquée, et son empreinte comparée au fichier du dépôt |
+| **Stockage R2** | un vrai aller-retour : dépôt par adresse signée, relecture par adresse signée, contenu identique (`recette/preuve-….txt`, une centaine d'octets, supprimable depuis le tableau de bord) |
+| **E-mails** | le relais répond en ligne, puis le jeton est éprouvé par un envoi vers une adresse **invalide** — le script Google vérifie le jeton AVANT le destinataire, donc aucun e-mail ne part ; l'adresse d'essai ne sert qu'avec `--email` |
+| **Chariow** | présence des quatre valeurs et état du drapeau — **aucun appel au marchand** n'est fait ici |
+
+Deux règles de lecture : un service que vous n'avez pas encore branché **n'est pas un échec** (il
+est annoncé « en attente », et l'application le dit aussi à ses utilisateurs) ; un service branché
+qui ne répond pas fait sortir le script **en erreur**, avec la ligne à corriger.
+
+Les valeurs mal collées sont nommées avant tout appel réseau — c'est là que se cachent les pannes
+silencieuses : « l'identifiant de compte a le bon format » (32 caractères hexadécimaux), « le nom
+du seau est utilisable » (minuscules, chiffres, tirets), « l'adresse du relais est bien en https »,
+« le jeton du relais fait au moins 16 caractères ».
 
 ⚠️ Si vous modifiez un secret dans le tableau de bord, Cloudflare **republie une version** du
 Worker : faites-le avant la recette finale, puis recontrôlez.
+
+⚠️ Pour la recette locale, `.env.local` doit contenir `MAILER_KIND=apps_script` en plus des deux
+valeurs du relais : c'est ce qui autorise le script à parler au relais (sans quoi il se tairait,
+comme en développement où l'envoi réel est volontairement éteint).
 
 ## 3 ter. La page de vente Chariow, telle qu'elle répond (vérifiée le 6 octobre 2026)
 
