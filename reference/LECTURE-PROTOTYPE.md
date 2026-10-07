@@ -94,7 +94,7 @@ Ce que le prototype montre et que l'application **n'a pas encore** :
 | **Certification** | Demande → validation humaine → génération Apps Script/Slides · PDF officiel + aperçu · page publique de vérification par code · certificat figé au nom capturé |
 | **Récompenses** | 10 badges par formation · Premier Pas, En Route, Retour en Force · attribution automatique et manuelle journalisée |
 | **Avis** | Avis obligatoires (2 semaines / 1 mois, 1 000 mots, écrit ou audio transcrit) · Spotlight |
-| **Assistant** | Assistant virtuel configurable (nom, photo, langue) · isolation par formation · questions IA immédiates + coach sous 48 h |
+| **Assistant** | Assistant virtuel configurable (nom, photo, langue) · isolation par formation · questions IA immédiates + coach sous 48 h — **spécification complète rassemblée dans `davar-app/SPEC-ASSISTANT-IA.md`** |
 | **Échanges** | Conversations, supervision, réponses du coach · support flottant (casque) · WhatsApp et appel |
 | **Notifications** | Cloche · disparition 48 h après lecture · motivations du dimanche |
 | **Social** | Ticker d'annonces et de plateformes · désabonnement par utilisateur |
