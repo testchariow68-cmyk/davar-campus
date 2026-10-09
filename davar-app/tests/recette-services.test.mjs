@@ -44,6 +44,10 @@ const FAUX = {
   // pendant les tests (sinon un faux jeton ferait un vrai appel chez le fournisseur).
   GROQ_API_KEY: '',
   GEMINI_API_KEY: '',
+  OPENROUTER_API_KEY: '',
+  HUGGINGFACE_API_KEY: '',
+  ASSISTANT_CUSTOM_URL: '',
+  ASSISTANT_CUSTOM_KEY: '',
 };
 
 /** Les mêmes noms, tous vidés : l'état « rien n'est encore branché ». */
@@ -158,4 +162,38 @@ test('le jeton du relais d’e-mail n’est jamais envoyé sans le mode d’envo
   assert.match(sortie, /le mode d’envoi est déclaré/);
   assert.equal(sortie.includes('relais Google répond en ligne'), false, `aucune requête ne doit partir :\n${sortie}`);
   assert.equal(sortie.includes('injoignable'), false);
+});
+
+/**
+ * Le propriétaire a demandé pourquoi les autres moteurs n'apparaissaient pas :
+ * ils EXISTAIENT dans le code (OpenRouter, Hugging Face, un moteur de son choix)
+ * mais le fichier à remplir et la recette n'en parlaient pas. D'où ces deux
+ * garde-fous : ce qui est proposé doit être nommé, et ce qui est à moitié rempli
+ * doit être signalé au lieu d'être ignoré en silence.
+ */
+test('la recette nomme les cinq moteurs possibles quand aucun n’est branché', () => {
+  const { sortie } = lancer(SANS_RIEN);
+  for (const nom of [
+    'GROQ_API_KEY',
+    'GEMINI_API_KEY',
+    'OPENROUTER_API_KEY',
+    'HUGGINGFACE_API_KEY',
+    'ASSISTANT_CUSTOM_URL',
+    'ASSISTANT_CUSTOM_KEY',
+  ]) {
+    assert.ok(sortie.includes(nom), `la recette doit nommer ${nom} :\n${sortie}`);
+  }
+});
+
+test('un moteur de son choix à moitié rempli est signalé, pas ignoré', () => {
+  const { sortie } = lancer({
+    ASSISTANT_CUSTOM_URL: 'https://ce-moteur-ne-doit-pas-etre-appele.invalid/v1/chat/completions',
+    ASSISTANT_CUSTOM_KEY: '',
+  });
+  assert.match(sortie, /DEUX valeurs/, `il faut les deux lignes :\n${sortie}`);
+  assert.equal(
+    sortie.includes('ce-moteur-ne-doit-pas-etre-appele'),
+    false,
+    'une clé manquante ne doit déclencher aucun appel'
+  );
 });

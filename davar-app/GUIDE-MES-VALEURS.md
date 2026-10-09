@@ -337,12 +337,33 @@ d'un côté, 2 000 transcriptions et 28 800 secondes d'audio/jour de l'autre —
 code les protège séparément. Sans clé, l'assistant le dit honnêtement et l'étudiant
 dicte sur son appareil : personne n'est bloqué.
 
-| Valeur | Où exactement | Nom à écrire |
-|---|---|---|
-| Clé Groq (commence par `gsk_…`) | <https://console.groq.com/keys> → connexion → **Create API Key** → nommez-la « Campus Davar » → copier | `GROQ_API_KEY` |
-| Clé Gemini (commence par `AIza…`) | <https://aistudio.google.com/apikey> → connexion → **Create API key** → copier | `GEMINI_API_KEY` |
+### Les cinq moteurs que le campus sait appeler
 
-> Aucune carte bancaire n'est demandée pour ces deux paliers gratuits.
+**Un seul suffit.** Les autres sont des **relais** : si le premier est épuisé ou
+injoignable, le suivant prend la main, sans rien demander à l'étudiant. C'est la
+chaîne écrite dans vos documents : `Groq → Gemini → OpenRouter → Hugging Face`.
+
+| # | Moteur | Nom à écrire | Où le trouver |
+|---|---|---|---|
+| 1 | **Groq** (`gsk_…`) | `GROQ_API_KEY` | <https://console.groq.com/keys> → **Create API Key** |
+| 2 | **Google Gemini** (`AIza…`) | `GEMINI_API_KEY` | <https://aistudio.google.com/apikey> → **Create API key** |
+| 3 | **OpenRouter** (`sk-or-…`) | `OPENROUTER_API_KEY` | <https://openrouter.ai/keys> → **Create Key** |
+| 4 | **Hugging Face** (`hf_…`) | `HUGGINGFACE_API_KEY` | <https://huggingface.co/settings/tokens> → **New token** (rôle *read* ou *write*) |
+| 5 | **Le vôtre** (OpenAI, Mistral, DeepSeek, Ollama…) | `ASSISTANT_CUSTOM_URL` **+** `ASSISTANT_CUSTOM_KEY` | les DEUX lignes ensemble, sinon le moteur est ignoré |
+
+Le cinquième est la porte ouverte à **n'importe quelle IA** qui parle le format
+d'OpenAI — c'est le cas d'OpenAI, Mistral, DeepSeek, Together, Groq, d'un modèle
+auto-hébergé, ou d'Ollama sur votre machine. Exemples d'adresse à coller :
+
+```
+ASSISTANT_CUSTOM_URL=https://api.mistral.ai/v1/chat/completions
+ASSISTANT_CUSTOM_URL=https://api.deepseek.com/chat/completions
+ASSISTANT_CUSTOM_URL=http://127.0.0.1:11434/v1/chat/completions   (Ollama, en local)
+```
+
+> Aucune carte bancaire n'est demandée pour les quatre premiers paliers gratuits.
+> Vous n'avez pas à tous les prendre : **un seul suffit**, les autres ne sont que
+> des roues de secours.
 
 ### 5a. Si Groq vous répond « Access denied. Please check your network settings. »
 

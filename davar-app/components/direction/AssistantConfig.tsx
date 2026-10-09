@@ -153,20 +153,19 @@ export function AssistantConfig({
               </label>
             ))}
           </div>
-          {!moteurs.some((moteur) => moteur.provider === 'groq' && moteur.cle) &&
-            !moteurs.some((moteur) => moteur.provider === 'gemini' && moteur.cle) && (
-              <p className="xs muted mt8">
-                Aucune clé de transcription en ligne n’est posée : l’étudiant dictera sur son appareil, et
-                l’enregistrement ne quittera jamais son téléphone. Aucun étudiant n’est jamais bloqué.
-              </p>
-            )}
-          {moteurs.some((moteur) => moteur.provider === 'groq' && moteur.cle) &&
-            moteurs.some((moteur) => moteur.provider === 'gemini' && moteur.cle) && (
-              <p className="xs muted mt8">
-                Les deux moteurs en ligne sont branchés : <b>Groq</b> est essayé en premier, <b>Gemini</b> prend la main
-                s’il ne répond pas (Groq refuse parfois les appels venant d’un serveur). L’étudiant n’a rien à faire.
-              </p>
-            )}
+          {!moteurs.some((moteur) => (moteur.provider === 'groq' || moteur.provider === 'gemini') && moteur.cle) && (
+            <p className="xs muted mt8">
+              Aucune clé de transcription en ligne n’est posée : l’étudiant dictera sur son appareil, et
+              l’enregistrement ne quittera jamais son téléphone. Aucun étudiant n’est jamais bloqué.
+            </p>
+          )}
+          {moteurs.filter((moteur) => (moteur.provider === 'groq' || moteur.provider === 'gemini') && moteur.cle).length >=
+            2 && (
+            <p className="xs muted mt8">
+              Les deux moteurs en ligne sont branchés : <b>Groq</b> est essayé en premier, <b>Gemini</b> prend la main
+              s’il ne répond pas (Groq refuse parfois les appels venant d’un serveur). L’étudiant n’a rien à faire.
+            </p>
+          )}
         </div>
 
         <div className="col" style={{ gap: 16 }}>

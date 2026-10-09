@@ -358,73 +358,134 @@ function verifierChariow() {
  * (voir GUIDE-MES-VALEURS.md). Elle sert l'assistant ET la transcription des avis.
  * On la vérifie par un appel qui ne consomme rien : la liste des modèles.
  */
+/**
+ * Les moteurs d'assistant que le campus sait appeler. Pour chacun, une SONDE : un
+ * appel qui ne consomme RIEN — aucune question posée, aucune transcription — et
+ * qui dit seulement si la clé est acceptée.
+ *
+ * Le moteur « personnalisé » n'a pas de sonde : son adresse est celle que le
+ * propriétaire a choisie, on ne peut donc pas la deviner ni la tester sans risquer
+ * d'y envoyer une requête absurde. On le déclare, sans prétendre le vérifier.
+ */
+const MOTEURS_IA = [
+  {
+    nom: 'Groq',
+    variable: 'GROQ_API_KEY',
+    url: () => 'https://api.groq.com/openai/v1/models',
+    entetes: (valeur) => ({ authorization: `Bearer ${valeur}` }),
+    // Groq sert aussi la dictée vocale : on vérifie que Whisper est bien là.
+    modeleAttendu: /^whisper-large-v3/,
+  },
+  {
+    nom: 'Google Gemini',
+    variable: 'GEMINI_API_KEY',
+    url: (valeur) => `https://generativelanguage.googleapis.com/v1beta/models?key=${encodeURIComponent(valeur)}`,
+    entetes: () => ({}),
+  },
+  {
+    nom: 'OpenRouter',
+    variable: 'OPENROUTER_API_KEY',
+    url: () => 'https://openrouter.ai/api/v1/models',
+    entetes: (valeur) => ({ authorization: `Bearer ${valeur}` }),
+  },
+  {
+    nom: 'Hugging Face',
+    variable: 'HUGGINGFACE_API_KEY',
+    url: () => 'https://huggingface.co/api/whoami-v2',
+    entetes: (valeur) => ({ authorization: `Bearer ${valeur}` }),
+  },
+];
+
+async function sonder(url, entetes) {
+  try {
+    const reponse = await fetch(url, { headers: entetes, signal: AbortSignal.timeout(15000) });
+    return { statut: reponse.status, donnees: await reponse.json().catch(() => null) };
+  } catch {
+    return { statut: 0, donnees: null };
+  }
+}
+
+/** Les modèles renvoyés par une sonde, quelle que soit la forme du JSON. */
+function modelesDeLaSonde(donnees) {
+  if (Array.isArray(donnees?.data)) return donnees.data.map((modele) => String(modele?.id ?? ''));
+  if (Array.isArray(donnees?.models)) return donnees.models.map((modele) => String(modele?.name ?? modele?.id ?? ''));
+  return [];
+}
+
 async function verifierAssistants() {
   console.log('\n6. ASSISTANTS ET DICTÉE VOCALE');
-  console.log(`   ${etat('GROQ_API_KEY')} · ${etat('GEMINI_API_KEY')}`);
-  const groq = (process.env.GROQ_API_KEY ?? '').trim();
-  const gemini = (process.env.GEMINI_API_KEY ?? '').trim();
-  if (groq.length === 0 && gemini.length === 0) {
+  console.log(`   ${MOTEURS_IA.map((moteur) => etat(moteur.variable)).join(' · ')}`);
+
+  const poses = MOTEURS_IA.filter((moteur) => (process.env[moteur.variable] ?? '').trim().length > 0);
+  const urlPerso = (process.env.ASSISTANT_CUSTOM_URL ?? '').trim();
+  const clePerso = (process.env.ASSISTANT_CUSTOM_KEY ?? '').trim();
+
+  // Un moteur de son choix à moitié rempli est IGNORÉ silencieusement par le code
+  // (il faut l'adresse ET la clé). On le dit ici, sinon le propriétaire croit
+  // l'avoir branché alors que l'assistant n'en sait rien.
+  if ((urlPerso.length > 0) !== (clePerso.length > 0))
+    controler(
+      'le moteur de votre choix est complet',
+      false,
+      'il faut les DEUX valeurs : ASSISTANT_CUSTOM_URL et ASSISTANT_CUSTOM_KEY'
+    );
+
+  if (poses.length === 0 && !(urlPerso && clePerso)) {
     console.log('   → en attente : l’assistant le dit honnêtement (il renvoie au coach humain),');
     console.log('     et l’étudiant qui dicte un avis bascule sur la transcription de son appareil.');
-    console.log('   → une seule clé suffit pour ouvrir l’assistant. Si Groq ne répond pas');
-    console.log('     depuis votre région, prenez Gemini : aistudio.google.com/apikey.');
+    console.log('   → une seule clé suffit pour ouvrir l’assistant. Cinq moteurs sont possibles :');
+    console.log('     GROQ_API_KEY, GEMINI_API_KEY, OPENROUTER_API_KEY, HUGGINGFACE_API_KEY,');
+    console.log('     ou un moteur de votre choix (ASSISTANT_CUSTOM_URL + ASSISTANT_CUSTOM_KEY).');
     return;
   }
-  if (groq.length > 0 && gemini.length === 0) {
-    console.log('   → seule Groq est renseignée. Si elle est refusée (blocage réseau ou quota),');
-    console.log('     l’assistant n’aura plus de relais : une clé Gemini en plus coûte 2 minutes.');
-  }
-  if (groq.length > 0) {
-    try {
-      const reponse = await fetch('https://api.groq.com/openai/v1/models', {
-        headers: { authorization: `Bearer ${groq}` },
-        signal: AbortSignal.timeout(15000),
-      });
-      if (reponse.status === 403) {
-        // Groq bloque les centres de données (serveurs, VPN, Workers Cloudflare) :
-        // la clé peut être parfaite, l'appel est refusé quand même. Ce n'est pas
-        // une erreur de configuration, et ce n'est pas grave : l'assistant passe
-        // à Gemini et la dictée bascule sur l'appareil de l'étudiant.
-        console.log('   ÉCHEC · Groq refuse l’appel depuis cette machine (HTTP 403).');
-        console.log('     Ce n’est pas votre clé : Groq bloque les adresses de serveur.');
-        console.log('     Conséquence : aucune. L’assistant enchaîne sur Gemini, et la dictée');
-        console.log('     des avis bascule sur l’appareil de l’étudiant (Plan B, sans quota).');
-        console.log('     Le jour où vous aurez une clé joignable, ajoutez GROQ_BASE_URL pour');
-        console.log('     passer par une passerelle Cloudflare — voir GUIDE-MES-VALEURS.md §5.');
-        if (!gemini) {
-          console.log('     ⚠ Sans clé Gemini à côté, l’assistant n’a plus de moteur : prenez une');
-          console.log('       clé Gemini (aistudio.google.com/apikey), gratuite et joignable partout.');
-        }
-      } else {
-        controler(
-          'la clé Groq est acceptée',
-          reponse.ok,
-          reponse.status === 401 ? 'clé refusée — vérifiez qu’elle commence par gsk_ et qu’elle est active' : `HTTP ${reponse.status}`
-        );
-      }
-      if (reponse.ok) {
-        const corps = await reponse.json().catch(() => null);
-        const modeles = Array.isArray(corps?.data) ? corps.data.map((modele) => String(modele?.id ?? '')) : [];
-        console.log('   → elle sert l’assistant ET la transcription des avis dictés (Whisper large-v3).');
-        controler(
-          'le moteur de transcription est disponible',
-          modeles.some((modele) => modele.startsWith('whisper-large-v3')),
-          'whisper-large-v3 — la liste des modèles ne le montre pas'
-        );
-      }
-    } catch {
-      controler('la clé Groq est acceptée', false, 'injoignable');
+
+  for (const moteur of poses) {
+    const valeur = (process.env[moteur.variable] ?? '').trim();
+    const { statut, donnees } = await sonder(moteur.url(valeur), moteur.entetes(valeur));
+
+    if (statut === 403 && moteur.variable === 'GROQ_API_KEY') {
+      // Groq bloque les centres de données (serveurs, VPN, Workers Cloudflare) :
+      // la clé peut être parfaite, l'appel est refusé quand même. Ce n'est pas une
+      // erreur de configuration, et ce n'est pas grave : l'assistant passe au
+      // moteur suivant et la dictée passe par Gemini ou l'appareil de l'étudiant.
+      console.log(`   ÉCHEC · Groq refuse l’appel depuis cette machine (HTTP 403).`);
+      console.log('     Ce n’est pas votre clé : Groq bloque les adresses de serveur.');
+      console.log('     Conséquence : aucune. L’assistant enchaîne sur le moteur suivant, et la');
+      console.log('     dictée des avis passe par Gemini ou par l’appareil de l’étudiant.');
+      console.log('     Le jour où vous aurez une clé joignable, ajoutez GROQ_BASE_URL pour');
+      console.log('     passer par une passerelle Cloudflare — voir GUIDE-MES-VALEURS.md §5.');
+      continue;
+    }
+
+    controler(
+      `la clé ${moteur.nom} est acceptée`,
+      statut >= 200 && statut < 300,
+      statut === 0
+        ? 'injoignable'
+        : statut === 401 || statut === 403
+          ? 'clé refusée — vérifiez sa valeur et qu’elle est active'
+          : `HTTP ${statut}`
+    );
+
+    if (moteur.modeleAttendu && statut >= 200 && statut < 300) {
+      const modeles = modelesDeLaSonde(donnees);
+      controler(
+        'le moteur de transcription est disponible',
+        modeles.some((modele) => moteur.modeleAttendu.test(modele)),
+        'whisper-large-v3 — la liste des modèles ne le montre pas'
+      );
+      console.log('   → elle sert l’assistant ET la transcription des avis dictés (Whisper large-v3).');
     }
   }
-  if (gemini.length > 0) {
-    try {
-      const reponse = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${encodeURIComponent(gemini)}`, {
-        signal: AbortSignal.timeout(15000),
-      });
-      controler('la clé Gemini est acceptée', reponse.ok, reponse.status === 400 ? 'clé refusée' : `HTTP ${reponse.status}`);
-    } catch {
-      controler('la clé Gemini est acceptée', false, 'injoignable');
-    }
+
+  if (urlPerso && clePerso) {
+    console.log('   OK   le moteur de votre choix est déclaré — il ne peut pas être sondé d’ici');
+    console.log('     (son adresse est la vôtre : on ne l’appelle pas, pour ne rien consommer).');
+  }
+
+  if (poses.length > 0) {
+    console.log(`   → ${poses.length} moteur(s) branché(s). L’assistant les enchaîne dans l’ordre, sans rien`);
+    console.log('     demander à l’étudiant : si le premier est épuisé, le suivant répond.');
   }
   console.log('   (aucune question, aucune transcription n’a été consommée par cette recette)');
 }

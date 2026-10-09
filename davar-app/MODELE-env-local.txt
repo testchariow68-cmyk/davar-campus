@@ -93,10 +93,35 @@ CHARIOW_API_KEY=
 # Dans ce cas, laissez cette ligne VIDE et prenez Gemini ci-dessous : l'assistant
 # fonctionne, et la dictée bascule sur l'appareil de l'étudiant. Personne n'est
 # bloqué. (Détail : GUIDE-MES-VALEURS.md §5a)
+# ── LES CINQ MOTEURS POSSIBLES ──────────────────────────────────────────────
+# Un SEUL suffit pour que l'assistant marche. Les autres sont des RELAIS : si le
+# premier est épuisé ou injoignable, le suivant répond, sans rien demander à
+# l'étudiant. Remplissez ceux que vous avez déjà ; laissez vides les autres.
+#
+#   1. Groq        — le plus rapide, n'entraîne pas ses modèles sur vos données
+#   2. Gemini      — gratuit, joignable de presque partout
+#   3. OpenRouter  — donne accès à beaucoup de modèles en une seule clé
+#   4. Hugging Face— open source, plus lent
+#   5. Le vôtre    — n'importe quelle IA au format OpenAI (OpenAI, Mistral,
+#                    DeepSeek, un modèle auto-hébergé…) : les DEUX lignes
+#                    ASSISTANT_CUSTOM_URL et ASSISTANT_CUSTOM_KEY ensemble.
+#
+# ⚠️ Si Groq vous répond « Access denied. Please check your network settings. »,
+# ce n'est PAS votre clé : Groq bloque les adresses de serveur (et certains pays).
+# Dans ce cas, laissez cette ligne VIDE et prenez Gemini ci-dessous : l'assistant
+# fonctionne, et la dictée bascule sur Gemini ou sur l'appareil de l'étudiant.
+# Personne n'est bloqué. (Détail : GUIDE-MES-VALEURS.md §5a)
 GROQ_API_KEY=
 # Clé Gemini : gratuite, joignable de presque partout. C'est elle qui fait
 # marcher l'assistant si Groq est injoignable depuis chez vous.
 GEMINI_API_KEY=
+# Facultatifs — relais seulement :
+OPENROUTER_API_KEY=
+HUGGINGFACE_API_KEY=
+# Un moteur de votre choix (les DEUX lignes, sinon il est ignoré) :
+# Exemple : ASSISTANT_CUSTOM_URL=https://api.mistral.ai/v1/chat/completions
+ASSISTANT_CUSTOM_URL=
+ASSISTANT_CUSTOM_KEY=
 
 
 # ── Ensuite ───────────────────────────────────────────────────────────────────
