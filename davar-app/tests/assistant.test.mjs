@@ -17,6 +17,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { applyAllMigrations } from './helpers/migrations.mjs';
 import {
+  moteurPersonnalisePret,
   chaineActive,
   compterQuestionEtudiant,
   contexteAutorise,
@@ -285,4 +286,42 @@ test('la configuration de l’assistant se lit et s’écrit, nom personnalisé 
   assert.equal(defauts.primaryProvider, 'groq');
   assert.deepEqual(defauts.chaine, ['groq', 'gemini', 'openrouter', 'hf']);
   assert.equal(defauts.studentDailyCap, 30);
+});
+
+/**
+ * Le moteur « de votre choix » (ASSISTANT_CUSTOM_URL + ASSISTANT_CUSTOM_KEY)
+ * n'était dans AUCUNE chaîne par défaut : on pouvait remplir ses deux variables
+ * sans qu'il soit jamais appelé. Il rejoint désormais la chaîne dès qu'il est prêt.
+ */
+test('le moteur de votre choix rejoint la chaîne dès qu’il est prêt', () => {
+  const config = {
+    primaryProvider: 'groq',
+    chaine: ['groq', 'gemini', 'openrouter', 'hf'],
+    limites: {},
+  };
+  delete process.env.ASSISTANT_CUSTOM_URL;
+  delete process.env.ASSISTANT_CUSTOM_KEY;
+  assert.equal(moteurPersonnalisePret(), false, 'deux variables vides : rien à ajouter');
+  assert.deepEqual(chaineActive(config, {}), ['groq', 'gemini', 'openrouter', 'hf']);
+
+  // L'adresse sans la clé (ou l'inverse) : toujours rien, et c'est volontaire.
+  process.env.ASSISTANT_CUSTOM_URL = 'https://api.exemple.test/v1/chat/completions';
+  assert.equal(moteurPersonnalisePret(), false, 'il faut les DEUX');
+  assert.deepEqual(chaineActive(config, {}), ['groq', 'gemini', 'openrouter', 'hf']);
+
+  process.env.ASSISTANT_CUSTOM_KEY = 'cle-de-test';
+  assert.equal(moteurPersonnalisePret(), true);
+  assert.deepEqual(
+    chaineActive(config, {}),
+    ['groq', 'gemini', 'openrouter', 'hf', 'custom'],
+    'en dernier recours : les moteurs gratuits d’abord, le sien ensuite'
+  );
+
+  // S'il a été choisi comme moteur principal, son rang est respecté : il n'est
+  // pas rejeté en fin de chaîne par-dessus le réglage du propriétaire.
+  const avecRang = { ...config, primaryProvider: 'custom', chaine: ['custom', 'groq', 'gemini'] };
+  assert.deepEqual(chaineActive(avecRang, {}), ['custom', 'groq', 'gemini']);
+
+  delete process.env.ASSISTANT_CUSTOM_URL;
+  delete process.env.ASSISTANT_CUSTOM_KEY;
 });

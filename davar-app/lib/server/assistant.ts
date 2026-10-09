@@ -269,12 +269,31 @@ export function limiteFournisseur(config: ConfigAssistant, fournisseur: Fourniss
 }
 
 /**
+ * Le moteur « de votre choix » est-il réellement utilisable ? Il faut les DEUX
+ * valeurs : une adresse sans clé, ou une clé sans adresse, ne sert à rien.
+ * Vérifié ici plutôt que dans `ai-providers.ts` pour éviter un import circulaire.
+ */
+export function moteurPersonnalisePret(): boolean {
+  return (
+    (process.env.ASSISTANT_CUSTOM_URL ?? '').trim().length > 0 &&
+    (process.env.ASSISTANT_CUSTOM_KEY ?? '').trim().length > 0
+  );
+}
+
+/**
  * La chaîne réellement disponible, dans l'ordre : le premier qui n'a pas atteint
  * son quota du jour est celui qui répond. Si tous sont épuisés, la liste est
  * vide — et l'application le dit honnêtement au lieu d'inventer une réponse.
+ *
+ * Le moteur « de votre choix » rejoint la chaîne en DERNIER RECOURS dès que ses
+ * deux variables sont posées. Sans cela, il figurait dans la liste des moteurs
+ * possibles sans jamais être appelé : on pouvait croire l'avoir branché alors
+ * que l'assistant n'en savait rien. S'il est déjà dans la chaîne enregistrée, son
+ * rang choisi par le propriétaire est respecté.
  */
 export function chaineActive(config: ConfigAssistant, etats: Record<string, EtatFournisseur>): Fournisseur[] {
   const ordre = [config.primaryProvider, ...config.chaine.filter((f) => f !== config.primaryProvider)];
+  if (!ordre.includes('custom') && moteurPersonnalisePret()) ordre.push('custom');
   return ordre.filter((fournisseur) => {
     if (!(fournisseur in FOURNISSEURS)) return false;
     const etat = etats[fournisseur];
