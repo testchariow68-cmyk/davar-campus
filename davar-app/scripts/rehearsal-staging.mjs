@@ -1,8 +1,14 @@
 /* Répétition locale de la migration staging — AUCUN accès réseau.
  *
  * Objectif : prouver, avant que le propriétaire ne touche au Turso hébergé, ce que
- * produisent exactement les migrations 002/003/004 sur une base qui ne contient que
+ * produisent exactement les migrations EN ATTENTE sur une base qui ne contient que
  * la migration 001 — c'est-à-dire la copie conforme de `davar-campus-staging`.
+ *
+ * Rien n'est chiffré en dur : le nombre de migrations, de tables et d'index est
+ * dérivé du manifeste et des fichiers SQL. Ce script a d'ailleurs déjà menti une
+ * fois — il annonçait « 16 tables » et « 4 reçus » alors que le campus en comptait
+ * 49 et 16, et il criait à l'échec sur une migration parfaitement saine. Un
+ * garde-fou qui crie faux est un garde-fou qu'on finit par ignorer.
  *
  * Le manifeste et les fichiers SQL sont lus depuis la même source que le script
  * réel (`scripts/staging-schema.mjs --manifest` et `turso/migrations/`), et la
@@ -32,6 +38,14 @@ const statementsOf = (file) => {
   return statements.filter((s) => !pragmaLike(s)).map((sql) => ({ sql }));
 };
 
+/** Les index déclarés par un fichier de migration. */
+const indexDeclaresDans = (file) =>
+  [...statementsOf(file).reduce((noms, { sql }) => {
+    for (const match of sql.matchAll(/CREATE\s+(?:UNIQUE\s+)?INDEX\s+(?:IF\s+NOT\s+EXISTS\s+)?["'`]?(\w+)["'`]?/gi))
+      noms.add(match[1]);
+    return noms;
+  }, new Set())];
+
 const dbPath = join(mkdtempSync(join(tmpdir(), 'davar-repetition-')), 'staging-local.db');
 const client = createClient({ url: `file:${dbPath}` });
 const failures = [];
@@ -51,14 +65,26 @@ try {
     "SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%' ORDER BY name")).rows.map((r) => String(r.name));
   const indexesAfter001 = (await client.execute(
     "SELECT name FROM sqlite_master WHERE type='index' AND name NOT LIKE 'sqlite_%'")).rows.length;
-  check('9 tables après 001', tablesAfter001.length === 9, `${tablesAfter001.length} tables`);
-  check('3 index après 001', indexesAfter001 === 3, `${indexesAfter001} index`);
+  check(
+    `${first.creates.length} tables après 001`,
+    tablesAfter001.length === first.creates.length,
+    `${tablesAfter001.length} tables`
+  );
+  check(
+    `${indexDeclaresDans(first.file).length} index après 001`,
+    indexesAfter001 === indexDeclaresDans(first.file).length,
+    `${indexesAfter001} index`
+  );
   check('reçu version 1', (await client.execute('SELECT COUNT(*) n FROM schema_migrations')).rows[0].n === 1);
 
-  console.log('\n=== 2. Application des migrations en attente (002, 003, 004) ===');
+  console.log(`\n=== 2. Application des migrations en attente (les ${manifest.migrations.length - 1} suivantes) ===`);
   const appliedRows = (await client.execute('SELECT version FROM schema_migrations')).rows.map((r) => Number(r.version));
   const pending = manifest.migrations.filter((m) => !appliedRows.includes(m.version));
-  check('3 migrations en attente', pending.length === 3, pending.map((m) => m.file).join(', '));
+  check(
+    `${manifest.migrations.length - 1} migrations en attente`,
+    pending.length === manifest.migrations.length - 1,
+    pending.map((m) => m.file).join(', ')
+  );
   const fk = await client.execute('PRAGMA foreign_keys');
   check('clés étrangères actives', Number(fk.rows[0]?.foreign_keys) === 1);
   for (const migration of pending) {
@@ -79,10 +105,20 @@ try {
   const indexes = (await client.execute(
     "SELECT name FROM sqlite_master WHERE type='index' AND name NOT LIKE 'sqlite_%' ORDER BY name")).rows.map((r) => String(r.name));
   const receipts = (await client.execute('SELECT version, checksum FROM schema_migrations ORDER BY version')).rows;
-  check(`16 tables`, tables.length === manifest.expectedTableCount, tables.join(', '));
-  check('6 index', indexes.length === 6, indexes.join(', '));
-  check('4 reçus conformes au manifeste',
-    receipts.length === 4 && receipts.every((row, i) => Number(row.version) === manifest.migrations[i].version && String(row.checksum) === manifest.migrations[i].sha256));
+  check(`${manifest.expectedTableCount} tables`, tables.length === manifest.expectedTableCount, tables.join(', '));
+  const indexAttendus = manifest.migrations.flatMap((migration) => indexDeclaresDans(migration.file));
+  const indexManquants = indexAttendus.filter((nom) => !indexes.includes(nom));
+  check(
+    `les ${indexAttendus.length} index déclarés existent`,
+    indexManquants.length === 0,
+    indexManquants.length > 0 ? `manquants : ${indexManquants.join(', ')}` : indexes.join(', ')
+  );
+  check(
+    `${manifest.migrations.length} reçus conformes au manifeste`,
+    receipts.length === manifest.migrations.length &&
+      receipts.every((row, i) => Number(row.version) === manifest.migrations[i].version && String(row.checksum) === manifest.migrations[i].sha256),
+    `${receipts.length} reçus`
+  );
   for (const table of ['users', 'trainings', 'verified_purchases', 'enrollments'])
     check(`${table} : zéro ligne`, (await client.execute(`SELECT COUNT(*) n FROM ${table}`)).rows[0].n === 0);
 
@@ -101,7 +137,7 @@ try {
   check('aucune migration en attente', stillPending.length === 0);
   const tablesAgain = (await client.execute(
     "SELECT COUNT(*) n FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%'")).rows[0].n;
-  check('toujours 16 tables', Number(tablesAgain) === 16);
+  check(`toujours ${manifest.expectedTableCount} tables`, Number(tablesAgain) === manifest.expectedTableCount);
 
   console.log(`\nRésultat : ${failures.length === 0 ? 'RÉUSSITE — la migration produira exactement ceci sur le staging' : `${failures.length} ÉCHEC(S) : ${failures.join(' | ')}`}`);
   console.log('Aucune écriture distante : cette répétition vit dans un fichier temporaire supprimé maintenant.');
