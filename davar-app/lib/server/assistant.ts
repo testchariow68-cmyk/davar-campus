@@ -15,6 +15,7 @@
  * Ce fichier ne dépend PAS de Next : ses règles sont donc testables en Node.
  */
 import type { Db } from './auth-core';
+import { urlGroq } from './http.ts';
 
 /* ------------------------------------------------------------------ durées */
 
@@ -457,7 +458,7 @@ export function jointureFournisseur(fournisseur: Fournisseur, modeles: Record<st
   const modele = (modeles[fournisseur] ?? '').trim() || modeleDefaut;
   switch (fournisseur) {
     case 'groq':
-      return { provider: 'groq', modele, cleEnvironnement: 'GROQ_API_KEY', url: 'https://api.groq.com/openai/v1/chat/completions' };
+      return { provider: 'groq', modele, cleEnvironnement: 'GROQ_API_KEY', url: urlGroq('chat/completions') };
     case 'openrouter':
       return { provider: 'openrouter', modele, cleEnvironnement: 'OPENROUTER_API_KEY', url: 'https://openrouter.ai/api/v1/chat/completions' };
     case 'hf':

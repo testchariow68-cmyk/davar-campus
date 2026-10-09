@@ -67,8 +67,9 @@ R2_ACCOUNT_ID=
 R2_ACCESS_KEY_ID=
 R2_SECRET_ACCESS_KEY=
 # Le NOM de votre seau : minuscules, chiffres et tirets (pas de majuscules).
-# ⚠️ Ce n'est PAS une valeur de jeton : c'est le nom affiché en haut de la page
-# de votre seau, par exemple davar-campus-fichiers.
+# ⚠️ Ni une valeur de jeton, ni le nom du jeton (« R2 Account Token » ne va
+# nulle part ici) : c'est le nom du SEAU, affiché en haut de sa page, par
+# exemple davar-campus-fichiers.
 R2_BUCKET=
 
 
@@ -87,11 +88,14 @@ CHARIOW_API_KEY=
 
 
 # ── 6. ASSISTANTS (la même clé sert la dictée vocale des avis) ─────────────────
-# Le palier gratuit de Groq est le plus généreux : commencez par celui-là.
-# Sa clé commence par gsk_… ; sans elle, l'assistant le dit honnêtement et
-# l'étudiant qui dicte un avis bascule sur son appareil.
+# ⚠️ Si Groq vous répond « Access denied. Please check your network settings. »,
+# ce n'est PAS votre clé : Groq bloque les adresses de serveur (et certains pays).
+# Dans ce cas, laissez cette ligne VIDE et prenez Gemini ci-dessous : l'assistant
+# fonctionne, et la dictée bascule sur l'appareil de l'étudiant. Personne n'est
+# bloqué. (Détail : GUIDE-MES-VALEURS.md §5a)
 GROQ_API_KEY=
-# Facultatif : second moteur, si vous voulez une réserve (clé AIza…)
+# Clé Gemini : gratuite, joignable de presque partout. C'est elle qui fait
+# marcher l'assistant si Groq est injoignable depuis chez vous.
 GEMINI_API_KEY=
 
 

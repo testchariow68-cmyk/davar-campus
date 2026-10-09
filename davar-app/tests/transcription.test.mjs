@@ -25,6 +25,7 @@ import {
   transcriptionEnLigneDisponible,
 } from '../lib/server/transcription.ts';
 import { DEFAULT_BUDGETS, budgetFor, pendingTotals, resetLocalCounters } from '../lib/server/quota.ts';
+import { urlGroq } from '../lib/server/http.ts';
 
 const AUDIO = new Uint8Array([1, 2, 3, 4, 5, 6, 7, 8]);
 
@@ -193,4 +194,46 @@ test('le nom du fichier transmis suit le format du navigateur', () => {
   assert.equal(nomFichierPour('audio/ogg;codecs=opus'), 'avis.ogg');
   assert.equal(nomFichierPour('audio/wav'), 'avis.wav');
   assert.equal(nomFichierPour(''), 'avis.webm');
+});
+
+/**
+ * Groq refuse les appels venant d'un centre de données (politique anti-fraude,
+ * indépendante de la validité de la clé) : un serveur ou un Worker Cloudflare
+ * reçoit « Access denied. Please check your network settings. ». D'où la
+ * possibilité de passer par une passerelle. Ces trois tests vérifient que
+ * l'adresse est bien composée, et que Rien ne change si l'on ne déclare rien.
+ */
+test('sans passerelle déclarée, on appelle l’API officielle de Groq', () => {
+  const avant = process.env.GROQ_BASE_URL;
+  delete process.env.GROQ_BASE_URL;
+  try {
+    assert.equal(urlGroq('chat/completions'), 'https://api.groq.com/openai/v1/chat/completions');
+    assert.equal(urlGroq('audio/transcriptions'), 'https://api.groq.com/openai/v1/audio/transcriptions');
+  } finally {
+    if (avant !== undefined) process.env.GROQ_BASE_URL = avant;
+  }
+});
+
+test('avec une passerelle déclarée, les appels passent par elle', () => {
+  const avant = process.env.GROQ_BASE_URL;
+  process.env.GROQ_BASE_URL = 'https://gateway.ai.cloudflare.com/v1/compte-123/davar/groq';
+  try {
+    assert.equal(urlGroq('chat/completions'), 'https://gateway.ai.cloudflare.com/v1/compte-123/davar/groq/chat/completions');
+    assert.equal(urlGroq('audio/transcriptions'), 'https://gateway.ai.cloudflare.com/v1/compte-123/davar/groq/audio/transcriptions');
+  } finally {
+    if (avant === undefined) delete process.env.GROQ_BASE_URL;
+    else process.env.GROQ_BASE_URL = avant;
+  }
+});
+
+test('une barre oblique finale dans la passerelle ne fait pas de double slash', () => {
+  const avant = process.env.GROQ_BASE_URL;
+  process.env.GROQ_BASE_URL = 'https://gateway.ai.cloudflare.com/v1/compte-123/davar/groq///';
+  try {
+    assert.equal(urlGroq('chat/completions'), 'https://gateway.ai.cloudflare.com/v1/compte-123/davar/groq/chat/completions');
+    assert.ok(!urlGroq('chat/completions').includes('//', 'https://'.length));
+  } finally {
+    if (avant === undefined) delete process.env.GROQ_BASE_URL;
+    else process.env.GROQ_BASE_URL = avant;
+  }
 });

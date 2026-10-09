@@ -103,3 +103,24 @@ export async function readJsonBody(request: Request): Promise<Record<string, unk
     return null;
   }
 }
+
+/**
+ * Adresse d'appel à Groq.
+ *
+ * Groq refuse les appels qui proviennent d'un centre de données — c'est une
+ * politique de lutte anti-fraude, documentée et indépendante de la validité de la
+ * clé : un serveur, un VPN ou un Worker Cloudflare reçoit
+ * « Access denied. Please check your network settings. » alors que la clé est
+ * bonne. Depuis le navigateur d'une connexion résidentielle, la même clé répond.
+ *
+ * La parade, quand on appelle depuis un serveur : passer par une passerelle
+ * (Cloudflare AI Gateway, gratuite). On la déclare une seule fois :
+ *
+ *     GROQ_BASE_URL=https://gateway.ai.cloudflare.com/v1/<id-compte>/<id-passerelle>/groq
+ *
+ * Sans cette variable, rien ne change : on appelle l'API officielle.
+ */
+export function urlGroq(chemin: string): string {
+  const base = (process.env.GROQ_BASE_URL ?? '').trim().replace(/\/+$/, '');
+  return base ? `${base}/${chemin}` : `https://api.groq.com/openai/v1/${chemin}`;
+}

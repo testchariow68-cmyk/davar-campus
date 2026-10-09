@@ -25,6 +25,7 @@
  *     de voir une erreur.
  */
 import { budgetFor, countOp } from './quota.ts';
+import { urlGroq } from './http.ts';
 
 export type MoteurTranscription = 'groq-whisper' | 'browser-whisper';
 
@@ -56,7 +57,14 @@ export const MOTEURS_TRANSCRIPTION: Array<{
 ];
 
 export const MODELE_GROQ = 'whisper-large-v3';
-export const URL_GROQ = 'https://api.groq.com/openai/v1/audio/transcriptions';
+/**
+ * Adresse d'appel à Whisper chez Groq. Passe par GROQ_BASE_URL si elle est
+ * déclarée (voir `urlGroq`) : sans elle, c'est l'API officielle. Calculée à
+ * l'appel, jamais à l'import : l'environnement peut changer entre-temps.
+ */
+export function urlTranscriptionGroq(): string {
+  return urlGroq('audio/transcriptions');
+}
 
 /** Sous les 25 Mo de Groq, et ≈ 15 minutes de parole. */
 export const PLAFOND_AUDIO_OCTETS = 8 * 1024 * 1024;
@@ -144,7 +152,7 @@ export async function transcrireAudio(options: {
 
   const envoyer = options.fetchImpl ?? fetch;
   try {
-    const reponse = await envoyer(URL_GROQ, {
+    const reponse = await envoyer(urlTranscriptionGroq(), {
       method: 'POST',
       headers: { authorization: `Bearer ${cle}` },
       body: forme,

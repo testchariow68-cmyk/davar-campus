@@ -366,7 +366,13 @@ async function verifierAssistants() {
   if (groq.length === 0 && gemini.length === 0) {
     console.log('   → en attente : l’assistant le dit honnêtement (il renvoie au coach humain),');
     console.log('     et l’étudiant qui dicte un avis bascule sur la transcription de son appareil.');
+    console.log('   → une seule clé suffit pour ouvrir l’assistant. Si Groq ne répond pas');
+    console.log('     depuis votre région, prenez Gemini : aistudio.google.com/apikey.');
     return;
+  }
+  if (groq.length > 0 && gemini.length === 0) {
+    console.log('   → seule Groq est renseignée. Si elle est refusée (blocage réseau ou quota),');
+    console.log('     l’assistant n’aura plus de relais : une clé Gemini en plus coûte 2 minutes.');
   }
   if (groq.length > 0) {
     try {
@@ -374,11 +380,28 @@ async function verifierAssistants() {
         headers: { authorization: `Bearer ${groq}` },
         signal: AbortSignal.timeout(15000),
       });
-      controler(
-        'la clé Groq est acceptée',
-        reponse.ok,
-        reponse.status === 401 ? 'clé refusée — vérifiez qu’elle commence par gsk_ et qu’elle est active' : `HTTP ${reponse.status}`
-      );
+      if (reponse.status === 403) {
+        // Groq bloque les centres de données (serveurs, VPN, Workers Cloudflare) :
+        // la clé peut être parfaite, l'appel est refusé quand même. Ce n'est pas
+        // une erreur de configuration, et ce n'est pas grave : l'assistant passe
+        // à Gemini et la dictée bascule sur l'appareil de l'étudiant.
+        console.log('   ÉCHEC · Groq refuse l’appel depuis cette machine (HTTP 403).');
+        console.log('     Ce n’est pas votre clé : Groq bloque les adresses de serveur.');
+        console.log('     Conséquence : aucune. L’assistant enchaîne sur Gemini, et la dictée');
+        console.log('     des avis bascule sur l’appareil de l’étudiant (Plan B, sans quota).');
+        console.log('     Le jour où vous aurez une clé joignable, ajoutez GROQ_BASE_URL pour');
+        console.log('     passer par une passerelle Cloudflare — voir GUIDE-MES-VALEURS.md §5.');
+        if (!gemini) {
+          console.log('     ⚠ Sans clé Gemini à côté, l’assistant n’a plus de moteur : prenez une');
+          console.log('       clé Gemini (aistudio.google.com/apikey), gratuite et joignable partout.');
+        }
+      } else {
+        controler(
+          'la clé Groq est acceptée',
+          reponse.ok,
+          reponse.status === 401 ? 'clé refusée — vérifiez qu’elle commence par gsk_ et qu’elle est active' : `HTTP ${reponse.status}`
+        );
+      }
       if (reponse.ok) {
         const corps = await reponse.json().catch(() => null);
         const modeles = Array.isArray(corps?.data) ? corps.data.map((modele) => String(modele?.id ?? '')) : [];

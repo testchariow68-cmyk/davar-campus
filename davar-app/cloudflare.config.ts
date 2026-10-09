@@ -115,6 +115,15 @@ export default defineConfig({
       GEMINI_API_KEY: bindings.secret(),
       OPENROUTER_API_KEY: bindings.secret(),
       HUGGINGFACE_API_KEY: bindings.secret(),
+      // Facultatif : passerelle pour joindre Groq depuis un centre de données.
+      // Groq REFUSE les appels venant d'un serveur (politique anti-fraude) : sans
+      // passerelle, un Worker reçoit « Access denied. Please check your network
+      // settings. » alors que la clé est valide. Laisser vide = API officielle
+      // directe, ce qui convient tant que l'appel part d'une connexion résidentielle.
+      // Renseigné, ce doit être l'adresse d'une passerelle, par exemple :
+      //   https://gateway.ai.cloudflare.com/v1/<id-compte>/<id-passerelle>/groq
+      // Ce n'est pas un secret (une adresse, pas une clé) : liaison en clair.
+      GROQ_BASE_URL: bindings.text(''),
       // Moteur personnalisé : n'est utilisé que si les deux sont posés.
       ASSISTANT_CUSTOM_URL: bindings.secret(),
       ASSISTANT_CUSTOM_KEY: bindings.secret(),

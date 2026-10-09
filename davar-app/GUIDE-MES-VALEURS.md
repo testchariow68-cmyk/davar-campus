@@ -200,6 +200,21 @@ refuse tout :
 
 → `R2_BUCKET` = **ce nom**, par exemple `davar-campus-fichiers`.
 
+⚠️ **Ce n'est ni le nom de votre jeton, ni une valeur de jeton.** Quand vous créez
+un jeton, Cloudflare propose un nom tout fait — **« R2 Account Token »** — que
+beaucoup gardent tel quel. Ce nom-là n'entre **nulle part** dans `.env.local` : il
+ne sert qu'à vous y retrouver dans la liste des jetons. Ce que veut `R2_BUCKET`,
+c'est le nom du **seau** (le « dossier » géant qui contiendra vos livres et vos
+audios), qui s'affiche en haut de la page du seau, ou dans la liste des seaux sur
+**R2 → Vue d'ensemble**.
+
+> Repère : le seau est un **conteneur**, le jeton est une **clé**. On met le
+> contenant dans `R2_BUCKET`, la clé dans `R2_ACCESS_KEY_ID`.
+>
+> Si vous n'avez jamais créé de seau (le jeton seul ne suffit pas) : **R2 → Vue
+> d'ensemble → « Créer un seau »** → nom en minuscules, chiffres et tirets →
+> **Créer un seau**. Ensuite seulement, créez le jeton, en le limitant à ce seau.
+
 ⚠️ **Ne mettez là aucune « valeur de jeton ».** Ce n'est pas une clé, ni un
 identifiant, ni un secret : c'est le **nom** que vous avez donné à votre seau —
 celui qui s'affiche en haut de sa page, en minuscules. Si votre écran montre une
@@ -278,7 +293,11 @@ immédiatement : elle ne s'affiche qu'une fois**.
 | Valeur | Nom à écrire |
 |---|---|
 | La clé qui commence par `sk_…` | `CHARIOW_API_KEY` |
-| L'identifiant de votre boutique, qui commence par `str_…` (visible dans les **Paramètres** de la boutique) | `CHARIOW_STORE_ID` |
+| L'identifiant de votre boutique, qui commence par **`str_`** (visible dans les **Paramètres** de la boutique) | `CHARIOW_STORE_ID` |
+
+> `str_` et non `store_` : trois lettres, `s-t-r`, suivies d'un tiret bas. C'est
+> le préfixe que Chariow emploie dans toutes ses réponses d'API (`"id": "str_…"`).
+> Vous le retrouvez aussi dans n'importe quelle vente, sous `store.id`.
 
 ### 4b. Le Pulse (l'automatisation qui nous prévient d'une vente)
 
@@ -321,9 +340,48 @@ dicte sur son appareil : personne n'est bloqué.
 | Valeur | Où exactement | Nom à écrire |
 |---|---|---|
 | Clé Groq (commence par `gsk_…`) | <https://console.groq.com/keys> → connexion → **Create API Key** → nommez-la « Campus Davar » → copier | `GROQ_API_KEY` |
-| Clé Gemini (commence par `AIza…`) — **facultatif, en second** | <https://aistudio.google.com/apikey> → connexion → **Create API key** → copier | `GEMINI_API_KEY` |
+| Clé Gemini (commence par `AIza…`) | <https://aistudio.google.com/apikey> → connexion → **Create API key** → copier | `GEMINI_API_KEY` |
 
 > Aucune carte bancaire n'est demandée pour ces deux paliers gratuits.
+
+### 5a. Si Groq vous répond « Access denied. Please check your network settings. »
+
+**Ce n'est pas vous, et ce n'est pas votre clé.** Groq bloque délibérément les
+appels qui viennent d'un centre de données — serveurs, VPN, et même les Workers
+Cloudflare. Le message apparaît donc parfois **avant même d'avoir une clé**, dès
+qu'on ouvre la console, et il apparaîtrait aussi depuis le campus en ligne alors
+que la clé serait parfaite.
+
+**Que faire ? Prenez Gemini.** C'est le même service, gratuit lui aussi, joignable
+depuis à peu près partout :
+
+1. <https://aistudio.google.com/apikey> → **Create API key** → copiez-la.
+2. Collez-la sur la ligne `GEMINI_API_KEY`.
+3. Laissez `GROQ_API_KEY` **vide** et continuez.
+
+Ce que ça change, très concrètement :
+
+- **L'assistant fonctionne** — Gemini est un moteur de premier ordre, pas un pis-aller.
+- **La dictée vocale des avis** bascule sur l'appareil de l'étudiant (Plan B, déjà
+  prévu, sans quota, rien à installer). Personne n'est bloqué pour rendre un avis.
+- **Aucune dépense.**
+
+**Plus tard, si Groq redevient joignable** (autre réseau, autre pays, ou depuis un
+poste résidentiel), ajoutez sa clé : elle reprend la main automatiquement, et les
+deux moteurs se relaient alors en cas de quota atteint.
+
+### 5b. `GROQ_BASE_URL` — pour que le campus en ligne puisse appeler Groq
+
+Une fois le campus déployé, il appelle depuis un centre de données : Groq le
+refusera. La parade est une **passerelle** (Cloudflare AI Gateway, gratuite), qui
+relaye l'appel. Si vous en créez une, notez son adresse ici :
+
+```
+GROQ_BASE_URL=https://gateway.ai.cloudflare.com/v1/<id-compte>/<id-passerelle>/groq
+```
+
+Vide, l'application appelle l'API officielle — ce qui convient parfaitement tant
+que vous travaillez sur votre machine.
 
 ---
 
