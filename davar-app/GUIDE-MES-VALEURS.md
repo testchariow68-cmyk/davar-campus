@@ -362,13 +362,16 @@ depuis à peu près partout :
 Ce que ça change, très concrètement :
 
 - **L'assistant fonctionne** — Gemini est un moteur de premier ordre, pas un pis-aller.
-- **La dictée vocale des avis** bascule sur l'appareil de l'étudiant (Plan B, déjà
-  prévu, sans quota, rien à installer). Personne n'est bloqué pour rendre un avis.
+- **La dictée vocale des avis** passe par **Gemini en ligne** : la voix est transcrite
+  côté serveur, **rien à télécharger pour l'étudiant** (ni les 41 Mo du repli). Ce
+  n'est qu'en tout dernier recours, si plus rien ne répond en ligne, qu'il dicte sur
+  son appareil. Personne n'est bloqué pour rendre un avis.
 - **Aucune dépense.**
 
 **Plus tard, si Groq redevient joignable** (autre réseau, autre pays, ou depuis un
-poste résidentiel), ajoutez sa clé : elle reprend la main automatiquement, et les
-deux moteurs se relaient alors en cas de quota atteint.
+poste résidentiel), ajoutez sa clé : elle reprend la main automatiquement — la chaîne
+de transcription est **Groq → Gemini → appareil de l'étudiant**, dans cet ordre, sans
+rien demander à personne.
 
 ### 5b. `GROQ_BASE_URL` — pour que le campus en ligne puisse appeler Groq
 

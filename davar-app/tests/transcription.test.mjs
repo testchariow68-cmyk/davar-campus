@@ -17,6 +17,9 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
   MODELE_GROQ,
+  MODELE_GEMINI,
+  MOTEURS_EN_LIGNE,
+  cleDuMoteur,
   MOTEURS_TRANSCRIPTION,
   PLAFOND_AUDIO_OCTETS,
   nomFichierPour,
@@ -50,14 +53,15 @@ function fauxMoteur(reponse = { status: 200, texte: 'Bonjour, voici mon avis.' }
   return { appels, fetchImpl };
 }
 
-test('les deux moteurs du propriétaire sont gardés, Groq en premier', () => {
+test('les trois moteurs sont gardés : Groq en premier, le navigateur en dernier', () => {
   assert.deepEqual(
     MOTEURS_TRANSCRIPTION.map((moteur) => moteur.valeur),
-    ['groq-whisper', 'browser-whisper'],
-    'l’ordre du prototype : Whisper large-v3 via Groq, puis le navigateur'
+    ['groq-whisper', 'gemini-audio', 'browser-whisper'],
+    'l’ordre du prototype : Groq, puis le relais en ligne, puis l’appareil'
   );
   assert.match(MOTEURS_TRANSCRIPTION[0].libelle, /recommandé/);
-  assert.equal(MOTEURS_TRANSCRIPTION[1].repli, true, 'le navigateur est le moteur de repli');
+  assert.equal(MOTEURS_TRANSCRIPTION[2].repli, true, 'le navigateur reste le moteur de repli');
+  assert.equal(MOTEURS_EN_LIGNE.length, 2, 'deux moteurs côté serveur, un sur l’appareil');
   assert.equal(moteurTranscription('browser-whisper'), 'browser-whisper');
   assert.equal(moteurTranscription('groq-whisper'), 'groq-whisper');
   assert.equal(moteurTranscription(''), 'groq-whisper', 'sans réglage, le défaut du prototype');
@@ -236,4 +240,161 @@ test('une barre oblique finale dans la passerelle ne fait pas de double slash', 
     if (avant === undefined) delete process.env.GROQ_BASE_URL;
     else process.env.GROQ_BASE_URL = avant;
   }
+});
+
+/* ------------------------------------------------------------------------- *
+ * Le relais : Groq REFUSE les appels venant d'un centre de données (serveurs,
+ * VPN, Workers Cloudflare) en renvoyant « Access denied. Please check your
+ * network settings. » même avec une clé valide. Sans relais, un campus déployé
+ * renverrait l'étudiant vers 41 Mo à télécharger sur son téléphone. Ces tests
+ * vérifient que Gemini prend la main sans rien demander à personne.
+ * ------------------------------------------------------------------------- */
+
+/** Un faux moteur GEMINI : il enregistre l'appel et rend un texte. */
+function fauxGemini(reponse = { status: 200, texte: 'Bonjour, voici mon avis.' }) {
+  const appels = [];
+  const fetchImpl = async (url, init) => {
+    appels.push({ url, init });
+    return new Response(
+      JSON.stringify({ candidates: [{ content: { parts: [{ text: reponse.texte }] } }] }),
+      { status: reponse.status, headers: { 'content-type': 'application/json' } }
+    );
+  };
+  return { appels, fetchImpl };
+}
+
+function sansGemini() {
+  delete process.env.GEMINI_API_KEY;
+}
+
+function avecGemini() {
+  process.env.GEMINI_API_KEY = 'AIza_cle_de_test';
+}
+
+test('sans aucune clé, aucune requête ne part — l’étudiant dicte sur son appareil', async () => {
+  sansCle();
+  sansGemini();
+  resetLocalCounters();
+  let appele = 0;
+  const resultat = await transcrireAudio({
+    audio: AUDIO,
+    typeMime: 'audio/webm',
+    fetchImpl: async () => {
+      appele += 1;
+      return new Response('{}');
+    },
+  });
+  assert.equal(resultat.ok, false);
+  assert.equal(resultat.raison, 'sans_cle');
+  assert.equal(resultat.repli, 'navigateur');
+  assert.equal(appele, 0, 'aucune requête ne doit partir sans clé');
+  assert.equal(transcriptionEnLigneDisponible(), false);
+});
+
+test('Groq injoignable : Gemini prend la main, sans rien demander à l’étudiant', async () => {
+  sansCle();
+  avecGemini();
+  resetLocalCounters();
+  const { appels, fetchImpl } = fauxGemini();
+  const resultat = await transcrireAudio({ audio: AUDIO, typeMime: 'audio/webm;codecs=opus', secondes: 30, fetchImpl });
+
+  assert.equal(resultat.ok, true, 'l’étudiant est transcrit, pas renvoyé vers un téléchargement');
+  assert.equal(resultat.texte, 'Bonjour, voici mon avis.');
+  assert.equal(resultat.moteur, 'gemini-audio');
+
+  assert.equal(appels.length, 1, 'une seule requête : Groq n’a même pas été tenté, faute de clé');
+  assert.match(appels[0].url, /generativelanguage\.googleapis\.com/);
+  assert.match(appels[0].url, new RegExp(MODELE_GEMINI));
+
+  const totaux = Object.fromEntries(pendingTotals().map((entree) => [entree.bucket, entree.count]));
+  assert.equal(totaux['transcription.requests'], 1, 'le plafond du jour est consommé une fois');
+  assert.equal(totaux['transcription.seconds'], 30);
+  sansGemini();
+});
+
+test('la requête Gemini porte une consigne de fidélité et l’audio en base64', async () => {
+  sansCle();
+  avecGemini();
+  resetLocalCounters();
+  const { appels, fetchImpl } = fauxGemini();
+  await transcrireAudio({ audio: AUDIO, typeMime: 'audio/webm', fetchImpl });
+
+  const corps = JSON.parse(appels[0].init.body);
+  const parties = corps.contents[0].parts;
+  const texte = parties.find((partie) => typeof partie.text === 'string')?.text ?? '';
+  const audioPartie = parties.find((partie) => partie.inline_data);
+
+  assert.match(texte, /Transcris fidèlement/, 'sans consigne, un modèle résume au lieu de transcrire');
+  assert.match(texte, /français/);
+  assert.equal(corps.generationConfig.temperature, 0, 'aucune invention : la fidélité d’abord');
+  assert.equal(audioPartie.inline_data.mime_type, 'audio/webm', 'le type est nettoyé de son codec');
+  assert.equal(audioPartie.inline_data.data, btoa(String.fromCharCode(...AUDIO)), 'l’audio part bien, encodé');
+  sansGemini();
+});
+
+test('les deux moteurs en ligne cohabitent : le réglé est essayé en premier', async () => {
+  avecCle();
+  avecGemini();
+  resetLocalCounters();
+  const { appels, fetchImpl } = fauxGemini();
+  const resultat = await transcrireAudio({ audio: AUDIO, typeMime: 'audio/webm', moteur: 'gemini-audio', fetchImpl });
+  assert.equal(resultat.moteur, 'gemini-audio');
+  assert.equal(appels.length, 1, 'le moteur choisi par le propriétaire est respecté');
+  assert.match(appels[0].url, /generativelanguage\.googleapis\.com/);
+  sansGemini();
+});
+
+test('si Groq échoue et que Gemini est là, la chaîne continue sans l’étudiant', async () => {
+  avecCle();
+  avecGemini();
+  resetLocalCounters();
+  const urls = [];
+  const fetchImpl = async (url, init) => {
+    urls.push(String(url));
+    if (String(url).includes('api.groq.com'))
+      return new Response('{"error":"Access denied. Please check your network settings."}', { status: 403 });
+    return new Response(JSON.stringify({ candidates: [{ content: { parts: [{ text: 'Texte dicté.' }] } }] }), {
+      status: 200,
+      headers: { 'content-type': 'application/json' },
+    });
+  };
+  const resultat = await transcrireAudio({ audio: AUDIO, typeMime: 'audio/webm', fetchImpl });
+  assert.equal(resultat.ok, true, 'le blocage de Groq n’est plus un mur');
+  assert.equal(resultat.moteur, 'gemini-audio');
+  assert.deepEqual(
+    urls.map((url) => (url.includes('api.groq.com') ? 'groq' : 'gemini')),
+    ['groq', 'gemini'],
+    'Groq est bien tenté en premier, comme dans le prototype'
+  );
+  sansGemini();
+});
+
+test('le propriétaire a choisi l’appareil : le serveur n’envoie rien en ligne', async () => {
+  avecCle();
+  avecGemini();
+  resetLocalCounters();
+  let appele = 0;
+  const resultat = await transcrireAudio({
+    audio: AUDIO,
+    typeMime: 'audio/webm',
+    moteur: 'browser-whisper',
+    fetchImpl: async () => {
+      appele += 1;
+      return new Response('{}');
+    },
+  });
+  assert.equal(resultat.ok, false);
+  assert.equal(resultat.repli, 'navigateur');
+  assert.equal(appele, 0, 'le choix « sur l’appareil » doit être respecté coûte que coûte');
+  sansGemini();
+});
+
+test('la clé lue dépend du moteur : Groq et Gemini ont chacun la leur', () => {
+  avecCle();
+  avecGemini();
+  assert.equal(cleDuMoteur('groq-whisper'), 'gsk_de_remplacement_pour_les_tests');
+  assert.equal(cleDuMoteur('gemini-audio'), 'AIza_cle_de_test');
+  sansGemini();
+  assert.equal(cleDuMoteur('gemini-audio'), '');
+  assert.equal(transcriptionEnLigneDisponible(), true, 'Groq seul suffit à dire « branché »');
 });

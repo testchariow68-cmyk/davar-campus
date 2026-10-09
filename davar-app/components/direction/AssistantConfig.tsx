@@ -132,7 +132,8 @@ export function AssistantConfig({
           <div className="eyebrow mb8">Transcription fidèle des avis audio (open source · gratuit · sans serveur à héberger)</div>
           <div className="col" style={{ gap: 8 }}>
             {[
-              ['groq-whisper', 'Whisper large-v3 via Groq (recommandé)', 'Modèle open source, API hébergée gratuite : ≈ 2 000 transcriptions/jour, 99 langues, très pointu. Aucun VPS. Aucun téléchargement pour l’étudiant.'],
+              ['groq-whisper', 'Whisper large-v3 via Groq (recommandé)', 'Modèle open source, API hébergée gratuite : ≈ 2 000 transcriptions/jour, 99 langues, très pointu. Aucun VPS. Aucun téléchargement pour l’étudiant. ⚠ Groq refuse les appels venant d’un serveur : si le campus déployé le voit bloqué, le relais Gemini prend la main tout seul.'],
+              ['gemini-audio', 'Gemini — transcription en ligne', 'Lit l’enregistrement et rend le texte, côté serveur : rien à télécharger pour l’étudiant. Utilise la clé Gemini, la même que l’assistant. Prend la main automatiquement quand Groq ne répond pas.'],
               ['browser-whisper', 'Whisper dans le navigateur (transformers.js)', '100 % open source, s’exécute sur l’appareil de l’étudiant : zéro quota, zéro serveur, zéro coût. Un peu plus lent. Le modèle se télécharge une seule fois (≈ 41 Mo). Sert AUSSI de repli si la ligne ne répond pas.'],
             ].map(([valeur, libelle, detail]) => (
               <label key={valeur} className="row small" style={{ gap: 9, cursor: 'pointer' }}>
@@ -152,12 +153,20 @@ export function AssistantConfig({
               </label>
             ))}
           </div>
-          {!moteurs.some((moteur) => moteur.provider === 'groq' && moteur.cle) && (
-            <p className="xs muted mt8">
-              Sans clé Groq posée, la transcription en ligne ne partira pas : l’étudiant dictera sur son appareil, et
-              l’enregistrement ne quittera jamais son téléphone. Aucun étudiant n’est jamais bloqué.
-            </p>
-          )}
+          {!moteurs.some((moteur) => moteur.provider === 'groq' && moteur.cle) &&
+            !moteurs.some((moteur) => moteur.provider === 'gemini' && moteur.cle) && (
+              <p className="xs muted mt8">
+                Aucune clé de transcription en ligne n’est posée : l’étudiant dictera sur son appareil, et
+                l’enregistrement ne quittera jamais son téléphone. Aucun étudiant n’est jamais bloqué.
+              </p>
+            )}
+          {moteurs.some((moteur) => moteur.provider === 'groq' && moteur.cle) &&
+            moteurs.some((moteur) => moteur.provider === 'gemini' && moteur.cle) && (
+              <p className="xs muted mt8">
+                Les deux moteurs en ligne sont branchés : <b>Groq</b> est essayé en premier, <b>Gemini</b> prend la main
+                s’il ne répond pas (Groq refuse parfois les appels venant d’un serveur). L’étudiant n’a rien à faire.
+              </p>
+            )}
         </div>
 
         <div className="col" style={{ gap: 16 }}>

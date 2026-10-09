@@ -117,10 +117,16 @@ try {
   }
   const assistantHtml = await (await appel(pot, '/direction/assistant')).text();
   controler(
-    'les deux moteurs de dictée sont proposés, Groq en premier',
+    'les moteurs de dictée sont proposés dans l’ordre du prototype',
     assistantHtml.includes('Whisper large-v3 via Groq (recommandé)') &&
-      assistantHtml.indexOf('Whisper large-v3 via Groq') < assistantHtml.indexOf('Whisper dans le navigateur'),
-    'l’ordre du prototype : Groq, puis le navigateur'
+      assistantHtml.indexOf('Whisper large-v3 via Groq') < assistantHtml.indexOf('Gemini — transcription en ligne') &&
+      assistantHtml.indexOf('Gemini — transcription en ligne') < assistantHtml.indexOf('Whisper dans le navigateur'),
+    'l’ordre du prototype : Groq, puis le relais Gemini, puis le navigateur'
+  );
+  controler(
+    'le relais Gemini est proposé (Groq refuse parfois les appels serveur)',
+    assistantHtml.includes('Gemini — transcription en ligne'),
+    'sans lui, un campus déployé renverrait l’étudiant vers 41 Mo à télécharger'
   );
 
   const creation = await appel(pot, '/api/direction/comptes-test', {

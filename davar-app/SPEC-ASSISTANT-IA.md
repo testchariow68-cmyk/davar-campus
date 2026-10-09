@@ -105,6 +105,24 @@ Deux moteurs open source, gratuits, sans serveur à héberger (`views-admin.js`,
 
 Cette seconde option est du **côté client pur** : c'est votre principe appliqué à la lettre.
 
+> **Complément du 8 octobre 2026 — un relais en ligne entre les deux.**
+> **Groq refuse les appels qui viennent d'un centre de données** (serveurs, VPN, et
+> donc le Worker qui héberge le campus) : il renvoie « Access denied. Please check
+> your network settings. », **même avec une clé parfaite**. Le propriétaire l'a
+> rencontré avant même de pouvoir créer sa clé. Sans relais, un campus déployé
+> renverrait donc chaque étudiant vers le Plan B — c'est-à-dire **41 Mo à
+> télécharger sur un téléphone**, ruineux en données mobiles.
+>
+> D'où un troisième moteur, **« Gemini — transcription en ligne »**, qui lit
+> l'audio et rend le texte côté serveur avec la clé `GEMINI_API_KEY`, celle que le
+> propriétaire possède déjà. **Rien à télécharger pour l'étudiant.**
+>
+> Votre décision est intégralement conservée : l'ordre reste **Groq d'abord,
+> l'appareil de l'étudiant en dernier**. Gemini s'intercale comme relais, et
+> l'enchaînement est **automatique** — l'étudiant ne choisit rien, ne voit rien.
+>
+> La chaîne réelle : **Groq → Gemini → navigateur**.
+
 > **Décision du propriétaire (7 octobre 2026) — « Plan A : Whisper large-v3 via
 > Groq. Plan B : Whisper dans le navigateur. C'est ce qu'on garde. »** Les DEUX
 > moteurs sont donc branchés, et l'écran Direction les présente dans l'ordre du

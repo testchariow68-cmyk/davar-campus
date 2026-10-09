@@ -12,6 +12,7 @@ import {
   type Fournisseur,
 } from '@/lib/server/assistant';
 import { cleDisponible } from '@/lib/server/ai-providers';
+import { MOTEURS_TRANSCRIPTION } from '@/lib/server/transcription';
 
 export const dynamic = 'force-dynamic';
 
@@ -50,7 +51,10 @@ export async function POST(request: Request) {
       if (typeof body?.hue === 'number' && body.hue >= 0 && body.hue <= 360) patch.hue = Math.trunc(body.hue);
       if (typeof body?.studentDailyCap === 'number' && body.studentDailyCap >= 1 && body.studentDailyCap <= 500)
         patch.studentDailyCap = Math.trunc(body.studentDailyCap);
-      if (typeof body?.transcription === 'string' && ['browser-whisper', 'groq-whisper'].includes(body.transcription))
+      if (
+        typeof body?.transcription === 'string' &&
+        MOTEURS_TRANSCRIPTION.some((moteur) => moteur.valeur === body.transcription)
+      )
         patch.transcription = body.transcription;
       if (estFournisseur(body?.primaryProvider)) patch.primaryProvider = body.primaryProvider;
       if (Array.isArray(body?.chaine)) {
