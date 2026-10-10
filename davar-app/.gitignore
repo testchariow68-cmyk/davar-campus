@@ -44,6 +44,10 @@ yarn-error.log*
 *.sqlite
 *.sqlite3
 
+# réglages de déploiement locaux (sous-domaine Cloudflare) — jamais publiés
+# (aucun secret : seulement l'adresse publique, mais elle est propre à chacun)
+.deploy-local.json
+
 # vercel
 .vercel
 
