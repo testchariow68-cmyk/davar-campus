@@ -30,7 +30,79 @@ Imprimez ou recopiez ce tableau ; vous en aurez besoin à chaque étape.
 
 ---
 
-## Étape 1 — RÉCUPÉRER LE CODE (une seule fois à la main)
+## Étape 1 — RÉCUPÉRER LE CODE
+
+### Lien direct (si vous préférez cliquer)
+
+```
+https://github.com/testchariow68-cmyk/davar-campus/archive/refs/heads/arena/09f3da07-davar-campus.zip
+```
+
+### Variante AUTOMATIQUE — vous avez DÉJÀ un `.env.local` rempli
+
+C'est votre cas. Copiez **tout le bloc ci-dessous** d'un seul coup, collez-le
+dans PowerShell (clic droit), et appuyez sur Entrée. Il fait tout :
+
+1. **retrouve votre `.env.local` rempli** où qu'il soit dans Téléchargements ou
+   sur le Bureau, et en fait une sauvegarde sur votre Bureau ;
+2. télécharge la dernière version et l'installe proprement dans
+   `...\Davar\davar-app` (un chemin **sans espace**, pour éviter les pièges) ;
+3. **remet vos valeurs** dans le nouveau dossier ;
+4. installe les dépendances et ouvre le dossier.
+
+```powershell
+$ErrorActionPreference='Stop'
+[Net.ServicePointManager]::SecurityProtocol=[Net.SecurityProtocolType]::Tls12
+
+# 1. Retrouver votre .env.local rempli (le fichier le plus precieux)
+$lieux = @("$HOME\Downloads","$HOME\Desktop","$HOME\Davar","$HOME\OneDrive\Bureau") | Where-Object { Test-Path $_ }
+$fiche = Get-ChildItem -Path $lieux -Filter '.env.local' -Recurse -Depth 6 -Force -ErrorAction SilentlyContinue |
+         Where-Object { $_.FullName -notlike '*\node_modules\*' } |
+         Sort-Object LastWriteTime -Descending | Select-Object -First 1
+if ($fiche) {
+  Write-Host "Valeurs trouvees : $($fiche.FullName)" -ForegroundColor Green
+  Copy-Item $fiche.FullName "$HOME\Desktop\env-local-sauvegarde.txt" -Force
+  Write-Host "Sauvegarde faite sur votre Bureau (env-local-sauvegarde.txt)" -ForegroundColor Green
+} else {
+  Write-Host "Aucun .env.local trouve : il faudra le remplir (npm run env:local)" -ForegroundColor Yellow
+}
+
+# 2. Telecharger et installer
+$base = "$HOME\Davar"
+New-Item -ItemType Directory -Path $base -Force | Out-Null
+$zip = Join-Path $env:TEMP 'davar.zip'
+Write-Host 'Telechargement en cours (environ 26 Mo)...' -ForegroundColor Cyan
+Invoke-WebRequest -Uri 'https://github.com/testchariow68-cmyk/davar-campus/archive/refs/heads/arena/09f3da07-davar-campus.zip' -OutFile $zip -UseBasicParsing
+Expand-Archive -LiteralPath $zip -DestinationPath $base -Force
+
+# 3. Ranger : on veut ...\Davar\davar-app, pas le nom d'archive a rallonge
+$extrait = Get-ChildItem -Path $base -Directory -Filter 'davar-campus-*' | Select-Object -First 1
+$cible = Join-Path $base 'davar-app'
+if (Test-Path $cible) { Remove-Item $cible -Recurse -Force -ErrorAction SilentlyContinue }
+Move-Item -LiteralPath (Join-Path $extrait.FullName 'davar-app') -Destination $cible -Force
+Remove-Item -LiteralPath $extrait.FullName -Recurse -Force
+Remove-Item $zip -Force
+
+# 4. Remettre VOS valeurs
+if ($fiche) { Copy-Item $fiche.FullName (Join-Path $cible '.env.local') -Force; Write-Host 'Vos valeurs sont en place.' -ForegroundColor Green }
+
+# 5. Installer les dependances (2 a 3 minutes)
+Set-Location $cible
+npm install
+
+Write-Host ''
+Write-Host "PRET. Votre campus est dans : $cible" -ForegroundColor Green
+Write-Host 'Double-cliquez DEPLOYER.bat dans ce dossier.' -ForegroundColor Cyan
+explorer $cible
+```
+
+> **Le seul critère de réussite :** le message `PRET. Votre campus est dans : …`
+> suivi de `Vos valeurs sont en place.` Le dossier s'ouvre tout seul.
+>
+> Si le bloc s'interrompt, **rien n'est perdu** : votre sauvegarde est sur votre
+> Bureau, et votre ancien dossier n'a pas été touché.
+
+### Sinon, à la main (si vous n'avez pas encore de `.env.local`)
 
 Le code n'est pas encore sur votre ordinateur **avec les scripts de
 déploiement**. Une seule fois, téléchargez-le :
@@ -43,9 +115,9 @@ cd "$HOME\Downloads\Davar\davar-campus-arena-09f3da07-davar-campus\davar-app"
 npm install
 ```
 
-> **Déjà un dossier avec votre `.env.local` rempli ?** Ne le recopiez pas à la
-> main : laissez-le où il est, et passez à l'étape 1 bis. Le bouton `MAJ.bat`
-> (étape 10) rapportera les nouveaux fichiers **sans toucher à vos valeurs**.
+> **Vous avez déjà un `.env.local` rempli ?** Prenez la **variante
+> automatique** ci-dessus : elle le retrouve toute seule et le conserve. Ne le
+> recopiez jamais à la main.
 
 Vérifiez que vous êtes au bon endroit :
 
