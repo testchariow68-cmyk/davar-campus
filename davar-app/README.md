@@ -1,6 +1,32 @@
-# DAVAR Campus — app Next.js en migration vers Turso
+# DAVAR Campus — app Next.js sur Turso
 
-> **Lisez `REAL-LAUNCH-STATUS.md` avant de démarrer ou déployer.** Comptes, paiements et campus restent verrouillés : la compilation locale ne vaut pas lancement public. Les guides historiques Supabase/CinetPay ne sont plus applicables. Aucun secret ni base réelle ne sont inclus.
+> **Pour un premier déploiement :** `DEPLOIEMENT-PRIVE-PREMIERE-RECETTE.md` (ce que vous lancez,
+> ce qui a déjà été vérifié dans le runtime Cloudflare) et `REVUE-MIGRATIONS-STAGING-002-004.md`
+> (migration de la base, avec répétition locale réussie).
+>
+> **Pour comprendre le projet et l'écart avec ses documents :** `CONFORMITE-DOCUMENTS.md`.
+>
+> **Lisez `MISE-EN-SERVICE.md` (état réel de la dernière tranche livrée), `ARCHITECTURE-GRATUITE.md` (objectif 0 € jusqu'à 3 000 étudiants actifs : briques gratuites, protection des quotas, seuils de révision) puis `REAL-LAUNCH-STATUS.md`.** Comptes, paiements et campus restent sous contrôle : la compilation locale ne vaut pas lancement public. Les guides historiques Supabase/CinetPay ne sont plus applicables. Aucun secret ni base réelle ne sont inclus.
+
+## Démarrage rapide (développement, sans secret)
+
+```bash
+npm ci
+npm run db:seed     # les 4 migrations + catalogue + compte de démonstration local
+npm run rehearsal:staging   # rejoue la migration staging en local (aucun réseau)
+npm run start:vinext        # exécute l'app dans le VRAI runtime Cloudflare (workerd)
+APP_ENV=development TURSO_DATABASE_URL="file:$PWD/dev-data/davar-dev.db" npm run dev
+```
+
+Tests : `npm test` (50 tests Node) · `npm run test:sql` (25 tests SQLite) ·
+`npm run typecheck` · `npm run build -- --webpack` · `npm run build:vinext`.
+
+Mot de passe : la dérivation (PBKDF2 600 000 itérations) se fait **dans le
+navigateur** ; le serveur ne revérifie qu'une clé dérivée. Aucun hébergement
+supplémentaire n'est requis (`AUTH_KDF_MODE=client`, valeur par défaut). Le
+service `auth-kdf-service/` reste disponible pour les comptes hérités.
+
+Configuration : copiez `.env.example` en `.env.local` (jamais versionné).
 
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 

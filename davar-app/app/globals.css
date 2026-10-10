@@ -191,3 +191,32 @@ h1, h2, h3, h4 { font-weight: 700; letter-spacing: -.01em; line-height: 1.25; }
 
 .gl-under{position:relative;z-index:2;margin-top:16px;color:#fff;font-size:13.5px;font-weight:700;cursor:pointer;text-decoration:underline;text-underline-offset:4px}
 .gl-under:hover{opacity:.85}
+
+/* ============================================================
+   ESPACE DIRECTION — administration du propriétaire
+   ============================================================ */
+.dv-nav { display: flex; gap: 6px; flex-wrap: wrap; }
+.dv-nav a { padding: 8px 13px; border-radius: 99px; font-size: 13px; font-weight: 600; color: var(--muted); border: 1px solid transparent; }
+.dv-nav a:hover { background: #fff; border-color: var(--line); color: var(--txt); }
+.dv-nav a[aria-current="page"] { background: var(--violet-soft); border-color: var(--violet-line); color: var(--violet-deep); }
+.dv-stats { display: grid; grid-template-columns: repeat(auto-fill, minmax(148px, 1fr)); gap: 12px; }
+.dv-stat { background: var(--card); border: 1px solid var(--line); border-radius: var(--r); padding: 14px 16px; box-shadow: var(--shadow); }
+.dv-stat b { display: block; font-size: 24px; font-weight: 800; letter-spacing: -.02em; margin-bottom: 2px; }
+.dv-tbl { width: 100%; border-collapse: collapse; font-size: 13px; }
+.dv-tbl th { text-align: left; font-size: 11.5px; text-transform: uppercase; letter-spacing: .04em; color: var(--faint); padding: 8px 10px; border-bottom: 1px solid var(--line); font-weight: 700; }
+.dv-tbl td { padding: 10px; border-bottom: 1px solid var(--line); vertical-align: middle; }
+.dv-tbl tr:last-child td { border-bottom: none; }
+.dv-list { display: flex; flex-direction: column; gap: 8px; }
+.dv-item { border: 1px solid var(--line); border-radius: var(--r-sm); padding: 12px 14px; background: #fff; }
+.dv-mod { border: 1px solid var(--line); border-radius: var(--r); background: #fff; overflow: hidden; }
+.dv-mod > header { display: flex; align-items: center; gap: 10px; padding: 12px 14px; background: var(--violet-soft); border-bottom: 1px solid var(--violet-line); flex-wrap: wrap; }
+.dv-les { display: flex; align-items: center; gap: 8px; padding: 9px 14px; border-bottom: 1px solid var(--line); flex-wrap: wrap; }
+.dv-les:last-child { border-bottom: none; }
+.dv-actions { display: flex; gap: 6px; margin-left: auto; flex-wrap: wrap; }
+.dv-mini { border: 1px solid var(--line2); background: #fff; border-radius: 8px; padding: 4px 9px; font-size: 12px; font-weight: 600; color: var(--muted); }
+.dv-mini:hover { border-color: var(--violet2); color: var(--violet); }
+.dv-mini.danger { color: var(--red); border-color: var(--red-line); background: var(--red-soft); }
+.dv-num { width: 26px; height: 26px; border-radius: 8px; background: var(--violet-soft); color: var(--violet-deep); display: inline-flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 800; flex: none; }
+.dv-tag { font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 99px; background: #F0EEF5; color: var(--muted); }
+.dv-tag.open { background: var(--green-soft); color: #14602F; }
+.dv-tag.closed { background: var(--amber-soft); color: #7A5210; }

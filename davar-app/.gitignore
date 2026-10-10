@@ -31,13 +31,22 @@ yarn-error.log*
 .pnpm-debug.log*
 
 # env files, local credential/backup artifacts — never publish
+# (seul le modèle sans secret .env.example est versionné)
 .env*
+!.env.example
+# secrets locaux du runtime Cloudflare (wrangler/vite) — jamais publiés
+.dev.vars
+.dev.vars.*
 *.before-free-staging.bak
 *.db
 *.db-shm
 *.db-wal
 *.sqlite
 *.sqlite3
+
+# réglages de déploiement locaux (sous-domaine Cloudflare) — jamais publiés
+# (aucun secret : seulement l'adresse publique, mais elle est propre à chacun)
+.deploy-local.json
 
 # vercel
 .vercel
@@ -50,3 +59,9 @@ next-env.d.ts
 /.vinext/
 /.cloudflare/
 /dist/
+
+# python (tests locaux)
+__pycache__/
+
+# base de développement locale (jamais une base hébergée)
+/dev-data/

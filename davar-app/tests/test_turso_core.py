@@ -5,6 +5,15 @@ import unittest
 from pathlib import Path
 
 SQL = Path(__file__).parents[1] / 'turso' / 'migrations' / '001_core.sqlite.sql'
+LIB = Path(__file__).parents[1] / 'lib' / 'server'
+
+
+def sql_blocks(path, needle=None):
+    """Extrait les requêtes SQL réelles d'un module (aucune base distante)."""
+    blocks = re.findall(r'sql:\s*`([^`]+)`', path.read_text(encoding='utf-8'))
+    if needle is None:
+        return blocks
+    return [block for block in blocks if needle in block]
 
 
 class TursoCoreTest(unittest.TestCase):
@@ -55,10 +64,13 @@ class TursoCoreTest(unittest.TestCase):
         self.assertEqual(self.db.execute('SELECT COUNT(*) FROM enrollments').fetchone()[0],0)
 
     def test_exact_chariow_ledger_sql_replay_and_pre_account_purchase(self):
-        # Exécute les requêtes SQL extraites du module serveur, sans Turso distant.
-        module = (SQL.parents[2] / 'lib/server/chariow-ledger.ts').read_text()
-        statements = re.findall(r'sql:`([^`]+)`', module)
-        self.assertEqual(len(statements), 5)
+        # Exécute les requêtes SQL extraites des modules serveur, sans Turso distant.
+        # Depuis la migration 002, le rattachement des achats vit dans auth-core.
+        statements = sql_blocks(LIB / 'chariow-ledger.ts')
+        claim = sql_blocks(LIB / 'auth-core.ts', needle='INSERT INTO enrollments')
+        self.assertEqual(len(statements), 4)
+        self.assertEqual(len(claim), 1)
+        statements = statements + claim
         self.db.execute("INSERT INTO trainings(id,title,price_cfa,chariow_product_id,published) VALUES ('t1','Cours',45000,'prd_test',1)")
         self.db.execute("INSERT INTO users(id,email_normalized,display_name,password_hash,created_at_ms) VALUES ('u1','awa@example.org','Awa','not-real-test-hash',1)")
         # Achat avant vérification de l'adresse : la vente persiste, aucun cours accordé.
@@ -78,8 +90,8 @@ class TursoCoreTest(unittest.TestCase):
                          [('verified_purchase','sal_abc')])
 
     def test_exact_chariow_ledger_sql_refuses_unknown_product_and_grants_only_verified_account(self):
-        module = (SQL.parents[2] / 'lib/server/chariow-ledger.ts').read_text()
-        purchase, delivery, grant = re.findall(r'sql:`([^`]+)`', module)[:3]
+        purchase, delivery, grant = sql_blocks(LIB / 'chariow-ledger.ts')[:3]
+        self.assertTrue(all('?' in block for block in (purchase, delivery, grant)))
         self.db.execute("INSERT INTO trainings(id,title,price_cfa,chariow_product_id,published) VALUES ('t1','Cours',45000,'prd_test',1)")
         self.db.execute("INSERT INTO users(id,email_normalized,display_name,password_hash,email_verified_at_ms,created_at_ms) VALUES ('u1','awa@example.org','Awa','not-real-test-hash',1,1)")
         self.db.execute("INSERT INTO users(id,email_normalized,display_name,password_hash,email_verified_at_ms,created_at_ms) VALUES ('u2','other@example.org','Other','not-real-test-hash',1,1)")

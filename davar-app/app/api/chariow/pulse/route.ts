@@ -1,6 +1,7 @@
 import {verifyPulseSignature} from '@/lib/payments/chariow-signature';
 import {matchVerifiedChariowSale} from '@/lib/payments/chariow-validate';
 import {recordVerifiedChariowSale} from '@/lib/server/chariow-ledger';
+import {openDb} from '@/lib/server/turso';
 
 export const dynamic = 'force-dynamic';
 const reply=(code:number)=>Response.json({ok:code===200},{status:code,headers:{'Cache-Control':'no-store'}});
@@ -65,7 +66,8 @@ export async function POST(request: Request) {
     const apiSale=(apiResponse && typeof apiResponse==='object' && 'data' in apiResponse) ? apiResponse.data : null;
     const sale=matchVerifiedChariowSale(pulse,apiSale,storeId);
     if (!sale || sale.saleId!==saleId) return reply(503);
-    await recordVerifiedChariowSale(sale,deliveryId);
+    const db=await openDb();
+    await recordVerifiedChariowSale(db,sale,deliveryId);
     return reply(200);
   } catch {return reply(503);}
 }

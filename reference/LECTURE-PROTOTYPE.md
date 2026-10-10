@@ -1,0 +1,147 @@
+# Lecture du prototype — le document de travail
+
+> Établi le 6 octobre 2026 après réception du dossier complet (ZIP `workspace-01a10e9f-…`, 253 entrées).
+> Ce document **trie** ce qui a été reçu : ce qui sert, ce qui ne sert pas, ce qui manque, et
+> l'écart exact entre le prototype et l'application réelle.
+
+---
+
+## 1. Ce qui a été reçu, et ce qu'on en a fait
+
+| Reçu | Volume | Décision |
+|---|---|---|
+| `davar-campus/` — le prototype complet | 5,4 Mo | **Conservé** : `reference/prototype-campus/` (code, style, assets, documents) |
+| `site/` — l'ancienne vitrine publique | 1,9 Mo | **SUPPRIMÉE** (propriétaire, 6 octobre 2026) : « j'ai ma page de vente, je n'ai pas besoin d'un site » |
+| `davar-campus/SEO.md` — plan de référencement de la vitrine | — | **SUPPRIMÉ** : il ne décrivait que la vitrine ; le garder aurait induit en erreur |
+| `uploads/` — captures d'écran de travail | 4,5 Mo | **Non conservé** : ce sont des captures de mise au point, pas une référence |
+| `.config/.wrangler/logs/` — journaux | 65 Ko | **Non conservé** : journaux de machine, aucun intérêt |
+| `davar-app/` (ancienne copie) | 2,4 Mo | **Non conservé** : l'application du dépôt est plus récente et plus complète |
+| ZIP imbriqués (`*-staging-worker*.zip`, etc.) | ~4 Mo | **Non conservé** : versions antérieures de ce que le dépôt contient déjà |
+| `davar-app/.env.local` | — | **Non conservé** : contient un marqueur de secret (`whsec_dev_test_secret_a_remplacer`). Vérifié : **ce n'est pas un vrai secret**, aucun identifiant réel ne fuit. À retirer quand même du ZIP public. |
+
+L'archive d'origine est **conservée telle quelle** à la racine du dépôt, sous son
+nom exact — `workspace-01a10e9f-b31a-7076-9432-4ee5051bcb82.zip` (17,7 Mo) : vous
+pouvez toujours l'ouvrir et la comparer. Tout ce qui en a été trié vit dans
+`reference/`, et rien n'a été modifié à l'intérieur de l'archive.
+
+⚠️ Cette archive contient, dans l'ancienne copie `davar-app/.env.local`, un
+**marqueur de secret de démonstration** (`whsec_dev_test_secret_a_remplacer`).
+Vérifié : ce n'est **pas** un vrai secret — aucun identifiant réel ne fuit. À
+retirer si l'archive est un jour republiée ailleurs.
+
+---
+
+## 2. Le prototype en chiffres — la mesure de l'écart
+
+| Fichier | Lignes | Fonctions | Rôle |
+|---|---|---|---|
+| `views-admin.js` | 2 726 | 162 | Administration complète |
+| `views-student.js` | 2 123 | 136 | Parcours étudiant |
+| `views-campus.js` | 977 | 79 | Campus, catalogue, achats |
+| `data.js` | 620 | 28 | Modèle de données (localStorage) — 717 lignes reçues, nettoyées depuis |
+| `lifecycle.js` | 352 | 17 | Cycle de vie et purge |
+| `ui.js` | 298 | 42 | Interface |
+| `rewards.js` | 278 | 20 | Récompenses et badges |
+| `app.js` | 123 | 6 | Amorçage, routage |
+| `icons.js` | 94 | 1 | Icônes |
+| `emails.js` | 51 | 2 | E-mails |
+| `security-client.js` | 36 | 3 | Sécurité côté navigateur |
+| **Total** | **≈ 7 800** | **≈ 490** | |
+
+### Écrans identifiés dans le prototype
+
+**Étudiant** : Mes formations · Découvrir plus de formations · Chapitres · Exercices · Mes exercices ·
+Mes évaluations · Mes questions · Mes certificats · Mes livres · Mes audios (lecture) · Mes avis ·
+Notifications · Mon profil · Paramètres · Assistant virtuel · Contenu verrouillé · Compte suspendu ·
+Paiement en attente de vérification · Achat confirmé
+
+**Direction** : Vue d'ensemble · Formations · Étudiants · Activité des étudiants · Équipe ·
+Conversations · Assistant virtuel · Certifications · Avis des étudiants · Badges & distinctions ·
+Récompenses · E-mails · Exports · Configuration · Cycle de vie des données · Facilité d'accès restreint
+
+---
+
+## 3. La découverte importante : la « vue test » EXISTE déjà dans le prototype
+
+Le propriétaire l'a demandée ; elle était **déjà pensée** dans `views-admin.js`. Le mécanisme exact :
+
+```
+viewAsList()   → ne propose QUE les comptes dont l'identifiant commence par « u-test- »
+                 jamais le fondateur (« u-yann »), jamais une vraie personne
+viewAs(uid)    → refuse tout ce qui n'est pas un compte de test, avec ce message exact :
+                 « La vue test n'ouvre que des comptes test — jamais le fondateur
+                   ni une vraie personne. »
+               → mémorise le vrai compte dans `viewAsReal` et n'ouvre que la vue testée
+quitViewAs()   → retour au vrai compte ; touche Échap sur ordinateur
+viewAsBannerHTML() → bandeau permanent en haut : « Vue test : <nom> — touche Échap pour quitter »
+```
+
+Deux règles de droits, également écrites dans le prototype :
+- **le Super Admin a toujours le test de vue** (toutes les vues) ;
+- **le Manager seulement si l'option est activée** en Configuration — et **jamais la vue du fondateur**.
+
+**Ce qui existe aujourd'hui dans l'application** : la marque `is_test` en base et un onglet « Vue
+test » qui **montre** le vrai contenu en lecture seule. **Ce qui manque encore** : le fait de
+**basculer réellement** dans la vue du compte test, avec le bandeau et le bouton « Quitter », pour
+voir les écrans exactement comme la personne les verra. C'est la prochaine brique.
+
+---
+
+## 4. Écart réel : prototype → application (mesuré, pas estimé)
+
+Ce que l'**application** fait aujourd'hui, réellement, avec une vraie base et un vrai serveur :
+authentification (dérivation dans le navigateur, e-mail vérifié, sessions, rôles, suspension) ·
+catalogue · formations, modules et leçons · progression enregistrée · Espace Direction (créer une
+formation, bâtir ses modules et leçons, ouvrir/fermer, gérer les étudiants, nommer l'équipe, comptes
+de test, purge).
+
+Ce que le prototype montre et que l'application **n'a pas encore** :
+
+| Domaine | Fonctionnalités du prototype encore absentes |
+|---|---|
+| **Contenu** | Livres (lecteur paginé) · livres audio · ressources attribuées par étudiant |
+| **Évaluation** | Exercices non bloquants · évaluations bloquantes (score minimum 80 %, validation humaine) |
+| **Certification** | Demande → validation humaine → génération Apps Script/Slides · PDF officiel + aperçu · page publique de vérification par code · certificat figé au nom capturé |
+| **Récompenses** | 10 badges par formation · Premier Pas, En Route, Retour en Force · attribution automatique et manuelle journalisée |
+| **Avis** | Avis obligatoires (2 semaines / 1 mois, 1 000 mots, écrit ou audio transcrit) · Spotlight |
+| **Assistant** | Assistant virtuel configurable (nom, photo, langue) · isolation par formation · questions IA immédiates + coach sous 48 h — **spécification complète rassemblée dans `davar-app/SPEC-ASSISTANT-IA.md`** |
+| **Échanges** | Conversations, supervision, réponses du coach · support flottant (casque) · WhatsApp et appel |
+| **Notifications** | Cloche · disparition 48 h après lecture · motivations du dimanche |
+| **Social** | Ticker d'annonces et de plateformes · désabonnement par utilisateur |
+| **Direction** | Exports CSV protégés par mot de passe · factures · Google Sheets · clés API · e-mails (section test et production) |
+| **Vie privée** | Cycle de vie et purge (12 h) : soumissions, conversations, notifications, sessions, comptes inactifs |
+| **Apparence** | Modes clair/sombre et **4 palettes** au choix · navigation pleine page sur téléphone |
+| **Accès** | Accès gracieux 3 jours · invitation du staff (7 jours) · transfert de propriété sécurisé complet |
+
+**Lecture honnête** : le prototype est une maquette d'expérience très riche (≈ 7 900 lignes,
+≈ 490 fonctions, tout dans le navigateur). L'application possède aujourd'hui **le socle réel** —
+identité, base, droits, contenu, direction — et **une fraction des écrans**. Atteindre la parité
+signifie construire chacun de ces domaines côté serveur, un par un. Aucun raccourci n'est possible :
+c'est précisément ce que le prototype ne pouvait pas faire (il ne partage rien entre deux appareils).
+
+---
+
+## 5. Décisions prises par le propriétaire (6 octobre 2026)
+
+1. **Une seule formation est vendable : « Devenir un excellent orateur ».** Décision du propriétaire
+   (6 octobre 2026) : les quatre autres (Marketing Digital, Anglais professionnel, Excel, Créer son
+   entreprise) sont **retirées** de l'application. Le prix (39 900 FCFA) n'apparaît jamais dans
+   l'application : il est porté par la page de vente officielle.
+2. **Le domaine.** `davar-academie.pages.dev` est un marqueur à remplacer par le domaine définitif
+   le jour de la mise en ligne.
+
+### Ce que la copie de travail du prototype a de moins que le dossier reçu
+
+Le prototype n'est pas modifié dans son comportement : les écrans, le style et les icônes sont
+repris tels quels. Trois nettoyages seulement, tous commandés par le propriétaire :
+
+1. **`SEO.md` retiré** : il ne décrivait que la vitrine, supprimée.
+2. **Quatre formations retirées de `js/data.js`** (Marketing Digital, Excel & Analyse de données,
+   Créer son entreprise, Anglais professionnel) : seule « Devenir un excellent orateur » subsiste,
+   exactement comme dans l'application. Les retirer du fichier de travail évite qu'une copie les
+   réintroduise un jour.
+3. **Prix corrigé** : `39 900 FCFA` (et non 45 000).
+
+**Une seule divergence assumée avec le prototype** : là où il affichait un prix sur la carte d'une
+formation, l'application n'en affiche aucun. Le propriétaire l'a décidé ainsi : l'achat se fait sur
+sa page de vente, le prix n'a rien à faire dans le campus.

@@ -1,39 +1,58 @@
-import Link from 'next/link';
-import { getPublishedTrainings } from '@/lib/server/turso';
+import { SessionNav } from '@/components/SessionNav';
 
-export const dynamic = 'force-dynamic';
-export const metadata = { title: 'Formations — Davar Académie Campus' };
+export const metadata = { title: 'Davar Académie — Campus privé' };
 
-/** Catalogue public : aucune session ou vente déduite de cette lecture. */
-export default async function Home() {
-  let trainings: Awaited<ReturnType<typeof getPublishedTrainings>> | null = null;
-  try { trainings = await getPublishedTrainings(); } catch { /* base/schéma non prêts */ }
+/**
+ * ENTRÉE DU CAMPUS — et rien d'autre.
+ *
+ * Décision du propriétaire (6 octobre 2026) : les pages de vente de
+ * l'application sont supprimées, parce que ses prix n'étaient pas les vrais et
+ * que la vente se fait sur SA page officielle. Cette page ne vend donc rien :
+ * elle ouvre l'entrée du campus privé, et rappelle où l'on prend son accès.
+ *
+ * Conséquence technique recherchée : plus aucun prix n'est affiché dans
+ * l'application, et la page reste STATIQUE (aucun accès base au rendu) — zéro
+ * requête dynamique pour un visiteur qui n'est pas encore étudiant.
+ */
+export default function Home() {
   return (
-    <main className="container" style={{paddingTop: 40, paddingBottom: 48}}>
-      <header className="row between" style={{flexWrap:'wrap',gap:16}}>
+    <main className="container" style={{ paddingTop: 40, paddingBottom: 48 }}>
+      <header className="row between" style={{ flexWrap: 'wrap', gap: 16 }}>
         <div className="brand">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src="/logo-structure.png" alt="Davar Académie" className="brand-img" />
         </div>
-        <Link href="/connexion" className="btn btn-ghost">Mon campus</Link>
+        <SessionNav />
       </header>
-      <section className="card card-pad mt16">
-        <h1>Formations Davar Académie</h1>
-        {trainings === null ? (
-          <div className="banner info mt16">Le catalogue n’est pas encore disponible. Aucune inscription ou paiement ne peut être effectué ici.</div>
-        ) : trainings.length === 0 ? (
-          <p className="muted mt16">Aucune formation publiée pour le moment.</p>
-        ) : (
-          <div className="grid g2 mt16">
-            {trainings.map((training) => (
-              <article className="card card-pad" key={training.id}>
-                <h2 style={{fontSize:18}}>{training.title}</h2>
-                <p className="muted">{training.priceCfa.toLocaleString('fr-FR')} FCFA</p>
-                <p className="small">Les inscriptions et les paiements ne sont pas encore ouverts.</p>
-              </article>
-            ))}
-          </div>
-        )}
+
+      <section className="card card-pad mt16" style={{ maxWidth: 720 }}>
+        <h1>Campus privé</h1>
+        <p className="muted small">
+          Le campus de <strong>DAVAR ACADÉMIE</strong> réunit vos formations, vos leçons et votre
+          progression. Il n&apos;est pas public : on y entre avec l&apos;accès reçu après un achat,
+          ou avec un accès ouvert par la direction.
+        </p>
+
+        <div className="banner info mt16">
+          <span>
+            Vous n&apos;avez pas encore d&apos;accès ? Les inscriptions et les paiements se font sur
+            la page officielle de DAVAR ACADÉMIE, jamais ici.
+          </span>
+        </div>
+
+        <p className="small muted mt16">
+          Une fois l&apos;achat effectué, créez votre compte avec <strong>exactement la même adresse
+          e-mail</strong> que celle utilisée pour l&apos;achat, puis confirmez cette adresse : votre
+          formation est rattachée à votre compte.
+        </p>
+      </section>
+
+      <section className="card card-pad mt16" style={{ maxWidth: 720 }}>
+        <h2 style={{ fontSize: 17 }}>Vous avez déjà un accès</h2>
+        <p className="muted small">
+          Se connecter ouvre votre espace : vos formations, vos modules, vos leçons et votre
+          progression, enregistrée au fil de votre travail.
+        </p>
       </section>
     </main>
   );
