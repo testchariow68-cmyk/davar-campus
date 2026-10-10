@@ -198,7 +198,7 @@ Il vous demandera de taper exactement :
 APPLIQUER DAVAR PRODUCTION
 ```
 
-> **Le seul critère de réussite :** la ligne `base de production à jour`.
+> **Le seul critère de réussite :** la ligne `base de production a jour` (sans accent : le script est en ASCII).
 >
 > Le script **refuse** de continuer si votre base contient le mot « staging »
 > (c'est une base de recette, jamais la production) ou si l'URL ne commence pas
@@ -217,13 +217,13 @@ APPLIQUER DAVAR PRODUCTION
 
 Le script vous demande **une seule information, une seule fois** : votre
 sous-domaine `workers.dev` (Cloudflare → Workers et Pages → colonne de droite).
-Il est mémorisé ensuite dans `.deploy-local.json`.
+Il est mémorisé ensuite dans `.deploy-local.txt`, à la racine du projet (jamais dans Git).
 
 Puis il construit « à blanc » (rien n'est envoyé), vous montre le résultat, et
 publie réellement.
 
 > **Le seul critère de réussite :** la ligne
-> `campus publié : https://davar-campus-production-2026.<votre-sous-domaine>.workers.dev`
+> `campus publie : https://davar-campus-production-2026.<votre-sous-domaine>.workers.dev`
 >
 > → **notez cette adresse dans votre fiche.** C'est l'adresse de votre campus.
 >
@@ -250,7 +250,7 @@ Le script lit votre `.env.local`, fabrique le paquet, l'envoie à Cloudflare
 > - vos clés **ne passent jamais par la ligne de commande**, où elles seraient
 >   visibles dans la liste des processus.
 >
-> **Le seul critère de réussite :** `clés envoyées et chiffrées par Cloudflare`.
+> **Le seul critère de réussite :** `cles envoyees et chiffrees par Cloudflare` (sans accent : le script est en ASCII).
 
 ---
 
@@ -391,6 +391,8 @@ Une copie de secours horodatée de votre `.env.local` est faite à chaque fois.
 | « Access denied. Please check your network settings. » (Groq) | Groq bloque les adresses de serveur — **ce n'est pas votre clé** | sans conséquence : Gemini prend la main (voir `GUIDE-MES-VALEURS.md` §5a) |
 | L'assistant ne répond pas | aucune clé de moteur posée | une seule clé suffit : `GEMINI_API_KEY` |
 | `cf auth login` reste bloqué | pare-feu ou antivirus | autorisez le port local, ou ouvrez le lien à la main |
+| **`Accolade fermante « } » manquante` au lancement** | le `.ps1` était lu avec des accents corrompus | **corrigé** : les scripts sont désormais en ASCII pur. Relancez `MAJ.bat`, puis `DEPLOYER.bat` |
+| `ERREUR ligne … : …` au moment de « Vérification du script » | le script ne peut pas être lu | copiez la ligne affichée et envoyez-la |
 
 ---
 

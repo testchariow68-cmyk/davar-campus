@@ -1,17 +1,23 @@
 <#
 .SYNOPSIS
-    Le bouton « Maj » : met le campus à jour depuis GitHub sans rien perdre.
+    Le bouton "Maj" : met le campus a jour depuis GitHub sans rien perdre.
 .DESCRIPTION
-    Télécharge la dernière version de la branche et remplace les fichiers du
-    projet, en PRÉSERVANT ce qui vous appartient :
+    Telecharge la derniere version de la branche et remplace les fichiers du
+    projet, en PRESERVANT ce qui vous appartient :
 
-      * .env.local     — toutes vos valeurs. Le fichier le plus précieux.
-      * dev-data\      — votre base locale de travail.
-      * node_modules\  — pour ne pas tout retélécharger à chaque fois.
+      * .env.local     - toutes vos valeurs. Le fichier le plus precieux.
+      * dev-data\      - votre base locale de travail.
+      * node_modules\  - pour ne pas tout retelecharger a chaque fois.
+      * .deploy-local.txt - votre sous-domaine, pour ne pas le retaper.
 
-    Puis réinstalle les dépendances et lance les tests.
+    Puis reinstalle les dependances et lance les tests.
 
-    Vous n'avez rien à copier, rien à renommer, rien à déplacer.
+    Vous n avez rien a copier, rien a renommer, rien a deplacer.
+
+    NOTE : ce fichier est volontairement ecrit SANS ACCENT (ASCII pur).
+    Windows PowerShell 5.1 lit un fichier .ps1 en UTF-8 sans BOM comme de
+    l ANSI, ce qui declenche ? Accolade fermante manquante ? des la premiere
+    ligne de fonction. En ASCII pur, aucune ambiguite de lecture n est possible.
 .EXAMPLE
     .\scripts\MAJ.ps1
 .EXAMPLE
@@ -19,7 +25,7 @@
 #>
 [CmdletBinding()]
 param(
-    # Saute les tests à la fin (déconseillé : ils sont la preuve que tout va bien)
+    # Saute les tests a la fin (deconseille : ils sont la preuve que tout va bien)
     [switch]$SansTest
 )
 
@@ -47,23 +53,23 @@ function Arreter([string]$Message) {
 }
 
 # --------------------------------------------------------------------------- #
-# 0. Être sûr d'être au bon endroit
+# 0. Etre sur d etre au bon endroit
 # --------------------------------------------------------------------------- #
 if (-not (Test-Path (Join-Path $racine 'package.json'))) {
-    Arreter "package.json est introuvable dans « $racine ». Lancez ce script depuis le dossier davar-app."
+    Arreter "package.json est introuvable dans $racine. Lancez ce script depuis le dossier davar-app."
 }
 
 Dire ''
-Dire '  DAVAR CAMPUS — mise à jour' -Couleur 'Yellow'
+Dire '  DAVAR CAMPUS - mise a jour' -Couleur 'Yellow'
 Dire "  Dossier : $racine"
 Dire "  Branche : $BRANCHE"
 
 # --------------------------------------------------------------------------- #
-# 1. Sauvegarde de .env.local — avant TOUTE chose
+# 1. Sauvegarde de .env.local - avant TOUTE chose
 # --------------------------------------------------------------------------- #
 Etape 'Sauvegarde de vos valeurs'
 if (-not (Test-Path $envLocal)) {
-    Write-Host '  (aucun .env.local : rien à sauvegarder. npm run env:local le créera plus tard.)' -ForegroundColor DarkGray
+    Write-Host '  (aucun .env.local : rien a sauvegarder. npm run env:local le creera plus tard.)' -ForegroundColor DarkGray
     $sauvegarde = $null
 } else {
     $horodatage = Get-Date -Format 'yyyyMMdd-HHmmss'
@@ -73,9 +79,9 @@ if (-not (Test-Path $envLocal)) {
 }
 
 # --------------------------------------------------------------------------- #
-# 2. Téléchargement
+# 2. Telechargement
 # --------------------------------------------------------------------------- #
-Etape 'Téléchargement de la dernière version'
+Etape 'Telechargement de la derniere version'
 $temporaire = Join-Path ([System.IO.Path]::GetTempPath()) ("davar-maj-" + [System.Guid]::NewGuid().ToString('N'))
 New-Item -ItemType Directory -Path $temporaire -Force | Out-Null
 $zip = Join-Path $temporaire 'maj.zip'
@@ -83,62 +89,62 @@ $zip = Join-Path $temporaire 'maj.zip'
 try {
     # TLS 1.2 : sans cela, GitHub refuse parfois la connexion sur Windows.
     [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
-    Write-Host '  Téléchargement en cours (≈ 26 Mo)…' -ForegroundColor DarkGray
+    Write-Host '  Telechargement en cours (environ 26 Mo)...' -ForegroundColor DarkGray
     Invoke-WebRequest -Uri $URL_ZIP -OutFile $zip -UseBasicParsing
-    Dire "  Téléchargé : $([math]::Round((Get-Item $zip).Length / 1MB, 1)) Mo" -Couleur 'Green'
+    Dire "  Telecharge : $([math]::Round((Get-Item $zip).Length / 1MB, 1)) Mo" -Couleur 'Green'
 
     # ----------------------------------------------------------------------- #
     # 3. Extraction
     # ----------------------------------------------------------------------- #
-    Etape 'Décompression'
+    Etape 'Decompression'
     Expand-Archive -LiteralPath $zip -DestinationPath $temporaire -Force
     $extrait = Get-ChildItem -Path $temporaire -Directory | Where-Object { $_.Name -like 'davar-campus-*' } | Select-Object -First 1
     if (-not $extrait) { Arreter "Impossible de trouver le dossier extrait dans $temporaire." }
     $source = Join-Path $extrait.FullName 'davar-app'
-    if (-not (Test-Path $source)) { Arreter "Le dossier davar-app est introuvable dans l'archive." }
+    if (-not (Test-Path $source)) { Arreter "Le dossier davar-app est introuvable dans l archive." }
 
     # ----------------------------------------------------------------------- #
-    # 4. Remplacement — en préservant ce qui est à vous
+    # 4. Remplacement - en preservant ce qui est a vous
     # ----------------------------------------------------------------------- #
-    Etape 'Remplacement des fichiers (vos valeurs sont préservées)'
+    Etape 'Remplacement des fichiers (vos valeurs sont preservees)'
     $journal = Join-Path $temporaire 'robocopy.log'
     # /MIR : met la destination au miroir de la source.
-    # /XD  : dossiers JAMAIS touchés. /XF : fichiers JAMAIS touchés.
+    # /XD  : dossiers JAMAIS touches. /XF : fichiers JAMAIS touches.
     $arguments = @(
         "`"$source`"", "`"$racine`"", '/MIR',
         '/XD', 'node_modules', 'dev-data', '.git', '.next', '.vinext', '.cloudflare',
-        '/XF', '.env.local', '.env.local.*', '.deploy-local.json',
+        '/XF', '.env.local', '.env.local.*', '.deploy-local.json', '.deploy-local.txt',
         '/NFL', '/NDL', '/NJH', '/NJS', '/NP', "/LOG:`"$journal`""
     )
     $code = (Start-Process -FilePath 'robocopy.exe' -ArgumentList $arguments -Wait -PassThru -NoNewWindow).ExitCode
-    # robocopy : 0 à 7 signifient « réussi » (1 = fichiers copiés, etc.).
+    # robocopy : 0 a 7 signifient "reussi" (1 = fichiers copies, etc.).
     if ($code -ge 8) {
         Write-Host (Get-Content $journal -Tail 20 -ErrorAction SilentlyContinue) -ForegroundColor Red
-        Arreter "robocopy a échoué (code $code). Vos fichiers n'ont pas été modifiés."
+        Arreter "robocopy a echoue (code $code). Vos fichiers n ont pas ete modifies."
     }
-    Dire '  Fichiers à jour.' -Couleur 'Green'
+    Dire '  Fichiers a jour.' -Couleur 'Green'
 
     # ----------------------------------------------------------------------- #
-    # 5. Vérification que vos valeurs sont toujours là
+    # 5. Verification que vos valeurs sont toujours la
     # ----------------------------------------------------------------------- #
-    Etape 'Contrôle de vos valeurs'
+    Etape 'Controle de vos valeurs'
     if ($sauvegarde) {
         if (-not (Test-Path $envLocal)) {
             Copy-Item $sauvegarde $envLocal -Force
-            Dire '  .env.local restauré depuis la sauvegarde.' -Couleur 'Yellow'
+            Dire '  .env.local restaure depuis la sauvegarde.' -Couleur 'Yellow'
         } else {
             Dire '  .env.local est intact.' -Couleur 'Green'
         }
     }
 
     # ----------------------------------------------------------------------- #
-    # 6. Dépendances
+    # 6. Dependances
     # ----------------------------------------------------------------------- #
-    Etape 'Installation des dépendances (patience)'
+    Etape 'Installation des dependances (patience)'
     Push-Location $racine
     try {
         npm install
-        if ($LASTEXITCODE -ne 0) { Arreter 'npm install a échoué.' }
+        if ($LASTEXITCODE -ne 0) { Arreter 'npm install a echoue.' }
     } finally {
         Pop-Location
     }
@@ -151,7 +157,7 @@ try {
         Push-Location $racine
         try {
             npm test
-            if ($LASTEXITCODE -ne 0) { Arreter 'Des tests échouent. Ne déployez pas : signalez-le.' }
+            if ($LASTEXITCODE -ne 0) { Arreter 'Des tests echouent. Ne deployez pas : signalez-le.' }
         } finally {
             Pop-Location
         }
@@ -162,7 +168,7 @@ try {
 }
 
 Dire ''
-Dire '  MISE À JOUR TERMINÉE.' -Couleur 'Green'
+Dire '  MISE A JOUR TERMINEE.' -Couleur 'Green'
 if ($sauvegarde) { Dire "  Votre copie de secours : $(Split-Path $sauvegarde -Leaf)" -Couleur 'DarkGray' }
 Dire ''
 Dire '  Ensuite :  .\scripts\DEPLOYER.ps1' -Couleur 'Cyan'
