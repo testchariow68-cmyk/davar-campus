@@ -72,3 +72,34 @@ Le propriétaire a délégué le choix. **Cible retenue : Cloudflare Workers pou
 5. Vérifier autorisations multi-utilisateurs, cours/progression, erreurs/réessais, sauvegarde/restauration, coûts et observabilité ; déployer d'abord sous environnement privé, puis seulement après revue de sécurité, du domaine, des secrets et du plan de retour arrière, demander validation explicite pour ouvrir les fonctionnalités publiques achevées.
 
 **Conclusion : première tranche de code préparée et verrouillée. L'application n'est PAS encore opérationnelle pour des comptes ou paiements réels.** Ne pas déployer cette branche comme un lancement public : elle affiche volontairement des écrans d'attente et refuse les opérations sensibles.
+
+## Les 11 couches de sécurité du prototype : non implémentées, par décision (13 octobre 2026)
+
+`reference/prototype-campus/SECURITY.md` décrit un système de sécurité autonome à 11 couches.
+Les 11 scripts `layerN-*.mjs` existent **uniquement** dans `reference/prototype-campus/security/workers/`.
+**Aucune de ces couches n'est présente dans `davar-app/`** — vérifié : aucun dossier `security/`,
+aucune occurrence de `layer1`…`layer11`, `honeypot`, `liboqs`, `llama-guard`, `DID`, `ComputeFHE`, `AETHER`.
+
+Question posée au propriétaire, réponse : **« rien pour l'instant, on met en ligne d'abord »**.
+Décision consignée ici pour être rouverte après l'ouverture publique.
+
+Plusieurs de ces couches entrent de toute façon en conflit avec des contraintes déjà arrêtées :
+
+- **couche 1 (Cloudflare Access)** : interdite — 50 utilisateurs gratuits, soit 21 000 $/mois à 3 000 étudiants ;
+- **couches 3 et 8 (Workers AI)** et **6 et 9 (Durable Objects)** : non utilisés par l'application,
+  et l'ADN du projet est de protéger les quotas, pas de les dépenser ;
+- **couche 10 (chiffrement homomorphe)** : `CAPACITY.md` indique lui-même un coût CPU supérieur au
+  plafond gratuit de 10 ms, à tenir hors du chemin de requête.
+
+Ce qui est **réellement en place** dans `davar-app/` : PBKDF2 600 000 itérations côté navigateur avec
+vérificateur dérivé côté serveur, limitation de débit, contrôle d'origine, protection CSRF
+(`lib/server/http.ts`), signature HMAC du webhook Chariow avec contre-vérification par API,
+sessions datées et révocables, rôles et périmètres, anti-énumération (adresse connue et inconnue
+indiscernables), journal des actions de l'équipe (`staff_events`), purge jamais automatique sans
+geste explicite.
+
+Deux règles du document ne sont **pas** tenues : la chaîne de hash SHA-256 sur le journal
+(le journal existe, sans chaînage) et la rotation automatique des secrets toutes les 24 h.
+Avec Turnstile sur connexion/inscription (absent), ce sont les seules briques peu coûteuses identifiées.
+
+**Ceci ne bloque pas la mise en ligne.**
