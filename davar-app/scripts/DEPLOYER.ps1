@@ -42,6 +42,7 @@ $racine      = Split-Path -Parent $PSScriptRoot
 $envLocal    = Join-Path $racine '.env.local'
 $reglages    = Join-Path $racine '.deploy-local.txt'
 $PHRASE      = 'APPLIQUER DAVAR PRODUCTION'
+$schemaApplique = $false   # vrai seulement si les tables ont reellement ete ecrites
 
 function Dire([string]$Message, [string]$Couleur = 'White') {
     Write-Host $Message -ForegroundColor $Couleur
@@ -191,7 +192,14 @@ function Etape-Schema {
     $code = $LASTEXITCODE
 
     if ($code -eq 0) {
-        if ($Appliquer) {
+        $faire = $Appliquer
+        if (-not $faire) {
+            Write-Host ''
+            Dire '  Inspection terminee. Les 49 tables ne sont PAS encore creees.' 'Yellow'
+            $reponse = (Read-Host '  Voulez-vous les creer maintenant ? (o/n)').Trim().ToLower()
+            if ($reponse -eq 'o' -or $reponse -eq 'oui' -or $reponse -eq 'y') { $faire = $true }
+        }
+        if ($faire) {
             Write-Host ''
             Dire '  Vous allez ecrire dans la base de PRODUCTION.' 'Red'
             $confirmation = (Read-Host "  Tapez exactement: $PHRASE").Trim()
@@ -205,10 +213,13 @@ function Etape-Schema {
             }
             node scripts/staging-schema.mjs --apply
             $code = $LASTEXITCODE
-            if ($code -eq 0) { Ok 'base de production a jour' }
+            if ($code -eq 0) {
+                Ok 'base de production a jour'
+                $script:schemaApplique = $true
+            }
         } else {
             Write-Host ''
-            Dire '  Inspection terminee. Pour APPLIQUER, relancez :' 'Yellow'
+            Dire '  Rien n a ete ecrit. Pour appliquer plus tard :' 'Yellow'
             Dire '    .\scripts\DEPLOYER.ps1 -Etape Schema -Appliquer' 'Cyan'
         }
     }
@@ -357,6 +368,14 @@ elseif ($Etape -eq 'Recette') { Etape-Recette }
 elseif ($Etape -eq 'Tout') {
     Etape-Verification
     Etape-Schema
+    # On ne publie JAMAIS un campus sur une base qui n a pas ses tables :
+    # il serait en ligne mais vide, et l echec ne se verrait qu apres coup.
+    if (-not $script:schemaApplique) {
+        Write-Host ''
+        Dire '  Les tables n ont pas ete creees : on s arrete AVANT de publier.' 'Red'
+        Dire '  Relancez et repondez "o" a la question du schema.' 'Yellow'
+        exit 1
+    }
     Etape-Deploiement
     Etape-Secrets
     Etape-Recette
