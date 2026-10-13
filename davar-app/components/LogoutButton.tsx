@@ -1,21 +1,25 @@
-"use client";
+'use client';
 
-import { useRouter } from "next/navigation";
-import { createClient } from "@/lib/supabase/client";
+import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 
 export function LogoutButton() {
   const router = useRouter();
+  const [busy, setBusy] = useState(false);
+
+  async function onClick() {
+    setBusy(true);
+    try {
+      await fetch('/api/auth/logout', { method: 'POST' });
+    } finally {
+      router.replace('/connexion');
+      router.refresh();
+    }
+  }
+
   return (
-    <button
-      className="btn btn-ghost"
-      onClick={async () => {
-        const supabase = createClient();
-        await supabase.auth.signOut();
-        router.push("/connexion");
-        router.refresh();
-      }}
-    >
-      Se déconnecter
+    <button type="button" className="btn btn-ghost" onClick={onClick} disabled={busy}>
+      {busy ? 'Déconnexion…' : 'Déconnexion'}
     </button>
   );
 }
