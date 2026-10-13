@@ -29,12 +29,13 @@ import {
 import { deciderCertificat, demanderCertificat, verifierCertificat, codeCertificat } from '../lib/server/certificats.ts';
 import { attribuerBadge, badgesDeEtudiant, BADGES_PARCOURS, installerCatalogue, verifierReglesBadges } from '../lib/server/recompenses.ts';
 import { avisAttendus, compterMots, deposerAvis, MOTS_MAXIMUM } from '../lib/server/avis.ts';
+import { pathToFileURL } from 'node:url';
 
 process.env.APP_ENV = 'development';
 
 async function basePrete() {
   const fichier = join(mkdtempSync(join(tmpdir(), 'davar-peda-')), 'test.db');
-  const db = createClient({ url: `file:${fichier}` });
+  const db = createClient({ url: pathToFileURL(fichier).href });
   await applyAllMigrations(db);
   const maintenant = Date.now();
   await db.execute({

@@ -14,7 +14,8 @@ import assert from 'node:assert/strict';
 import { readdirSync, readFileSync, statSync } from 'node:fs';
 import { join } from 'node:path';
 
-const ROOT = new URL('..', import.meta.url).pathname;
+import { fileURLToPath } from 'node:url';
+const ROOT = fileURLToPath(new URL('..', import.meta.url));
 
 /** Variables lues sans être déclarées : chacune doit avoir une raison écrite. */
 const ACCEPTED_WITHOUT_BINDING = {

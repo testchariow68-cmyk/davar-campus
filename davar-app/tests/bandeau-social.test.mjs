@@ -26,6 +26,7 @@ import {
   plateformesNonSuivies,
   totalParPlateforme,
 } from '../lib/server/social.ts';
+import { pathToFileURL } from 'node:url';
 
 process.env.APP_ENV = 'development';
 
@@ -33,7 +34,7 @@ const MAINTENANT = 1_760_000_000_000;
 
 async function baseVide() {
   const fichier = join(mkdtempSync(join(tmpdir(), 'davar-social-')), 'test.db');
-  const db = createClient({ url: `file:${fichier}` });
+  const db = createClient({ url: pathToFileURL(fichier).href });
   await applyAllMigrations(db);
   await db.execute({
     sql: `INSERT INTO users(id,email_normalized,display_name,password_hash,email_verified_at_ms,role,status,created_at_ms)

@@ -16,7 +16,8 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
 
-const RACINE = new URL('..', import.meta.url).pathname;
+import { fileURLToPath } from 'node:url';
+const RACINE = fileURLToPath(new URL('..', import.meta.url));
 
 /** Valeurs de remplacement : reconnaissables, jamais de vrais secrets. */
 const FAUX = {

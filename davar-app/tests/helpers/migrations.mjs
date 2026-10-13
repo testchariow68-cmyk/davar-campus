@@ -6,7 +6,8 @@
 import { readFileSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
 
-const ROOT = new URL('../..', import.meta.url).pathname;
+import { fileURLToPath } from 'node:url';
+const ROOT = fileURLToPath(new URL('../..', import.meta.url));
 const MIGRATIONS_DIR = join(ROOT, 'turso', 'migrations');
 
 export function migrationFiles() {

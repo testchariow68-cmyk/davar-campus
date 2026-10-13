@@ -23,8 +23,9 @@ import { mkdtempSync, readFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
-const ROOT = new URL('..', import.meta.url).pathname;
-const manifest = JSON.parse(execFileSync('node', ['scripts/staging-schema.mjs', '--manifest'], { cwd: ROOT, encoding: 'utf8' }));
+import { fileURLToPath, pathToFileURL} from 'node:url';
+const ROOT = fileURLToPath(new URL('..', import.meta.url));
+const manifest = JSON.parse(execFileSync(process.execPath, ['scripts/staging-schema.mjs', '--manifest'], { cwd: ROOT, encoding: 'utf8' }));
 
 const pragmaLike = (statement) => /^PRAGMA\b/i.test(statement);
 
@@ -47,7 +48,7 @@ const indexDeclaresDans = (file) =>
   }, new Set())];
 
 const dbPath = join(mkdtempSync(join(tmpdir(), 'davar-repetition-')), 'staging-local.db');
-const client = createClient({ url: `file:${dbPath}` });
+const client = createClient({ url: pathToFileURL(dbPath).href });
 const failures = [];
 const check = (label, condition, detail = '') => {
   console.log(`${condition ? '  ok  ' : ' ÉCHEC'} ${label}${detail ? ` — ${detail}` : ''}`);

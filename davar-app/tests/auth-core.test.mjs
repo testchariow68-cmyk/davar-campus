@@ -25,13 +25,14 @@ import {
   revokeSession,
   verifyPassword,
 } from '../lib/server/auth-core.ts';
+import { pathToFileURL } from 'node:url';
 
 // Itérations réduites : ici on teste la logique, pas le coût du hachage.
 process.env.APP_ENV = 'development';
 process.env.AUTH_PBKDF2_ITERATIONS = '10000';
 
 async function freshDb() {
-  const client = createClient({ url: `file:${join(mkdtempSync(join(tmpdir(), 'davar-test-')), 'test.db')}` });
+  const client = createClient({ url: pathToFileURL(join(mkdtempSync(join(tmpdir(), 'davar-test-')), 'test.db')).href });
   await applyAllMigrations(client);
   return client;
 }

@@ -19,10 +19,11 @@ import { recordVerifiedChariowSale } from '../lib/server/chariow-ledger.ts';
 process.env.APP_ENV = 'development';
 process.env.AUTH_PBKDF2_ITERATIONS = '10000';
 
-const root = new URL('..', import.meta.url).pathname;
+import { fileURLToPath, pathToFileURL} from 'node:url';
+const root = fileURLToPath(new URL('..', import.meta.url));
 
 async function freshDb() {
-  const client = createClient({ url: `file:${join(mkdtempSync(join(tmpdir(), 'davar-ledger-')), 'test.db')}` });
+  const client = createClient({ url: pathToFileURL(join(mkdtempSync(join(tmpdir(), 'davar-ledger-')), 'test.db')).href });
   await applyAllMigrations(client);
   await client.execute(
     "INSERT INTO trainings(id,title,price_cfa,chariow_product_id,published) VALUES ('t-orateur','Devenir un excellent orateur',45000,'prd_6wx1czzp',1)"

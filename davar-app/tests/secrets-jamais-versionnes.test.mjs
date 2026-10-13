@@ -22,9 +22,10 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { execFileSync } from 'node:child_process';
 import { readFileSync, statSync } from 'node:fs';
-import { join } from 'node:path';
+import { join, resolve } from 'node:path';
 
-const RACINE = new URL('..', import.meta.url).pathname.replace(/\/$/, '');
+import { fileURLToPath } from 'node:url';
+const RACINE = resolve(fileURLToPath(new URL('..', import.meta.url)));
 
 function git(...arguments_) {
   return execFileSync('git', ['-C', RACINE, ...arguments_], { encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] }).trim();

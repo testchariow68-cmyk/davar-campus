@@ -24,7 +24,7 @@ import { createClient } from '@libsql/client';
 import { createHash } from 'node:crypto';
 import { readFileSync, readdirSync, rmSync, mkdirSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { fileURLToPath, pathToFileURL} from 'node:url';
 import { hashPassword } from '../lib/server/auth-core.ts';
 import { TRAININGS } from '../lib/trainings.ts';
 
@@ -46,7 +46,7 @@ const dbPath = resolve(root, process.env.DEV_DB_PATH?.trim() || 'dev-data/davar-
 mkdirSync(dirname(dbPath), { recursive: true });
 if (has('--reset')) rmSync(dbPath, { force: true });
 
-const db = createClient({ url: `file:${dbPath}` });
+const db = createClient({ url: pathToFileURL(dbPath).href });
 
 function splitStatements(sql) {
   return sql

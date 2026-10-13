@@ -37,6 +37,7 @@ import {
   refuserTransfert,
   transfertEnAttente,
 } from '../lib/server/transfert.ts';
+import { pathToFileURL } from 'node:url';
 
 process.env.APP_ENV = 'development';
 
@@ -45,7 +46,7 @@ const MAINTENANT = 1_760_000_000_000;
 
 async function baseVide() {
   const fichier = join(mkdtempSync(join(tmpdir(), 'davar-invitations-')), 'test.db');
-  const db = createClient({ url: `file:${fichier}` });
+  const db = createClient({ url: pathToFileURL(fichier).href });
   await applyAllMigrations(db);
   return db;
 }

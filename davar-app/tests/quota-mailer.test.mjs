@@ -30,10 +30,11 @@ const {
 const { emailBudget, mailerConfigured, mailerKind, sendEmail, sendVerificationEmail, MailQuotaReachedError, MailerNotConfiguredError } =
   await import('../lib/server/mailer.ts');
 
-const root = new URL('..', import.meta.url).pathname;
+import { fileURLToPath, pathToFileURL} from 'node:url';
+const root = fileURLToPath(new URL('..', import.meta.url));
 
 async function freshDb() {
-  const client = createClient({ url: `file:${join(mkdtempSync(join(tmpdir(), 'davar-quota-')), 'q.db')}` });
+  const client = createClient({ url: pathToFileURL(join(mkdtempSync(join(tmpdir(), 'davar-quota-')), 'q.db')).href });
   await applyAllMigrations(client);
   return client;
 }

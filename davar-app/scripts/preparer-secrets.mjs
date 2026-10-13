@@ -29,8 +29,9 @@
 import { readFileSync, writeFileSync, mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
 
-const RACINE = resolve(new URL('..', import.meta.url).pathname);
+const RACINE = resolve(fileURLToPath(new URL('..', import.meta.url)));
 
 /**
  * Les secrets tels que DÉCLARÉS dans cloudflare.config.ts. Un secret saisi dans

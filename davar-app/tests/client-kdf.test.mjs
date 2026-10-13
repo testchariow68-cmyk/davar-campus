@@ -14,6 +14,7 @@ process.env.AUTH_PBKDF2_ITERATIONS = '10000';
 process.env.AUTH_VERIFIER_ITERATIONS = '2000';
 
 import { applyAllMigrations } from './helpers/migrations.mjs';
+import { pathToFileURL } from 'node:url';
 
 const {
   CLIENT_KDF_ITERATIONS,
@@ -36,7 +37,7 @@ const SECRET = 'secret-de-test-pour-le-sel-factice-32-caracteres';
 const PASSWORD = 'Formation-Davar-2026!';
 
 async function freshDb() {
-  const client = createClient({ url: `file:${join(mkdtempSync(join(tmpdir(), 'davar-client-')), 'c.db')}` });
+  const client = createClient({ url: pathToFileURL(join(mkdtempSync(join(tmpdir(), 'davar-client-')), 'c.db')).href });
   await applyAllMigrations(client);
   return client;
 }

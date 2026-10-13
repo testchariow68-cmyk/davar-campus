@@ -18,12 +18,13 @@ import { applyAllMigrations } from './helpers/migrations.mjs';
 import { compterAppelFournisseur, compterQuestionEtudiant, marquerQuotaAtteint, jourDe } from '../lib/server/assistant.ts';
 import { analyseAssistants } from '../lib/server/assistants.ts';
 import { santeTechnique } from '../lib/server/sante.ts';
+import { pathToFileURL } from 'node:url';
 
 process.env.APP_ENV = 'development';
 
 async function baseVide() {
   const fichier = join(mkdtempSync(join(tmpdir(), 'davar-sante-')), 'test.db');
-  const db = createClient({ url: `file:${fichier}` });
+  const db = createClient({ url: pathToFileURL(fichier).href });
   await applyAllMigrations(db);
   return db;
 }

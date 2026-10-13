@@ -21,13 +21,14 @@ import { applyAllMigrations } from './helpers/migrations.mjs';
 import { definirRolesEquipe, listerEquipe } from '../lib/server/direction.ts';
 import { appliquerInvitations, creerInvitation, marquerInvitationUtilisee } from '../lib/server/invitations.ts';
 import { lireRoles, normaliserRoles, peutEcrire, sectionsPour } from '../lib/server/equipe.ts';
+import { pathToFileURL } from 'node:url';
 
 process.env.APP_ENV = 'development';
 const MAINTENANT = 1_760_000_000_000;
 
 async function baseAvecEquipe() {
   const fichier = join(mkdtempSync(join(tmpdir(), 'davar-equipe-')), 'test.db');
-  const db = createClient({ url: `file:${fichier}` });
+  const db = createClient({ url: pathToFileURL(fichier).href });
   await applyAllMigrations(db);
   for (const [id, email, role] of [
     ['usr_proprio', 'direction@davar.test', 'admin'],

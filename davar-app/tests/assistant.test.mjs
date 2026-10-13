@@ -34,12 +34,13 @@ import { poserQuestionAuxFournisseurs } from '../lib/server/ai-providers.ts';
 import { ajouterMessage, messagesDeConversation, ouvrirConversation } from '../lib/server/echanges.ts';
 import { compterNonLues, listerNotifications, marquerLue, notifier } from '../lib/server/notifications.ts';
 import { ecrireReglages, lireReglages } from '../lib/server/settings.ts';
+import { pathToFileURL } from 'node:url';
 
 process.env.APP_ENV = 'development';
 
 async function baseVide() {
   const fichier = join(mkdtempSync(join(tmpdir(), 'davar-assistant-')), 'test.db');
-  const db = createClient({ url: `file:${fichier}` });
+  const db = createClient({ url: pathToFileURL(fichier).href });
   await applyAllMigrations(db);
   return db;
 }

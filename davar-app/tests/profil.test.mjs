@@ -25,6 +25,7 @@ import {
   lirePreferences,
   lireProfil,
 } from '../lib/server/profil.ts';
+import { pathToFileURL } from 'node:url';
 
 process.env.APP_ENV = 'development';
 const MAINTENANT = 1_760_000_000_000;
@@ -33,7 +34,7 @@ const CLE_B = 'B'.repeat(43);
 
 async function baseAvecEtudiant() {
   const fichier = join(mkdtempSync(join(tmpdir(), 'davar-profil-')), 'test.db');
-  const db = createClient({ url: `file:${fichier}` });
+  const db = createClient({ url: pathToFileURL(fichier).href });
   await applyAllMigrations(db);
   await db.execute({
     sql: `INSERT INTO users(id,email_normalized,display_name,password_hash,email_verified_at_ms,role,kdf_scheme,status,created_at_ms)

@@ -12,7 +12,7 @@
  */
 import { createClient } from '@libsql/client';
 import { resolve } from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { fileURLToPath, pathToFileURL} from 'node:url';
 import { dirname } from 'node:path';
 import { recordVerifiedChariowSale } from '../lib/server/chariow-ledger.ts';
 
@@ -35,7 +35,7 @@ if (!productId || !email || !saleId) {
   process.exit(2);
 }
 
-const db = createClient({ url: url ?? `file:${resolve(root, 'dev-data/davar-dev.db')}` });
+const db = createClient({ url: url ?? pathToFileURL(resolve(root, 'dev-data/davar-dev.db')).href });
 try {
   const price = await db.execute({
     sql: 'SELECT price_cfa FROM trainings WHERE chariow_product_id = ? AND published = 1',

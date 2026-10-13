@@ -17,7 +17,8 @@ import {
   lireEnvLocale,
 } from '../scripts/preparer-secrets.mjs';
 
-const RACINE = new URL('..', import.meta.url).pathname;
+import { fileURLToPath } from 'node:url';
+const RACINE = fileURLToPath(new URL('..', import.meta.url));
 
 test('la liste des secrets n’a pas divergé de cloudflare.config.ts', () => {
   // Un secret déclaré dans la configuration mais absent de la liste ne serait

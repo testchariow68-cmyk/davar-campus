@@ -38,6 +38,7 @@ import {
   positionLecture,
   positionsDeLEtudiant,
 } from '../lib/server/medias.ts';
+import { pathToFileURL } from 'node:url';
 
 process.env.APP_ENV = 'development';
 
@@ -147,7 +148,7 @@ test('l’encodage des chemins suit la règle AWS', () => {
 
 async function basePrete() {
   const fichier = join(mkdtempSync(join(tmpdir(), 'davar-medias-')), 'test.db');
-  const db = createClient({ url: `file:${fichier}` });
+  const db = createClient({ url: pathToFileURL(fichier).href });
   await applyAllMigrations(db);
   const maintenant = Date.now();
   await db.execute({

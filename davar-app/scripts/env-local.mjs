@@ -20,6 +20,7 @@
  */
 import { readFileSync, writeFileSync, existsSync } from 'node:fs';
 import { randomBytes } from 'node:crypto';
+import { fileURLToPath } from 'node:url';
 
 const chemin = new URL('../.env.local', import.meta.url);
 const secret = () => randomBytes(32).toString('hex'); // 64 caractères hexadécimaux
@@ -132,7 +133,7 @@ writeFileSync(chemin, lignes.join('\n'), 'utf8');
 /* ------------------------------------------------------------------- verdict */
 
 const aRemplir = [...lignes.join('\n').matchAll(/^([A-Z0-9_]+)=$/gm)].map((correspondance) => correspondance[1]);
-console.log(`Fichier prêt : ${chemin.pathname}`);
+console.log(`Fichier prêt : ${fileURLToPath(chemin)}`);
 console.log(`Valeurs fabriquées pour vous : AUTH_PARAMS_SECRET, AUTH_VERIFIER_PEPPER, APP_DIAGNOSTIC_TOKEN (64 caractères hexadécimaux).`);
 if (aRemplir.length === 0) {
   console.log('Il ne reste rien à remplir : lancez « npm run recette:services ».');

@@ -25,12 +25,13 @@ import {
 } from '../lib/server/vue-test.ts';
 import { AuthError, loginUser } from '../lib/server/auth-core.ts';
 import { vueEnsemble } from '../lib/server/direction.ts';
+import { pathToFileURL } from 'node:url';
 
 process.env.APP_ENV = 'development';
 
 async function baseVide() {
   const fichier = join(mkdtempSync(join(tmpdir(), 'davar-vuetest-')), 'test.db');
-  const db = createClient({ url: `file:${fichier}` });
+  const db = createClient({ url: pathToFileURL(fichier).href });
   await applyAllMigrations(db);
   return db;
 }

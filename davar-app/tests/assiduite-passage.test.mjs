@@ -16,12 +16,13 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { applyAllMigrations } from './helpers/migrations.mjs';
 import { RETOURS, passageEtudiant } from '../lib/server/assiduite.ts';
+import { pathToFileURL } from 'node:url';
 
 process.env.APP_ENV = 'development';
 
 async function baseVide() {
   const fichier = join(mkdtempSync(join(tmpdir(), 'davar-passage-')), 'test.db');
-  const db = createClient({ url: `file:${fichier}` });
+  const db = createClient({ url: pathToFileURL(fichier).href });
   await applyAllMigrations(db);
   return db;
 }
