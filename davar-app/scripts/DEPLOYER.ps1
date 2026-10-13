@@ -131,12 +131,35 @@ function Assurer-Connexion {
     Ok 'connecte a Cloudflare'
 }
 
+function Normaliser-SousDomaine([string]$brut) {
+    # Tolere tout ce que le proprietaire peut coller : le mot seul
+    # (? davaracademie ?), l hote (? davaracademie.workers.dev ?) ou l adresse
+    # entiere d un Worker (? https://davar-campus-production-2026.davaracademie
+    # .workers.dev ?). Le sous-domaine *.workers.dev est toujours UN SEUL mot :
+    # on garde donc le dernier, ce qui corrige les deux autres formes.
+    $v = $brut.Trim()
+    $v = $v -replace '^https?://', ''
+    $v = ($v -split '/')[0]
+    $v = $v -replace '\.workers\.dev$', ''
+    $v = $v.Trim('.')
+    if ($v -match '\.') { $v = ($v -split '\.')[-1] }
+    return $v.Trim()
+}
+
 function Get-SousDomaine {
     $valeur = ''
+    $brut = ''
     if (Test-Path $reglages) {
-        $valeur = (Get-Content $reglages -Raw)
-        if ($null -ne $valeur) { $valeur = $valeur.Trim() }
+        $lu = (Get-Content $reglages -Raw)
+        if ($null -ne $lu) { $brut = $lu.Trim() }
     }
+    if ($brut -ne '') {
+        $valeur = Normaliser-SousDomaine $brut
+        # Une valeur ancienne, ou collee en entier, est corrigee puis re-ecrite :
+        # sans cela, une mauvaise valeur serait reutilisee a chaque lancement.
+        if ($valeur -ne $brut) { Set-Content -Path $reglages -Value $valeur -Encoding ASCII }
+    }
+    if ($valeur -eq '' -or $valeur -match '[^A-Za-z0-9-]') { $valeur = '' }
     if ($valeur -eq '') {
         $defaut = Get-SousDomaineParDefaut
         Write-Host ''
@@ -150,9 +173,7 @@ function Get-SousDomaine {
         } else {
             $valeur = (Read-Host '  Votre sous-domaine').Trim()
         }
-        $valeur = $valeur.Trim('.')
-        $valeur = $valeur -replace '^https?://', ''
-        $valeur = ($valeur -split '/')[0]
+        $valeur = Normaliser-SousDomaine $valeur
         if ($valeur -eq '') { Arreter 'Sous-domaine vide. Relancez.' }
         Set-Content -Path $reglages -Value $valeur -Encoding ASCII
         Ok "sous-domaine memorise : $valeur"
