@@ -101,25 +101,54 @@ function Get-SousDomaineParDefaut {
     return ''
 }
 
+function Invoke-Externe {
+    param(
+        [Parameter(Mandatory = $true)][string]$Programme,
+        [string[]]$Parametres = @(),
+        [switch]$Silencieux
+    )
+    # Windows PowerShell 5.1 transforme la moindre ligne ecrite sur la sortie
+    # d erreur par un programme externe en erreur FATALE des que
+    # $ErrorActionPreference vaut Stop. Or npm, npx et node ecrivent leurs
+    # simples "notice" sur cette sortie : sans ce garde-fou, un message
+    # parfaitement anodin interrompt le deploiement et fait croire a un echec.
+    # On baisse donc la garde le temps de l appel, puis on rend le CODE DE
+    # SORTIE : c est lui seul qui dit si l operation a reussi.
+    $ancien = $ErrorActionPreference
+    $ErrorActionPreference = 'Continue'
+    try {
+        if ($Silencieux) {
+            $lignes = & $Programme @Parametres 2>&1
+            $script:derniereSortie = ($lignes | Out-String).Trim()
+        } else {
+            & $Programme @Parametres 2>&1 | Out-Host
+        }
+        return $LASTEXITCODE
+    } finally {
+        $ErrorActionPreference = $ancien
+    }
+}
+
 function Assurer-Connexion {
     if ($script:cfConnecte) { return }
     Etape 'Connexion a Cloudflare'
     Push-Location $racine
-    $sortie = & npx cf auth whoami 2>&1
-    $code = $LASTEXITCODE
+    $code = Invoke-Externe 'npx' @('cf', 'auth', 'whoami') -Silencieux
+    $sortie = $script:derniereSortie
     if ($code -ne 0) {
         Write-Host ''
         Dire '  Il faut vous connecter a Cloudflare une seule fois.' 'Yellow'
         Dire '  Une fenetre de navigateur va s ouvrir : connectez-vous,' 'Yellow'
         Dire '  autorisez, puis revenez dans cette fenetre noire.' 'Yellow'
         Write-Host ''
-        & npx cf auth login
-        if ($LASTEXITCODE -ne 0) {
+        $code = Invoke-Externe 'npx' @('cf', 'auth', 'login')
+        if ($code -ne 0) {
             Pop-Location
             Arreter 'Connexion impossible. Reessayez : npx cf auth login'
         }
-        $sortie = & npx cf auth whoami 2>&1
-        if ($LASTEXITCODE -ne 0) {
+        $code = Invoke-Externe 'npx' @('cf', 'auth', 'whoami') -Silencieux
+        $sortie = $script:derniereSortie
+        if ($code -ne 0) {
             Pop-Location
             Arreter 'La connexion n a pas ete retenue. Reessayez.'
         }
@@ -133,9 +162,9 @@ function Assurer-Connexion {
 
 function Normaliser-SousDomaine([string]$brut) {
     # Tolere tout ce que le proprietaire peut coller : le mot seul
-    # (? davaracademie ?), l hote (? davaracademie.workers.dev ?) ou l adresse
+    # ("davaracademie"), l hote ("davaracademie.workers.dev") ou l adresse
     # entiere d un Worker (? https://davar-campus-production-2026.davaracademie
-    # .workers.dev ?). Le sous-domaine *.workers.dev est toujours UN SEUL mot :
+    # .workers.dev"). Le sous-domaine *.workers.dev est toujours UN SEUL mot :
     # on garde donc le dernier, ce qui corrige les deux autres formes.
     $v = $brut.Trim()
     $v = $v -replace '^https?://', ''
@@ -187,8 +216,9 @@ function Get-SousDomaine {
 function Etape-Verification {
     Etape '1. Verification'
 
-    $brut = (node --version)
-    if ($LASTEXITCODE -ne 0) { Arreter 'Node.js ne repond pas. Installez-le : https://nodejs.org' }
+    $code = Invoke-Externe 'node' @('--version') -Silencieux
+    if ($code -ne 0) { Arreter 'Node.js ne repond pas. Installez-le : https://nodejs.org' }
+    $brut = $script:derniereSortie
     $version = $brut -replace '^v', ''
     $majeur = ($version -split '\.')[0]
     if ([int]$majeur -lt 22) {
@@ -217,15 +247,13 @@ function Etape-Verification {
 
     Etape 'Repetition de la migration (sur une copie, jamais sur votre base)'
     Push-Location $racine
-    npm run rehearsal:staging
-    $code = $LASTEXITCODE
+    $code = Invoke-Externe 'npm' @('run', 'rehearsal:staging')
     Pop-Location
     if ($code -ne 0) { Arreter 'La repetition echoue. Ne touchez pas a la production.' }
 
     Etape 'Tests'
     Push-Location $racine
-    npm test
-    $code = $LASTEXITCODE
+    $code = Invoke-Externe 'npm' @('test')
     Pop-Location
     if ($code -ne 0) { Arreter 'Des tests echouent. Ne deployez pas : signalez-le.' }
     Ok 'tests verts'
@@ -262,8 +290,7 @@ function Etape-Schema {
 
     Push-Location $racine
     Dire '  Inspection d abord (aucune ecriture)...' 'DarkGray'
-    node scripts/staging-schema.mjs --inspect
-    $code = $LASTEXITCODE
+    $code = Invoke-Externe 'node' @('scripts/staging-schema.mjs', '--inspect')
 
     if ($code -eq 0) {
         $faire = $Appliquer
@@ -285,8 +312,7 @@ function Etape-Schema {
                 Remove-Item Env:DAVAR_SCHEMA_TARGET -ErrorAction SilentlyContinue
                 Arreter 'Phrase incorrecte. Rien n a ete ecrit.'
             }
-            node scripts/staging-schema.mjs --apply
-            $code = $LASTEXITCODE
+            $code = Invoke-Externe 'node' @('scripts/staging-schema.mjs', '--apply')
             if ($code -eq 0) {
                 Ok 'base de production a jour'
                 $script:schemaApplique = $true
@@ -332,12 +358,10 @@ function Etape-Deploiement {
 
     Push-Location $racine
     Etape 'Construction a blanc (rien n est envoye)'
-    npx cf deploy --dry-run
-    $code = $LASTEXITCODE
+    $code = Invoke-Externe 'npx' @('cf', 'deploy', '--dry-run')
     if ($code -eq 0) {
         Etape 'Publication reelle'
-        npx cf deploy
-        $code = $LASTEXITCODE
+        $code = Invoke-Externe 'npx' @('cf', 'deploy')
     }
     Pop-Location
 
@@ -364,8 +388,7 @@ function Etape-Secrets {
     $corps = Join-Path $dossier 'corps.json'
 
     Push-Location $racine
-    node scripts/preparer-secrets.mjs --production --out $corps
-    $code = $LASTEXITCODE
+    $code = Invoke-Externe 'node' @('scripts/preparer-secrets.mjs', '--production', '--out', $corps)
     Pop-Location
 
     if ($code -ne 0) {
@@ -376,8 +399,7 @@ function Etape-Secrets {
     Write-Host ''
     Dire '  Envoi...' 'DarkGray'
     Push-Location $racine
-    npx cf workers secrets bulk --worker $TRAVAILLEUR --body "@$corps"
-    $code = $LASTEXITCODE
+    $code = Invoke-Externe 'npx' @('cf', 'workers', 'secrets', 'bulk', '--worker', $TRAVAILLEUR, '--body', "@$corps")
     Pop-Location
 
     Remove-Item -LiteralPath $dossier -Recurse -Force -ErrorAction SilentlyContinue
@@ -398,7 +420,7 @@ function Etape-Secrets {
 function Etape-Recette {
     Etape '5. Recette des services'
     Push-Location $racine
-    npm run recette:services
+    $null = Invoke-Externe 'npm' @('run', 'recette:services')
     Pop-Location
     Write-Host ''
     Dire '  Copiez cette sortie et envoyez-la : elle ne contient aucun secret.' 'Cyan'
