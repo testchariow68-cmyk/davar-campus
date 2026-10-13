@@ -19,7 +19,7 @@
 
     NOTE : ce fichier est volontairement ecrit SANS ACCENT (ASCII pur).
     Windows PowerShell 5.1 lit un fichier .ps1 en UTF-8 sans BOM comme de
-    l'ANSI, ce qui declenche ? Accolade fermante manquante ? des la premiere
+    l'ANSI, ce qui declenche "Accolade fermante manquante" des la premiere
     ligne de fonction. En ASCII pur, aucune ambiguite de lecture n'est possible.
 .EXAMPLE
     .\scripts\DEPLOYER.ps1
@@ -43,6 +43,7 @@ $envLocal    = Join-Path $racine '.env.local'
 $reglages    = Join-Path $racine '.deploy-local.txt'
 $PHRASE      = 'APPLIQUER DAVAR PRODUCTION'
 $schemaApplique = $false   # vrai seulement si les tables ont reellement ete ecrites
+$cfConnecte   = $false   # vrai des que "cf auth whoami" repond
 
 function Dire([string]$Message, [string]$Couleur = 'White') {
     Write-Host $Message -ForegroundColor $Couleur
@@ -87,6 +88,49 @@ function Lire-Valeur([string]$Cle) {
 # --------------------------------------------------------------------------- #
 # Le sous-domaine : demande une seule fois, memorise dans un simple fichier texte
 # --------------------------------------------------------------------------- #
+function Get-SousDomaineParDefaut {
+    # Votre sous-domaine *.workers.dev est deja ecrit noir sur blanc dans la
+    # configuration : c est celui du Worker de recette, qui appartient au meme
+    # compte Cloudflare que la production. On le lit, plutot que de demander au
+    # proprietaire d aller le chercher dans un tableau de bord.
+    $config = Join-Path $racine 'cloudflare.config.ts'
+    if (-not (Test-Path $config)) { return '' }
+    $texte = Get-Content $config -Raw
+    $trouve = [regex]::Match($texte, "STAGING_ORIGIN\s*=\s*'https://[^']*?\.([A-Za-z0-9-]+)\.workers\.dev'")
+    if ($trouve.Success) { return $trouve.Groups[1].Value }
+    return ''
+}
+
+function Assurer-Connexion {
+    if ($script:cfConnecte) { return }
+    Etape 'Connexion a Cloudflare'
+    Push-Location $racine
+    $sortie = & npx cf auth whoami 2>&1
+    $code = $LASTEXITCODE
+    if ($code -ne 0) {
+        Write-Host ''
+        Dire '  Il faut vous connecter a Cloudflare une seule fois.' 'Yellow'
+        Dire '  Une fenetre de navigateur va s ouvrir : connectez-vous,' 'Yellow'
+        Dire '  autorisez, puis revenez dans cette fenetre noire.' 'Yellow'
+        Write-Host ''
+        & npx cf auth login
+        if ($LASTEXITCODE -ne 0) {
+            Pop-Location
+            Arreter 'Connexion impossible. Reessayez : npx cf auth login'
+        }
+        $sortie = & npx cf auth whoami 2>&1
+        if ($LASTEXITCODE -ne 0) {
+            Pop-Location
+            Arreter 'La connexion n a pas ete retenue. Reessayez.'
+        }
+    }
+    Pop-Location
+    $script:cfConnecte = $true
+    $compte = ($sortie | Out-String).Trim()
+    if ($compte -ne '') { Dire "  $compte" 'DarkGray' }
+    Ok 'connecte a Cloudflare'
+}
+
 function Get-SousDomaine {
     $valeur = ''
     if (Test-Path $reglages) {
@@ -94,15 +138,24 @@ function Get-SousDomaine {
         if ($null -ne $valeur) { $valeur = $valeur.Trim() }
     }
     if ($valeur -eq '') {
+        $defaut = Get-SousDomaineParDefaut
         Write-Host ''
         Dire '  Une seule information a donner, une seule fois :' 'Yellow'
-        Dire '  Cloudflare -> Workers et Pages -> colonne de droite' 'DarkGray'
-        Dire '  -> "sous-domaine *.workers.dev"' 'DarkGray'
-        $valeur = (Read-Host '  Votre sous-domaine').Trim()
+        Dire '  votre sous-domaine *.workers.dev (Cloudflare ->' 'DarkGray'
+        Dire '  Workers et Pages -> colonne de droite).' 'DarkGray'
+        if ($defaut -ne '') {
+            Dire "  Il a ete trouve dans votre configuration : $defaut" 'Cyan'
+            $valeur = (Read-Host "  Entree pour le garder, ou tapez le votre").Trim()
+            if ($valeur -eq '') { $valeur = $defaut }
+        } else {
+            $valeur = (Read-Host '  Votre sous-domaine').Trim()
+        }
         $valeur = $valeur.Trim('.')
+        $valeur = $valeur -replace '^https?://', ''
+        $valeur = ($valeur -split '/')[0]
         if ($valeur -eq '') { Arreter 'Sous-domaine vide. Relancez.' }
         Set-Content -Path $reglages -Value $valeur -Encoding ASCII
-        Ok 'sous-domaine memorise'
+        Ok "sous-domaine memorise : $valeur"
     }
     return $valeur
 }
@@ -240,6 +293,7 @@ function Etape-Schema {
 function Etape-Deploiement {
     Etape '3. Publication du Worker public'
 
+    Assurer-Connexion
     $sousDomaine = Get-SousDomaine
     $url = Lire-Valeur 'TURSO_DATABASE_URL'
     $hote = $url -replace '^libsql://', ''
@@ -281,6 +335,8 @@ function Etape-Deploiement {
 # --------------------------------------------------------------------------- #
 function Etape-Secrets {
     Etape '4. Envoi de vos cles a Cloudflare'
+
+    Assurer-Connexion
 
     $dossier = Join-Path ([System.IO.Path]::GetTempPath()) ('davar-secrets-' + [System.Guid]::NewGuid().ToString('N'))
     New-Item -ItemType Directory -Path $dossier -Force | Out-Null
@@ -366,6 +422,9 @@ elseif ($Etape -eq 'Deploiement') { Etape-Deploiement }
 elseif ($Etape -eq 'Secrets') { Etape-Secrets }
 elseif ($Etape -eq 'Recette') { Etape-Recette }
 elseif ($Etape -eq 'Tout') {
+    # La connexion d abord : la fenetre du navigateur s ouvre tout de suite,
+    # au lieu de vous attendre au bout de vingt minutes de tests.
+    Assurer-Connexion
     Etape-Verification
     Etape-Schema
     # On ne publie JAMAIS un campus sur une base qui n a pas ses tables :

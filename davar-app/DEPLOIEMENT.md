@@ -391,6 +391,8 @@ Une copie de secours horodatée de votre `.env.local` est faite à chaque fois.
 | « Access denied. Please check your network settings. » (Groq) | Groq bloque les adresses de serveur — **ce n'est pas votre clé** | sans conséquence : Gemini prend la main (voir `GUIDE-MES-VALEURS.md` §5a) |
 | L'assistant ne répond pas | aucune clé de moteur posée | une seule clé suffit : `GEMINI_API_KEY` |
 | `cf auth login` reste bloqué | pare-feu ou antivirus | autorisez le port local, ou ouvrez le lien à la main |
+| **Aucune fenêtre Cloudflare ne s'ouvre** | la CLI `cf` ne se connecte jamais d'elle-même | lancez `npx cf auth login` une fois ; le script le fait désormais avant de publier |
+| **Je ne connais pas mon sous-domaine `*.workers.dev`** | il est déjà écrit dans `cloudflare.config.ts` | le script vous le **propose** : Entrée pour le valider (chez vous : `davaracademie`) |
 | **`Accolade fermante « } » manquante` au lancement** | le `.ps1` était lu avec des accents corrompus | **corrigé** : les scripts sont désormais en ASCII pur. Relancez `MAJ.bat`, puis `DEPLOYER.bat` |
 | `ERREUR ligne … : …` au moment de « Vérification du script » | le script ne peut pas être lu | copiez la ligne affichée et envoyez-la |
 
