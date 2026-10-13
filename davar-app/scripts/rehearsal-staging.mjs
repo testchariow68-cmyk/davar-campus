@@ -21,7 +21,7 @@ import { createClient } from '@libsql/client';
 import { execFileSync } from 'node:child_process';
 import { mkdtempSync, readFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { join } from 'node:path';
+import { dirname, join } from 'node:path';
 
 import { fileURLToPath, pathToFileURL} from 'node:url';
 const ROOT = fileURLToPath(new URL('..', import.meta.url));
@@ -144,6 +144,23 @@ try {
   console.log('Aucune écriture distante : cette répétition vit dans un fichier temporaire supprimé maintenant.');
   process.exitCode = failures.length === 0 ? 0 : 1;
 } finally {
-  client.close();
-  rmSync(dbPath, { force: true });
+  try { client.close(); } catch { /* deja ferme : rien a signaler */ }
+
+  // Windows refuse de supprimer un fichier encore verrouille, meme apres
+  // close() : le handle met parfois un instant a se liberer. On reessaie donc
+  // quelques fois, et surtout un echec de nettoyage ne doit JAMAIS ecraser le
+  // verdict — supprimer un dossier temporaire n'a rien a voir avec la migration.
+  const dossier = dirname(dbPath);
+  let nettoye = false;
+  for (let essai = 0; essai < 5 && !nettoye; essai += 1) {
+    try {
+      rmSync(dossier, { recursive: true, force: true, maxRetries: 10, retryDelay: 200 });
+      nettoye = true;
+    } catch {
+      if (essai < 4) await new Promise((resoudre) => setTimeout(resoudre, 300));
+    }
+  }
+  if (!nettoye) {
+    console.log(`Note : le dossier temporaire n'a pas pu être vidé (sans conséquence) : ${dossier}`);
+  }
 }
