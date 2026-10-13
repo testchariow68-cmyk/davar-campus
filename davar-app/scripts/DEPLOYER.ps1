@@ -356,14 +356,34 @@ function Etape-Deploiement {
     $env:DAVAR_PRODUCTION_DB_HOST = $hote
     $env:DAVAR_PUBLIC_ORIGIN = $origine
 
+    # Un Worker qui DECLARE des secrets ne peut pas etre cree sans les recevoir
+    # en meme temps : Cloudflare refuse de creer le Worker sans eux, et refuse
+    # aussi de poser un secret sur un Worker qui n existe pas encore. Le serpent
+    # se mord la queue. --secrets-file le tranche : les valeurs partent avec la
+    # publication, dans un fichier supprime juste apres.
+    Etape 'Preparation de vos cles (fichier temporaire)'
+    $secrets = Join-Path ([System.IO.Path]::GetTempPath()) ('davar-deploy-secrets-' + [System.Guid]::NewGuid().ToString('N'))
+    New-Item -ItemType Directory -Path $secrets -Force | Out-Null
+    $fichierSecrets = Join-Path $secrets 'secrets.env'
+
     Push-Location $racine
+    $code = Invoke-Externe 'node' @('scripts/preparer-secrets.mjs', '--production', '--format', 'env', '--out', $fichierSecrets)
+    if ($code -ne 0) {
+        Pop-Location
+        Remove-Item -LiteralPath $secrets -Recurse -Force -ErrorAction SilentlyContinue
+        Arreter 'Impossible de preparer vos cles. Rien n a ete publie.'
+    }
+
     Etape 'Construction a blanc (rien n est envoye)'
-    $code = Invoke-Externe 'npx' @('cf', 'deploy', '--dry-run')
+    $code = Invoke-Externe 'npx' @('cf', 'deploy', '--dry-run', '--secrets-file', $fichierSecrets)
     if ($code -eq 0) {
         Etape 'Publication reelle'
-        $code = Invoke-Externe 'npx' @('cf', 'deploy')
+        $code = Invoke-Externe 'npx' @('cf', 'deploy', '--secrets-file', $fichierSecrets)
     }
     Pop-Location
+
+    Remove-Item -LiteralPath $secrets -Recurse -Force -ErrorAction SilentlyContinue
+    Dire '  Fichier de cles temporaire supprime.' 'DarkGray'
 
     Remove-Item Env:DAVAR_DEPLOY_TARGET -ErrorAction SilentlyContinue
     Remove-Item Env:DAVAR_PRODUCTION_DB_HOST -ErrorAction SilentlyContinue

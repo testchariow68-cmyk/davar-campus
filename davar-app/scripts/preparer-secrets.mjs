@@ -102,12 +102,13 @@ export function corpsSecrets(valeurs) {
 }
 
 function argumentsDe(argv) {
-  const options = { dryRun: false, production: false, env: null, out: null };
+  const options = { dryRun: false, production: false, env: null, out: null, format: 'bulk' };
   for (let i = 0; i < argv.length; i += 1) {
     if (argv[i] === '--dry-run') options.dryRun = true;
     else if (argv[i] === '--production') options.production = true;
     else if (argv[i] === '--env') options.env = argv[i + 1] ?? null;
     else if (argv[i] === '--out') options.out = argv[i + 1] ?? null;
+    else if (argv[i] === '--format') options.format = argv[i + 1] ?? 'bulk';
   }
   return options;
 }
@@ -159,12 +160,29 @@ export function main(argv = process.argv.slice(2), racine = RACINE) {
 
   const dossier = mkdtempSync(join(tmpdir(), 'davar-secrets-'));
   const cheminCorps = options.out ? resolve(options.out) : join(dossier, 'corps.json');
-  writeFileSync(cheminCorps, JSON.stringify(corps), { mode: 0o600 });
+
+  if (options.format === 'env') {
+    // Format attendu par « cf deploy --secrets-file » : une ligne NOM=valeur
+    // par secret. C'est la SEULE façon de créer un Worker qui DÉCLARE des
+    // secrets : Cloudflare refuse de créer le Worker sans les recevoir en
+    // même temps, et refuse aussi de poser un secret sur un Worker qui
+    // n'existe pas encore. Le serpent se mord la queue ; --secrets-file le
+    // tranche d'un coup.
+    const lignes = noms.map((nom) => `${nom}=${corps.secrets[nom].text}`);
+    writeFileSync(cheminCorps, `${lignes.join('\n')}\n`, { mode: 0o600 });
+  } else {
+    writeFileSync(cheminCorps, JSON.stringify(corps), { mode: 0o600 });
+  }
 
   console.log('');
   console.log(`Corps écrit : ${cheminCorps}`);
-  console.log('Commande à utiliser (les valeurs ne passent PAS par la ligne de commande) :');
-  console.log('  npx cf workers secrets bulk --worker <nom> --body @' + cheminCorps);
+  if (options.format === 'env') {
+    console.log('À utiliser avec (les valeurs ne passent PAS par la ligne de commande) :');
+    console.log('  npx cf deploy --secrets-file ' + cheminCorps);
+  } else {
+    console.log('Commande à utiliser (les valeurs ne passent PAS par la ligne de commande) :');
+    console.log('  npx cf workers secrets bulk --worker <nom> --body @' + cheminCorps);
+  }
   console.log('');
   console.log('⚠ Ce fichier contient vos secrets : supprimez-le juste après l’envoi.');
 
