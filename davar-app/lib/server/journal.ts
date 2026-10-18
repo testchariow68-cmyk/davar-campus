@@ -52,6 +52,7 @@ export const ACTIONS = {
   'formation-modification': { libelle: 'a modifié une formation', importante: false },
   'formation-publication': { libelle: 'a publié ou retiré une formation', importante: true },
   'formation-suppression': { libelle: 'a supprimé une formation', importante: true },
+  'avis-en-avant': { libelle: 'a mis un avis en avant dans le catalogue', importante: false },
   'contenu-structure': { libelle: 'a modifié les modules ou les leçons', importante: false },
   'ressource-depot': { libelle: 'a déposé une ressource', importante: false },
   'ressource-attribution': { libelle: 'a attribué une ressource', importante: false },

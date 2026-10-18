@@ -1,6 +1,7 @@
 import { redirect } from 'next/navigation';
 import { Icon } from '@/components/campus/Icon';
 import { sessionSection } from '@/lib/server/direction-access';
+import { EtoileAvis } from '@/components/direction/EtoileAvis';
 import { avisEnRetard, avisRecus } from '@/lib/server/avis';
 
 export const dynamic = 'force-dynamic';
@@ -73,6 +74,7 @@ export default async function AvisPage() {
                   <span className="badge b-grey">{avis.mots} mots</span>
                   {avis.kind === 'audio' && <span className="badge b-violet">audio transcrit</span>}
                   <span className="xs faint">{new Date(avis.atMs).toLocaleDateString('fr-FR')}</span>
+                  <EtoileAvis avisId={avis.id} enAvant={avis.enAvant} />
                 </span>
               </div>
               <div className="xs muted mt4">{avis.formation}</div>

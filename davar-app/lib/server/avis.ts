@@ -123,12 +123,14 @@ export type AvisDirection = {
   kind: string;
   extrait: string;
   atMs: number;
+  /** L'étoile ✦ : cet avis témoigne sur la page du catalogue. */
+  enAvant: boolean;
 };
 
 /** Ce que le propriétaire reçoit : l'ÉCRIT uniquement, comme il l'a demandé. */
 export async function avisRecus(db: Db, limite = 100): Promise<AvisDirection[]> {
   const lignes = await db.execute({
-    sql: `SELECT r.id, r.step, r.words, r.kind, r.body, r.at_ms, r.transcribed_by,
+    sql: `SELECT r.id, r.step, r.words, r.kind, r.body, r.at_ms, r.transcribed_by, r.spotlight,
                  u.display_name, u.email_normalized, t.title AS formation
           FROM reviews r
           JOIN users u ON u.id = r.user_id
@@ -146,6 +148,7 @@ export async function avisRecus(db: Db, limite = 100): Promise<AvisDirection[]> 
     kind: texte(row.kind, 'ecrit'),
     extrait: texte(row.body).slice(0, 400),
     atMs: entier(row.at_ms),
+    enAvant: entier(row.spotlight) === 1,
   }));
 }
 
@@ -186,4 +189,48 @@ export async function avisEnRetard(db: Db, maintenant = Date.now()): Promise<
     }
   }
   return sortie;
+}
+
+/* ------------------------------------------------------------ mise en avant */
+
+export type AvisEnAvant = {
+  id: string;
+  texte: string;
+  etudiant: string;
+  formation: string;
+};
+
+/**
+ * LES AVIS MIS EN AVANT — ceux qui témoignent sur la page du catalogue
+ * (« Ils témoignent »). Trois au plus, et seulement ce que l'étudiant a écrit.
+ */
+export async function lireAvisEnAvant(db: Db, limite = 3): Promise<AvisEnAvant[]> {
+  const bornes = Math.min(Math.max(limite, 1), 6);
+  const lignes = await db.execute({
+    sql: `SELECT r.id, r.body, r.training_id, u.display_name, t.title AS formation
+          FROM reviews r
+          JOIN users u ON u.id = r.user_id
+          LEFT JOIN trainings t ON t.id = r.training_id
+          WHERE r.spotlight = 1
+          ORDER BY r.at_ms DESC LIMIT ?`,
+    args: [bornes],
+  });
+  return lignes.rows.map((row) => ({
+    id: texte(row.id),
+    texte: texte(row.body).slice(0, 220),
+    etudiant: texte(row.display_name, 'Étudiant DAVAR vérifié'),
+    formation: texte(row.formation, 'Plateforme DAVAR'),
+  }));
+}
+
+/**
+ * Mettre un avis en avant, ou le retirer. Geste de direction : l'étoile du
+ * prototype, et rien de plus — jamais le texte n'est modifié ici.
+ */
+export async function mettreEnAvant(db: Db, avisId: string, valeur: boolean): Promise<boolean> {
+  const resultat = await db.execute({
+    sql: 'UPDATE reviews SET spotlight = ? WHERE id = ?',
+    args: [valeur ? 1 : 0, avisId],
+  });
+  return Number(resultat.rowsAffected ?? 0) === 1;
 }

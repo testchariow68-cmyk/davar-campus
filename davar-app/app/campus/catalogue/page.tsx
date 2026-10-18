@@ -3,6 +3,7 @@ import { redirect } from 'next/navigation';
 import { Icon } from '@/components/campus/Icon';
 import { CarteFormation } from '@/components/campus/CarteFormation';
 import { currentSession } from '@/lib/server/auth';
+import { lireAvisEnAvant } from '@/lib/server/avis';
 import { lireCatalogue } from '@/lib/server/campus';
 import { lireReglages } from '@/lib/server/settings';
 import { REGLAGES_DEFAUT } from '@/lib/server/settings';
@@ -24,7 +25,10 @@ export default async function CataloguePage() {
 
   // Vue test : le propriétaire voit le catalogue comme un étudiant qui n'a rien.
   const catalogue = await lireCatalogue(session.db, session.vueTest ? null : session.user.id);
-  const reglages = await lireReglages(session.db);
+  const [reglages, temoignages] = await Promise.all([
+    lireReglages(session.db),
+    lireAvisEnAvant(session.db),
+  ]);
   const reservation = reglages['paiement.coaching'] ?? RESERVATION_COACHING;
 
   return (
@@ -63,6 +67,38 @@ export default async function CataloguePage() {
         </div>
       ) : (
         <div className="empty small">Aucune formation acquise pour le moment.</div>
+      )}
+
+      {temoignages.length > 0 && (
+        <>
+          <div className="page-head" style={{ marginTop: 30 }}>
+            <div>
+              <h2 style={{ fontSize: 19 }}>Ils témoignent</h2>
+            </div>
+          </div>
+          <div
+            className="grid"
+            style={{ gridTemplateColumns: 'repeat(auto-fit,minmax(240px,1fr))', gap: 12 }}
+          >
+            {temoignages.map((temoignage) => (
+              <div className="card card-pad sp-card" key={temoignage.id}>
+                <Icon nom="quote" taille={18} />
+                <p className="small" style={{ margin: '8px 0 10px' }}>
+                  {temoignage.texte}
+                </p>
+                <div className="row">
+                  <span className="step-ico s-gold" style={{ width: 30, height: 30 }}>
+                    <Icon nom="check" taille={13} />
+                  </span>
+                  <div>
+                    <b className="xs">{temoignage.etudiant}</b>
+                    <div className="xs faint">{temoignage.formation}</div>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </>
       )}
 
       {reservation && (

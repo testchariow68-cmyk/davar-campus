@@ -145,6 +145,13 @@ const MIGRATIONS = [
     ddl: 2, // deux colonnes ajoutées : le téléphone et le pays du compte
     creates: [],
   },
+  {
+    version: 18,
+    file: '018_avis_en_avant.sqlite.sql',
+    sha256: '4d5154217aab06adec58e245f8c2b8159baa0f3219467cb553a8c31f0cf5b3d6',
+    ddl: 1, // une colonne ajoutée : l'étoile qui met un avis en avant
+    creates: [],
+  },
 ];
 const EXPECTED_TABLE_COUNT = 49; // 48 après 013 — 014 et 015 ajoutent des colonnes, 016 ajoute le journal de l'équipe
 const FORBIDDEN = /\b(drop|truncate|delete\s+from)\b/i;

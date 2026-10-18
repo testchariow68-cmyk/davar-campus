@@ -4,6 +4,7 @@ import { trackApiRequest } from '@/lib/server/quota';
 import { enregistrerEvenement } from '@/lib/server/journal';
 import { deciderDevoir } from '@/lib/server/pedagogie';
 import { deciderCertificat } from '@/lib/server/certificats';
+import { mettreEnAvant } from '@/lib/server/avis';
 import { notifier } from '@/lib/server/notifications';
 
 export const dynamic = 'force-dynamic';
@@ -28,6 +29,17 @@ export async function POST(request: Request) {
   const id = typeof body?.id === 'string' ? body.id : '';
   const motif = typeof body?.motif === 'string' ? body.motif.trim().slice(0, 800) : '';
   if (!id) return jsonNoStore({ error: 'invalid_input' }, 400);
+
+  // Mettre un avis en avant (ou le retirer) : l'étoile du prototype, qui
+  // affiche le témoignage sur la page du catalogue. Le texte n'est jamais
+  // modifié — seul son emplacement change.
+  if (action === 'avis_en_avant') {
+    const valeur = body?.valeur === true || body?.valeur === 1 || body?.valeur === '1';
+    const ok = await mettreEnAvant(db, id, valeur);
+    if (!ok) return jsonNoStore({ error: 'introuvable' }, 404);
+    await enregistrerEvenement(db, { actorId: reel.id, action: 'avis-en-avant', detail: id });
+    return jsonNoStore({ ok: true, message: valeur ? 'Avis mis en avant ✦' : 'Mise en avant retirée.' });
+  }
   const maintenant = Date.now();
 
   try {
