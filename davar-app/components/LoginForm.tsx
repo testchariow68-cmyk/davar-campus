@@ -99,7 +99,7 @@ export function LoginForm() {
     <form onSubmit={onSubmit} noValidate>
       {error && <div className="banner err" role="alert"><span>{error}</span></div>}
       {notice && <div className="banner info"><span style={{wordBreak: 'break-all'}}>{notice}</span></div>}
-      <label htmlFor="login-email">Adresse e-mail</label>
+      <label htmlFor="login-email">E-mail</label>
       <input
         id="login-email"
         className="inp"
@@ -119,21 +119,18 @@ export function LoginForm() {
         required
         value={password}
         onChange={(event) => setPassword(event.target.value)}
-        placeholder="Votre mot de passe"
+        placeholder="••••••••"
       />
       <button type="submit" disabled={busy}>
         {step === 'deriving' ? 'Protection de votre mot de passe…' : step === 'verifying' ? 'Connexion…' : 'Se connecter'}
       </button>
-      <p className="xs muted" style={{textAlign:'center',marginTop:8}}>
-        Votre mot de passe est transformé sur votre appareil : il n’est jamais transmis tel quel.
-      </p>
       {unverified && (
         <button type="button" className="btn btn-ghost" onClick={resend} disabled={busy}>
           Renvoyer le lien de confirmation
         </button>
       )}
       <p className="small" style={{textAlign:'center',marginTop:14}}>
-        Pas encore de compte ? <Link href="/inscription">Créer mon accès</Link>
+        Pas de compte ? <Link href="/inscription">S’inscrire</Link>
       </p>
     </form>
   );

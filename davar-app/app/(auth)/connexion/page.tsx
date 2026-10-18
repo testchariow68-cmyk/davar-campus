@@ -1,4 +1,3 @@
-import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { LoginForm } from '@/components/LoginForm';
 import { currentUser } from '@/lib/server/auth';
@@ -23,7 +22,7 @@ export default async function ConnexionPage() {
       <img className="lg-logo" src="/campus-icon.png" alt="DAVAR ACADÉMIE CAMPUS" />
       <div className="gcard">
         <h1>DAVAR ACADÉMIE CAMPUS</h1>
-        <p>Connectez-vous pour retrouver vos formations.</p>
+        <p>Connectez-vous</p>
         {configured ? (
           <LoginForm />
         ) : (
@@ -34,7 +33,6 @@ export default async function ConnexionPage() {
             </span>
           </div>
         )}
-        <Link href="/" className="btn btn-ghost mt16">Retour au catalogue</Link>
       </div>
       <div className="gl-foot">© 2026 Davar Académie — Abidjan, Côte d’Ivoire</div>
     </div>
