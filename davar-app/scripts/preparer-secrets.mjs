@@ -63,11 +63,6 @@ export const SECRETS_DECLARES = [
   'HUGGINGFACE_API_KEY',
   'ASSISTANT_CUSTOM_URL',
   'ASSISTANT_CUSTOM_KEY',
-  // Ces deux-là ne servent qu'à Brevo, que le propriétaire a remplacé par le
-  // relais Google Apps Script. On les garde pour ne rien casser le jour où il
-  // voudrait revenir en arrière ; vides, ils sont simplement ignorés.
-  'BREVO_API_KEY',
-  'MAIL_FROM_EMAIL',
 ];
 
 /** Valeurs à ne JAMAIS envoyer : le déploiement les écrit lui-même. */

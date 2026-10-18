@@ -2,6 +2,7 @@ import { verrouProprietaire } from '@/lib/server/direction-access';
 import { jsonNoStore, readJsonBody } from '@/lib/server/http';
 import { trackApiRequest } from '@/lib/server/quota';
 import { enregistrerEvenement } from '@/lib/server/journal';
+import { modeleParId } from '@/lib/server/modeles-courriel';
 import { ecrireReglages, lireReglages, lienSocialValide } from '@/lib/server/settings';
 import { creerCle, listerCles, revoquerCle } from '@/lib/server/cles-api';
 import { emailBudget, mailerConfigured, sendEmail } from '@/lib/server/mailer';
@@ -90,31 +91,55 @@ export async function POST(request: Request) {
       return jsonNoStore({ ok: reussie, message: reussie ? 'Clé révoquée.' : 'Cette clé était déjà révoquée.', cles: await listerCles(db) });
     }
 
-    if (action === 'courriel_test') {
+    // Essayer un modèle un par un : le propriétaire voit exactement ce que
+    // reçoit un étudiant, avant la mise en production.
+    if (action === 'courriel_modele') {
+      const modele = modeleParId(String(body?.modele ?? ''));
       const destinataire = String(body?.email ?? reel.email ?? '').trim().toLowerCase();
+      if (!modele) return jsonNoStore({ error: 'modele_inconnu' }, 400);
       if (!destinataire.includes('@')) return jsonNoStore({ error: 'adresse_invalide' }, 400);
       if (!mailerConfigured())
         return jsonNoStore(
           {
             error: 'envoi_non_configure',
             message:
-              "Aucun service d'envoi n'est configuré. Posez l'adresse du relais Apps Script (ou la clé Brevo) côté serveur, puis réessayez.",
+              "Aucun service d'envoi n'est configuré. Posez l'adresse du relais Apps Script côté serveur, puis réessayez.",
           },
           503
         );
       try {
         await sendEmail(
-          {
-            to: destinataire,
-            subject: 'DAVAR ACADÉMIE — essai d’envoi',
-            text: `Cet essai confirme que les e-mails de la plateforme partent bien.
-
-Depuis : ${reel.email}
-Le ${new Date(maintenant).toLocaleString('fr-FR')}`,
-          },
+          { to: destinataire, subject: `[ESSAI] ${modele.objet}`, text: modele.corps(reel.displayName) },
           db
         );
-        return jsonNoStore({ ok: true, message: `Essai envoyé à ${destinataire}.` });
+        await enregistrerEvenement(db, { actorId: reel.id, action: 'courriel-modele', detail: modele.id }, maintenant);
+        return jsonNoStore({ ok: true, message: `« ${modele.objet} » envoyé à ${destinataire}.` });
+      } catch {
+        return jsonNoStore({ error: 'envoi_refuse', message: "L'envoi a été refusé (budget quotidien atteint, ou service indisponible)." }, 503);
+      }
+    }
+
+    // Écrire à quelqu'un, librement : aucun modèle, aucun destinataire imposé.
+    if (action === 'courriel_libre') {
+      const destinataire = String(body?.email ?? '').trim().toLowerCase();
+      const objet = String(body?.objet ?? '').trim().slice(0, 200);
+      const texte = String(body?.texte ?? '').trim().slice(0, 5000);
+      if (!destinataire.includes('@')) return jsonNoStore({ error: 'adresse_invalide' }, 400);
+      if (!objet) return jsonNoStore({ error: 'objet_manquant', message: 'L’objet de l’e-mail est requis.' }, 400);
+      if (!texte) return jsonNoStore({ error: 'message_vide', message: 'Écrivez d’abord le message de l’e-mail.' }, 400);
+      if (!mailerConfigured())
+        return jsonNoStore(
+          {
+            error: 'envoi_non_configure',
+            message:
+              "Aucun service d'envoi n'est configuré. Posez l'adresse du relais Apps Script côté serveur, puis réessayez.",
+          },
+          503
+        );
+      try {
+        await sendEmail({ to: destinataire, subject: objet, text: texte }, db);
+        await enregistrerEvenement(db, { actorId: reel.id, action: 'courriel-libre' }, maintenant);
+        return jsonNoStore({ ok: true, message: `E-mail envoyé à ${destinataire}.` });
       } catch {
         return jsonNoStore({ error: 'envoi_refuse', message: "L'envoi a été refusé (budget quotidien atteint, ou service indisponible)." }, 503);
       }

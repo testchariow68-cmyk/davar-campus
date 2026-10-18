@@ -88,6 +88,254 @@ export async function vueEnsemble(db: Db): Promise<VueEnsemble> {
   };
 }
 
+/* ---------------------------------------------------------------------- pilotage */
+
+export type Tache = {
+  /** Repère l'action, pour la liste « À traiter maintenant ». */
+  genre: 'brouillon' | 'corriger' | 'certificat' | 'coach' | 'ia';
+  titre: string;
+  sousTitre: string;
+  lien: string;
+  atMs: number;
+};
+
+export type Activite = { genre: 'vente' | 'soumission' | 'certificat' | 'question'; texte: string; atMs: number };
+
+export type VuePilotage = {
+  etudiants: number;
+  etudiantsCeMois: number;
+  formationsPubliees: number;
+  formations: number;
+  ventesTrenteJours: number;
+  aTraiter: Tache[];
+  activite: Activite[];
+  /** Les chiffres du staff : chacun ne voit que ce qui le concerne. */
+  copiesEnAttente: number;
+  copiesCorrigees: number;
+  conversationsOuvertes: number;
+  conversationsResolues: number;
+  sansReponse: number;
+  questionsCoach: number;
+  certificatsEnAttente: number;
+  brouillons: Tache[];
+  /** Les chiffres de l'analyste — jamais un montant. */
+  tauxCompletion: number;
+  badgesEmis: number;
+  passerelles: number;
+  noteMoyenne: string;
+};
+
+/**
+ * LE TABLEAU DE BORD DU PROPRIETAIRE — `aOverviewPilotage()` du prototype.
+ *
+ * Quatre chiffres, puis ce qui attend une décision humaine, puis ce qui vient
+ * de se passer. Rien n'est inventé pour faire joli : une plateforme vide
+ * annonce une plateforme vide.
+ */
+export async function vuePilotage(db: Db, maintenant = Date.now()): Promise<VuePilotage> {
+  const ilYa30Jours = maintenant - 30 * 24 * 3600 * 1000;
+  const compter = async (sql: string, args: unknown[] = []): Promise<number> => {
+    const resultat = await db.execute({ sql, args });
+    return nombre(resultat.rows[0]?.n);
+  };
+
+  const [etudiants, etudiantsCeMois, formationsPubliees, formations] = await Promise.all([
+    compter("SELECT COUNT(*) AS n FROM users WHERE role='student' AND is_test=0"),
+    compter("SELECT COUNT(*) AS n FROM users WHERE role='student' AND is_test=0 AND created_at_ms >= ?", [ilYa30Jours]),
+    compter('SELECT COUNT(*) AS n FROM trainings WHERE published=1'),
+    compter('SELECT COUNT(*) AS n FROM trainings'),
+  ]);
+
+  const ventes = await db.execute({
+    sql: 'SELECT amount_value_text FROM verified_purchases WHERE verified_at_ms >= ?',
+    args: [ilYa30Jours],
+  });
+  let ventesTrenteJours = 0;
+  for (const ligne of ventes.rows) ventesTrenteJours += nombre(ligne.amount_value_text);
+
+  const [
+    copiesEnAttente,
+    copiesCorrigees,
+    conversationsOuvertes,
+    conversationsResolues,
+    certificatsEnAttente,
+    badgesEmis,
+  ] = await Promise.all([
+    compter("SELECT COUNT(*) AS n FROM submissions WHERE status = 'pending'"),
+    compter("SELECT COUNT(*) AS n FROM submissions WHERE status = 'approved'"),
+    compter('SELECT COUNT(*) AS n FROM conversations WHERE resolved = 0'),
+    compter('SELECT COUNT(*) AS n FROM conversations WHERE resolved = 1'),
+    compter("SELECT COUNT(*) AS n FROM certificate_requests WHERE status = 'pending'"),
+    compter('SELECT COUNT(*) AS n FROM badge_awards'),
+  ]);
+
+  const [soumissions, demandes, questions, brouillons] = await Promise.all([
+    db.execute({
+      sql: `SELECT s.id, s.at_ms, s.file_key, u.display_name, t.title
+            FROM submissions s JOIN users u ON u.id = s.user_id JOIN trainings t ON t.id = s.training_id
+            WHERE s.status = 'pending' ORDER BY s.at_ms DESC LIMIT 8`,
+    }),
+    db.execute({
+      sql: `SELECT c.id, c.at_ms, c.holder_name, t.title
+            FROM certificate_requests c JOIN trainings t ON t.id = c.training_id
+            WHERE c.status = 'pending' ORDER BY c.at_ms DESC LIMIT 8`,
+    }),
+    db.execute({
+      sql: `SELECT c.id, c.updated_at_ms, c.mode, c.ai_validated, u.display_name,
+                   (SELECT m.text FROM conversation_messages m WHERE m.conversation_id = c.id ORDER BY m.at_ms DESC LIMIT 1) AS dernier,
+                   (SELECT m.author FROM conversation_messages m WHERE m.conversation_id = c.id ORDER BY m.at_ms DESC LIMIT 1) AS auteur
+            FROM conversations c JOIN users u ON u.id = c.user_id
+            WHERE c.resolved = 0 ORDER BY c.updated_at_ms DESC LIMIT 12`,
+    }),
+    db.execute({
+      sql: `SELECT id, title, (SELECT COUNT(*) FROM course_modules m WHERE m.training_id = t.id) AS modules
+              FROM trainings t WHERE published = 0 ORDER BY title ASC LIMIT 8`,
+    }),
+  ]);
+
+  const aTraiter: Tache[] = [];
+  for (const ligne of soumissions.rows)
+    aTraiter.push({
+      genre: 'corriger',
+      titre: `Corriger : ${texte(ligne.file_key) ?? 'travail rendu'}`,
+      sousTitre: `${texte(ligne.display_name) ?? ''} · ${texte(ligne.title) ?? ''}`,
+      lien: '/direction/devoirs',
+      atMs: nombre(ligne.at_ms),
+    });
+  for (const ligne of demandes.rows)
+    aTraiter.push({
+      genre: 'certificat',
+      titre: `Évaluer : ${texte(ligne.holder_name) ?? 'un étudiant'} a demandé son certificat`,
+      sousTitre: `${texte(ligne.title) ?? ''} · 100 % terminé`,
+      lien: '/direction/certificats',
+      atMs: nombre(ligne.at_ms),
+    });
+  for (const ligne of questions.rows) {
+    const dernierAuteur = texte(ligne.auteur);
+    const nom = texte(ligne.display_name) ?? '';
+    // Une conversation non résolue dont le dernier mot vient de l'étudiant
+    // attend une réponse ; celle dont le dernier mot vient de l'IA attend
+    // d'être supervisée avant d'être montrée à l'étudiant.
+    if (dernierAuteur === 'student')
+      aTraiter.push({
+        genre: 'coach',
+        titre: `Répondre : ${nom}`,
+        sousTitre: (texte(ligne.dernier) ?? '').slice(0, 80),
+        lien: `/direction/conversations/${texte(ligne.id) ?? ''}`,
+        atMs: nombre(ligne.updated_at_ms),
+      });
+    else if (dernierAuteur === 'ai' && nombre(ligne.ai_validated) === 0)
+      aTraiter.push({
+        genre: 'ia',
+        titre: `Superviser la réponse de l’assistant — ${nom}`,
+        sousTitre: 'Valider, corriger ou compléter la réponse.',
+        lien: `/direction/conversations/${texte(ligne.id) ?? ''}`,
+        atMs: nombre(ligne.updated_at_ms),
+      });
+  }
+  const brouillonsATraiter: Tache[] = brouillons.rows.map((ligne) => ({
+    genre: 'brouillon' as const,
+    titre: `Finaliser : ${texte(ligne.title) ?? 'formation'}`,
+    sousTitre: `Brouillon — ${nombre(ligne.modules)} chapitre(s)`,
+    lien: '/direction/formations',
+    atMs: 0,
+  }));
+  aTraiter.sort((a, b) => b.atMs - a.atMs);
+
+  // Taux de complétion : la part des étudiants qui ont mené une formation au bout.
+  const finies = await db.execute({
+    sql: `SELECT e.user_id AS uid
+            FROM enrollments e
+            JOIN course_modules mo ON mo.training_id = e.training_id
+            JOIN course_lessons l ON l.module_id = mo.id
+            LEFT JOIN lesson_completions lc ON lc.lesson_id = l.id AND lc.user_id = e.user_id
+           GROUP BY e.user_id, e.training_id
+          HAVING COUNT(l.id) > 0 AND COUNT(lc.lesson_id) = COUNT(l.id)`,
+  });
+  const ayantsTermine = new Set(finies.rows.map((ligne) => texte(ligne.uid))).size;
+  const tauxCompletion = etudiants > 0 ? Math.round((ayantsTermine / etudiants) * 100) : 0;
+
+  // Note moyenne des formations publiées : vide tant que le propriétaire n'a
+  // rien saisi — jamais une note inventée.
+  const notes = await db.execute({
+    sql: 'SELECT rating FROM trainings WHERE published = 1 AND rating IS NOT NULL',
+  });
+  let sommeNotes = 0;
+  for (const ligne of notes.rows) sommeNotes += nombre(ligne.rating);
+  const noteMoyenne = notes.rows.length > 0 ? (sommeNotes / notes.rows.length).toFixed(1) : '—';
+
+  const [ventesRecentes, soumissionsRecentes, certificatsRecents, messagesRecents] = await Promise.all([
+    db.execute({
+      sql: `SELECT v.verified_at_ms, v.amount_value_text, u.display_name, t.title
+            FROM verified_purchases v LEFT JOIN users u ON u.email_normalized = v.buyer_email_normalized
+            JOIN trainings t ON t.id = v.training_id
+            ORDER BY v.verified_at_ms DESC LIMIT 8}`,
+    }),
+    db.execute({
+      sql: `SELECT s.at_ms, s.file_key, u.display_name FROM submissions s JOIN users u ON u.id = s.user_id
+            ORDER BY s.at_ms DESC LIMIT 8`,
+    }),
+    db.execute({
+      sql: `SELECT c.issued_at_ms, u.display_name, t.title FROM certificates c
+            JOIN users u ON u.id = c.user_id JOIN trainings t ON t.id = c.training_id
+            ORDER BY c.issued_at_ms DESC LIMIT 8`,
+    }),
+    db.execute({
+      sql: `SELECT m.at_ms, m.text, u.display_name, c.mode FROM conversation_messages m
+            JOIN conversations c ON c.id = m.conversation_id JOIN users u ON u.id = c.user_id
+            WHERE m.author = 'student' ORDER BY m.at_ms DESC LIMIT 8`,
+    }),
+  ]);
+
+  const activite: Activite[] = [
+    ...ventesRecentes.rows.map((ligne) => ({
+      genre: 'vente' as const,
+      texte: `Vente confirmée — ${texte(ligne.display_name) ?? 'un acheteur'} · ${texte(ligne.title) ?? ''}`,
+      atMs: nombre(ligne.verified_at_ms),
+    })),
+    ...soumissionsRecentes.rows.map((ligne) => ({
+      genre: 'soumission' as const,
+      texte: `Soumission reçue — ${texte(ligne.display_name) ?? ''} · ${texte(ligne.file_key) ?? 'travail rendu'}`,
+      atMs: nombre(ligne.at_ms),
+    })),
+    ...certificatsRecents.rows.map((ligne) => ({
+      genre: 'certificat' as const,
+      texte: `Certificat émis — ${texte(ligne.display_name) ?? ''} · ${texte(ligne.title) ?? ''}`,
+      atMs: nombre(ligne.issued_at_ms),
+    })),
+    ...messagesRecents.rows.map((ligne) => ({
+      genre: 'question' as const,
+      texte: `Question de ${texte(ligne.display_name) ?? ''} (${texte(ligne.mode) === 'coach' ? 'adressée au coach' : 'répondue par l’assistant'})`,
+      atMs: nombre(ligne.at_ms),
+    })),
+  ]
+    .sort((a, b) => b.atMs - a.atMs)
+    .slice(0, 8);
+
+  return {
+    etudiants,
+    etudiantsCeMois,
+    formationsPubliees,
+    formations,
+    ventesTrenteJours,
+    aTraiter,
+    activite,
+    copiesEnAttente,
+    copiesCorrigees,
+    conversationsOuvertes,
+    conversationsResolues,
+    sansReponse: aTraiter.filter((tache) => tache.genre === 'coach').length,
+    questionsCoach: aTraiter.filter((tache) => tache.genre === 'coach').length,
+    certificatsEnAttente,
+    brouillons: brouillonsATraiter,
+    tauxCompletion,
+    badgesEmis,
+    // Une seule passerelle est branchée : Flutterwave. Les deux autres n'existent pas.
+    passerelles: 1,
+    noteMoyenne,
+  };
+}
+
 /* --------------------------------------------------------------------- formations */
 
 export type Formation = {

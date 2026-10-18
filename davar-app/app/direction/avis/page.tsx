@@ -17,7 +17,7 @@ export default async function AvisPage() {
     <>
       <div className="page-head">
         <div>
-          <h1 style={{ fontSize: 19 }}>Avis des étudiants</h1>
+          <h1 style={{ fontSize: 19 }}>Avis</h1>
           <p>
             Deux avis sont demandés : environ deux semaines après l’achat, puis environ un mois. Vous ne recevez ici
             que l’<b>écrit</b> — un avis audio est transcrit, jamais transmis en fichier.

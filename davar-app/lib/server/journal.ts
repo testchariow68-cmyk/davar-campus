@@ -59,6 +59,10 @@ export const ACTIONS = {
   'motivation-envoyee': { libelle: 'a envoyé la motivation du dimanche', importante: true },
   'assistant-reglages': { libelle: 'a changé la configuration de l’assistant', importante: true },
   'reglages-campus': { libelle: 'a changé les réglages du campus', importante: true },
+  // Le détail d'un envoi ne porte jamais le nom ni l'adresse du destinataire :
+  // le journal raconte qui a envoyé quoi, il n'archive pas de données.
+  'courriel-modele': { libelle: 'a envoyé un modèle d’e-mail pour essai', importante: false },
+  'courriel-libre': { libelle: 'a écrit et envoyé un e-mail', importante: false },
 } as const satisfies Record<string, DefinitionAction>;
 
 export type ActionJournal = keyof typeof ACTIONS;

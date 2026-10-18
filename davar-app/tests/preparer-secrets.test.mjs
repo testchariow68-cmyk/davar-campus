@@ -179,7 +179,7 @@ test('--completer ajoute une valeur inerte aux clés déclarées mais vides', as
 
   // La valeur de complément est un espace, jamais une vraie valeur : elle
   // doit être vide après .trim(), seul test que fait le campus partout.
-  const espace = /^BREVO_API_KEY="([^"]*)"$/m.exec(contenu);
+  const espace = /^R2_ACCOUNT_ID="([^"]*)"$/m.exec(contenu);
   assert.ok(espace, 'la clé vide doit être complétée');
   assert.equal(espace[1].trim(), '', 'la valeur de complément doit être vide après .trim()');
   assert.ok(!contenu.includes('pulse_'), 'aucune valeur inerte ne doit ressembler à un vrai identifiant');

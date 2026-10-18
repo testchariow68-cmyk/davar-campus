@@ -1,11 +1,9 @@
 /**
  * Envoi d'e-mail — SERVEUR UNIQUEMENT, désactivé par défaut.
  *
- * Deux fournisseurs gratuits sont supportés, sans carte bancaire :
- *  - `brevo`       : API transactionnelle Brevo, 300 e-mails/jour sur l'offre
- *                    gratuite (marketing + transactionnel partagent le quota).
- *  - `apps_script` : script Google Apps Script déjà présent dans le projet
- *                    (utilisable en secours, quota Google plus serré).
+ * Un seul fournisseur, sans carte bancaire : le relais Google Apps Script déjà
+ * présent dans le projet (le propriétaire l'a choisi ; le quota est celui de
+ * Google). Aucun autre service d'envoi n'est câblé, et aucun n'est facturé.
  *
  * Tant que rien n'est configuré, l'application REFUSE de créer un compte
  * réel hors développement : un compte non vérifiable serait inutilisable et la
@@ -29,11 +27,11 @@ export class MailQuotaReachedError extends Error {
   }
 }
 
-export type MailerKind = 'none' | 'apps_script' | 'brevo';
+export type MailerKind = 'none' | 'apps_script';
 
 export function mailerKind(): MailerKind {
   const declared = process.env.MAILER_KIND?.trim();
-  if (declared === 'brevo' || declared === 'apps_script') return declared;
+  if (declared === 'apps_script') return declared;
   return 'none';
 }
 
@@ -48,11 +46,6 @@ function httpsUrl(value: string | undefined): string | null {
 }
 
 export function mailerConfigured(): boolean {
-  if (mailerKind() === 'brevo') {
-    const key = process.env.BREVO_API_KEY?.trim();
-    const from = process.env.MAIL_FROM_EMAIL?.trim();
-    return Boolean(key && key.length >= 20 && from && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(from));
-  }
   if (mailerKind() === 'apps_script') {
     const token = process.env.MAIL_APPS_SCRIPT_TOKEN?.trim();
     return Boolean(httpsUrl(process.env.MAIL_APPS_SCRIPT_URL) && token && token.length >= 16);
@@ -61,24 +54,6 @@ export function mailerConfigured(): boolean {
 }
 
 export type OutgoingEmail = { to: string; subject: string; text: string };
-
-async function sendViaBrevo(message: OutgoingEmail, apiKey: string): Promise<void> {
-  const senderEmail = process.env.MAIL_FROM_EMAIL!.trim();
-  const senderName = process.env.MAIL_FROM_NAME?.trim() || 'Davar Académie Campus';
-  const response = await fetch('https://api.brevo.com/v3/smtp/email', {
-    method: 'POST',
-    headers: { 'api-key': apiKey, 'content-type': 'application/json', accept: 'application/json' },
-    body: JSON.stringify({
-      sender: { email: senderEmail, name: senderName },
-      to: [{ email: message.to }],
-      subject: message.subject,
-      textContent: message.text,
-    }),
-    cache: 'no-store',
-    signal: AbortSignal.timeout(10_000),
-  });
-  if (!response.ok) throw new Error(`Envoi d'e-mail refusé (${response.status})`);
-}
 
 async function sendViaAppsScript(message: OutgoingEmail): Promise<void> {
   const url = httpsUrl(process.env.MAIL_APPS_SCRIPT_URL)!;
@@ -104,7 +79,6 @@ export async function sendEmail(message: OutgoingEmail, db?: Db): Promise<void> 
     if (db) await recordOpEvent(db, 'email_refused');
     throw new MailQuotaReachedError();
   }
-  if (mailerKind() === 'brevo') await sendViaBrevo(message, process.env.BREVO_API_KEY!.trim());
   else await sendViaAppsScript(message);
   if (db) await recordOpEvent(db, 'email_sent');
 }

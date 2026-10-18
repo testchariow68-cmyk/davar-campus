@@ -142,36 +142,40 @@ test('journal d’opérations : aucune donnée personnelle, seuls des types d’
   assert.deepEqual(columns, ['id', 'kind', 'window_tag', 'occurred_at_ms']);
 });
 
-test('envoi d’e-mail : configuration Brevo gratuite reconnue, sinon refus explicite', async () => {
+test('envoi d’e-mail : configuration Apps Script reconnue, sinon refus explicite', async () => {
   delete process.env.MAILER_KIND;
   assert.equal(mailerKind(), 'none');
   assert.equal(mailerConfigured(), false);
   await assert.rejects(() => sendEmail({ to: 'a@b.com', subject: 'x', text: 'y' }), MailerNotConfiguredError);
 
+  // Un autre fournisseur n'est pas câblé : le propriétaire a choisi Apps Script,
+  // et rien d'autre ne doit pouvoir expédier à son insu.
   process.env.MAILER_KIND = 'brevo';
-  process.env.BREVO_API_KEY = 'cle-api-factice-de-test-1234567890';
-  process.env.MAIL_FROM_EMAIL = 'campus@davaracademie.ci';
-  assert.equal(mailerConfigured(), true);
-  assert.equal(emailBudget().kind, 'brevo');
-  assert.equal(emailBudget().dailyLimit, 300);
+  assert.equal(mailerKind(), 'none', 'un fournisseur non retenu n’est jamais accepté');
+  assert.equal(mailerConfigured(), false);
 
-  process.env.MAIL_FROM_EMAIL = 'adresse-invalide';
-  assert.equal(mailerConfigured(), false, 'une adresse d’expédition invalide doit fermer l’envoi');
-  process.env.MAIL_FROM_EMAIL = 'campus@davaracademie.ci';
+  process.env.MAILER_KIND = 'apps_script';
+  process.env.MAIL_APPS_SCRIPT_URL = 'https://script.google.com/macros/s/FAKE/exec';
+  process.env.MAIL_APPS_SCRIPT_TOKEN = 'jeton-de-test-assez-long';
+  assert.equal(mailerConfigured(), true);
+  assert.equal(emailBudget().kind, 'apps_script');
+
+  process.env.MAIL_APPS_SCRIPT_URL = 'http://script.google.com/macros/s/FAKE/exec';
+  assert.equal(mailerConfigured(), false, 'une adresse non chiffrée doit fermer l’envoi');
+  process.env.MAIL_APPS_SCRIPT_URL = 'https://script.google.com/macros/s/FAKE/exec';
 });
 
-test('appel Brevo : charge utile conforme, secret uniquement en en-tête', async () => {
-  process.env.MAILER_KIND = 'brevo';
-  process.env.BREVO_API_KEY = 'cle-api-factice-de-test-1234567890';
-  process.env.MAIL_FROM_EMAIL = 'campus@davaracademie.ci';
-  process.env.MAIL_FROM_NAME = 'Davar Campus';
+test('appel Apps Script : le secret part dans le corps attendu, jamais ailleurs', async () => {
+  process.env.MAILER_KIND = 'apps_script';
+  process.env.MAIL_APPS_SCRIPT_URL = 'https://script.google.com/macros/s/FAKE/exec';
+  process.env.MAIL_APPS_SCRIPT_TOKEN = 'jeton-de-test-assez-long';
   process.env.QUOTA_DAILY_EMAILS = '300';
 
   let captured;
   const originalFetch = globalThis.fetch;
   globalThis.fetch = async (url, init) => {
     captured = { url, init, body: JSON.parse(init.body) };
-    return new Response('{"messageId":"test"}', { status: 201 });
+    return new Response('{"ok":true}', { status: 200 });
   };
   try {
     await sendEmail({ to: 'etudiant@example.com', subject: 'Confirmez', text: 'Lien : https://exemple.ci/x' });
@@ -179,14 +183,11 @@ test('appel Brevo : charge utile conforme, secret uniquement en en-tête', async
     globalThis.fetch = originalFetch;
   }
 
-  assert.equal(captured.url, 'https://api.brevo.com/v3/smtp/email');
-  assert.equal(captured.init.headers['api-key'], process.env.BREVO_API_KEY);
-  assert.equal(JSON.stringify(captured.body).includes(process.env.BREVO_API_KEY), false, 'la clé ne doit pas être dans le corps');
-  assert.deepEqual(captured.body.to, [{ email: 'etudiant@example.com' }]);
-  assert.equal(captured.body.sender.email, 'campus@davaracademie.ci');
-  assert.equal(captured.body.sender.name, 'Davar Campus');
+  assert.equal(captured.url, 'https://script.google.com/macros/s/FAKE/exec');
+  assert.equal(captured.body.secret, process.env.MAIL_APPS_SCRIPT_TOKEN);
+  assert.equal(captured.body.to, 'etudiant@example.com');
   assert.equal(captured.body.subject, 'Confirmez');
-  assert.match(captured.body.textContent, /exemple\.ci/);
+  assert.match(captured.body.text, /exemple\.ci/);
   delete process.env.QUOTA_DAILY_EMAILS;
 });
 

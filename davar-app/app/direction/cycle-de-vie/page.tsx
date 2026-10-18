@@ -24,7 +24,7 @@ export default async function CycleDeViePage() {
     <>
       <div className="page-head">
         <div>
-          <h1 style={{ fontSize: 19 }}>Cycle de vie des données</h1>
+          <h1 style={{ fontSize: 19 }}>Cycle de vie</h1>
           <p>
             Ce que la plateforme conserve, combien de temps, et ce qu’elle efface. Aucune purge automatique n’est
             active : chaque passage se demande ici, avec vos deux verrous.

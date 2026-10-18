@@ -94,9 +94,6 @@ export default defineConfig({
       // Envoi des e-mails de confirmation. En production, l'inscription REFUSE
       // de créer un compte sans service d'e-mail : aucune fausse promesse.
       MAILER_KIND: bindings.text(mailerKind),
-      BREVO_API_KEY: bindings.secret(),
-      MAIL_FROM_EMAIL: bindings.secret(),
-      MAIL_FROM_NAME: bindings.text('Davar Académie'),
       // Chariow Pulse : à n'activer qu'après un essai signé réussi.
       CHARIOW_ENABLE_PULSE: bindings.text('false'),
       CHARIOW_PULSE_SECRET: bindings.secret(),
