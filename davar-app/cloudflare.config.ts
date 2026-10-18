@@ -137,13 +137,6 @@ export default defineConfig({
       R2_ACCESS_KEY_ID: bindings.secret(),
       R2_SECRET_ACCESS_KEY: bindings.secret(),
       R2_BUCKET: bindings.secret(),
-      // Le paiement des achats suivants, depuis l'application. Flutterwave a été
-      // retenu parce qu'il authentifie par clé et non par adresse IP : une
-      // application hébergée sur les Workers n'a pas d'IP fixe, et louer une IP
-      // dédiée (Aegis) est réservé aux comptes Enterprise — hors budget avant
-      // trois mille étudiants. Money Fusion, lui, refuse toute IP non déclarée.
-      FLUTTERWAVE_SECRET_KEY: bindings.secret(),
-      FLUTTERWAVE_WEBHOOK_SECRET: bindings.secret(),
     },
   }),
 });

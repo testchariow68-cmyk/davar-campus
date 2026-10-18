@@ -26,6 +26,9 @@ const CLES_REGLAGES = new Set([
   'announce.audience',
   CLE_PALETTE,
   CLE_COULEURS,
+  'paiement.flutterwave.actif',
+  'paiement.flutterwave.cle',
+  'paiement.flutterwave.webhook',
 ]);
 
 /**

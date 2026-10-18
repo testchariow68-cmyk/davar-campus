@@ -12,7 +12,8 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { applyAllMigrations } from './helpers/migrations.mjs';
 import { registerUser } from '../lib/server/auth-core.ts';
-import { attribuerApresPaiement, creerIntention, fraisDe } from '../lib/server/paiement.ts';
+import { attribuerApresPaiement, creerIntention, voiePaiement } from '../lib/server/paiement.ts';
+import { ecrireReglages } from '../lib/server/settings.ts';
 
 process.env.APP_ENV = 'development';
 process.env.AUTH_PBKDF2_ITERATIONS = '10000';
@@ -37,12 +38,8 @@ async function baseFraiche() {
   return { db: client, userId };
 }
 
-const MONTANT = 45_000 + fraisDe(45_000);
-
-test('les frais de traitement sont de 3,5 % du prix, arrondis', () => {
-  assert.equal(fraisDe(45_000), 1_575);
-  assert.equal(fraisDe(0), 0);
-});
+// L'étudiant paie le prix affiché : aucun frais n'est ajouté sur cette voie.
+const MONTANT = 45_000;
 
 test('paiement confirmé : la formation est attribuée et annoncée', async () => {
   const { db, userId } = await baseFraiche();
@@ -145,4 +142,19 @@ test('une intention inconnue n’ouvre aucun accès', async () => {
     args: [userId],
   });
   assert.equal(Number(inscriptions.rows[0].n), 0);
+});
+
+test('la voie ne s’ouvre que si le propriétaire a coché la case ET posé la clé', async () => {
+  const { db } = await baseFraiche();
+  // Rien de saisi : fermé.
+  assert.equal(await voiePaiement(db), null);
+
+  // La clé seule ne suffit pas : il faut aussi ouvrir la voie.
+  await ecrireReglages(db, { 'paiement.flutterwave.cle': 'FLWSECK-test' });
+  assert.equal(await voiePaiement(db), null);
+
+  // La case seule ne suffit pas non plus : sans clé, aucun encaissement.
+  await ecrireReglages(db, { 'paiement.flutterwave.actif': '1' });
+  assert.equal(await voiePaiement(db), 'flutterwave');
+  await db.close();
 });

@@ -5,9 +5,6 @@ import Link from 'next/link';
 import { Icon } from '@/components/campus/Icon';
 import { teinte } from '@/components/campus/CarteFormation';
 
-/** Frais de traitement : 3,5 %, supportés par l'étudiant et ajoutés au prix. */
-const TAUX_FRAIS = 0.035;
-
 const MESSAGES: Record<string, string> = {
   paiement_non_configure:
     'Le paiement en ligne n’est pas encore branché : réessayez dans un instant, ou écrivez-nous pour payer par un autre moyen.',
@@ -47,6 +44,7 @@ export function Commande({
   telephoneInitial,
   dejaAcquise,
   retourPaiement = null,
+  etapeInitiale = 1,
 }: {
   formation: FormationCommande;
   nom: string;
@@ -55,8 +53,10 @@ export function Commande({
   dejaAcquise: boolean;
   /** Ce qu'a répondu le fournisseur au retour de paiement, s'il y en a eu un. */
   retourPaiement?: 'refuse' | 'attente' | null;
+  /** 3 quand le serveur vient de confirmer le paiement : la confirmation prime. */
+  etapeInitiale?: 1 | 2 | 3;
 }) {
-  const [etape, setEtape] = useState<1 | 2 | 3>(1);
+  const [etape, setEtape] = useState<1 | 2 | 3>(etapeInitiale);
   const [telephone, setTelephone] = useState(telephoneInitial);
   const [envoi, setEnvoi] = useState(false);
   const [erreur, setErreur] = useState<string | null>(
@@ -67,8 +67,6 @@ export function Commande({
         : null
   );
 
-  const frais = Math.round(formation.prixCfa * TAUX_FRAIS);
-  const total = formation.prixCfa + frais;
   const teinteFormation = teinte(formation.id);
 
   async function payer() {
@@ -103,7 +101,10 @@ export function Commande({
     }
   }
 
-  if (dejaAcquise) {
+  // La confirmation du paiement prime : sans cela, l'étudiant qui revient
+  // d'un paiement réussi lirait « vous possédez déjà cette formation » au lieu
+  // de la confirmation qu'il attend.
+  if (dejaAcquise && etapeInitiale !== 3) {
     return (
       <div className="card lock-hero" style={{ maxWidth: 560, margin: '40px auto' }}>
         <div className="lk" style={{ background: 'var(--green-soft)', color: 'var(--green)' }}>
@@ -180,28 +181,8 @@ export function Commande({
               <h3 style={{ fontSize: 15, marginTop: 6 }}>Mobile money ou carte bancaire</h3>
               <p className="xs muted mt4">
                 Wave, Orange Money, MTN MoMo, Moov Money (Côte d’Ivoire, Sénégal…) et cartes
-                internationales : un seul paiement sécurisé pour tous, où que vous soyez. Vous serez
-                redirigé vers une page de paiement sécurisée. Les frais de traitement (3,5 %) sont{' '}
-                <b>supportés par l’étudiant</b> et ajoutés au prix.
+                internationales : un seul paiement sécurisé pour tous, où que vous soyez.
               </p>
-
-              <div className="card mt16" style={{ background: '#FBFAFE', borderColor: 'var(--violet-line)' }}>
-                <div style={{ padding: '14px 16px' }}>
-                  <div className="row between small">
-                    <span className="muted">Formation</span>
-                    <b>{argent(formation.prixCfa)}</b>
-                  </div>
-                  <div className="row between small mt8">
-                    <span className="muted">Frais de traitement (3,5 % — à votre charge)</span>
-                    <b>{argent(frais)}</b>
-                  </div>
-                  <div className="divider" style={{ margin: '10px 0' }} />
-                  <div className="row between">
-                    <b>Total à payer</b>
-                    <b className="price">{argent(total)}</b>
-                  </div>
-                </div>
-              </div>
 
               {erreur && (
                 <div className="banner err mt16" role="alert">
@@ -215,7 +196,8 @@ export function Commande({
                 onClick={payer}
                 disabled={envoi}
               >
-                <Icon nom="key" taille={15} /> {envoi ? 'Redirection…' : `Payer ${argent(total)}`}
+                <Icon nom="key" taille={15} />{' '}
+                {envoi ? 'Redirection…' : `Payer ${argent(formation.prixCfa)}`}
               </button>
 
               <div className="xs faint mt8" style={{ textAlign: 'center' }}>
@@ -245,9 +227,8 @@ export function Commande({
               </div>
               <h2 style={{ fontSize: 19, marginTop: 14 }}>Achat confirmé 🎉</h2>
               <p className="muted small mt8">
-                Paiement de <b>{argent(total)}</b> confirmé (dont {argent(frais)} de frais de
-                traitement à votre charge). La formation « <b>{formation.title}</b> » a été{' '}
-                <b>ajoutée à votre compte existant</b> ({email}).
+                Paiement de <b>{argent(formation.prixCfa)}</b> confirmé. La formation «{' '}
+                <b>{formation.title}</b> » a été <b>ajoutée à votre compte existant</b> ({email}).
               </p>
               <div className="banner ok mt16" style={{ textAlign: 'left' }}>
                 <Icon nom="zap" taille={15} />

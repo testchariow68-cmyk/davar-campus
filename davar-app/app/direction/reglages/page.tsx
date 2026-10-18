@@ -1,6 +1,7 @@
 import { redirect } from 'next/navigation';
 import { ApparenceAdmin } from '@/components/direction/ApparenceAdmin';
 import { MotivationsAdmin } from '@/components/direction/MotivationsAdmin';
+import { PaiementAdmin } from '@/components/direction/PaiementAdmin';
 import { ReglagesAdmin } from '@/components/direction/ReglagesAdmin';
 import { sessionProprietaire } from '@/lib/server/direction-access';
 import { apparenceChoisie } from '@/lib/server/apparence';
@@ -34,6 +35,9 @@ export default async function ReglagesPage() {
       <ApparenceAdmin paletteInitiale={apparence.palette} couleursInitiales={apparence.couleurs} />
       <div className="mt16" />
       <ReglagesAdmin initiaux={reglages} />
+
+      <div className="mt16" />
+      <PaiementAdmin initiaux={reglages} />
 
       <div className="mt16" />
       <MotivationsAdmin initial={motivations} />

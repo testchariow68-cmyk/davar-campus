@@ -22,6 +22,7 @@
  */
 import type { Db } from './auth-core';
 import { notifier } from './notifications.ts';
+import { lireReglages } from './settings.ts';
 
 export type VoiePaiement = 'flutterwave' | null;
 
@@ -43,18 +44,28 @@ function identifiant(prefixe: string): string {
 }
 
 /**
+ * Les clés du fournisseur, telles que le propriétaire les a saisies dans son
+ * espace. Elles ne sont ni en dur dans le code, ni dans un fichier : c'est lui
+ * qui les pose, et lui seul peut les retirer.
+ */
+export async function lireClesPaiement(
+  db: Db
+): Promise<{ actif: boolean; cle: string | null; secret: string | null }> {
+  const reglages = await lireReglages(db);
+  return {
+    actif: reglages['paiement.flutterwave.actif'] === '1',
+    cle: texte(reglages['paiement.flutterwave.cle']),
+    secret: texte(reglages['paiement.flutterwave.webhook']),
+  };
+}
+
+/**
  * La voie réellement ouverte. Une clé absente n'est jamais simulée : l'écran
  * le dit et le bouton refuse d'encaisser.
  */
-export function voiePaiement(): VoiePaiement {
-  return texte(process.env.FLUTTERWAVE_SECRET_KEY) ? 'flutterwave' : null;
-}
-
-/** Frais de traitement supportés par l'étudiant et ajoutés au prix : 3,5 %. */
-export const TAUX_FRAIS = 0.035;
-
-export function fraisDe(montantCfa: number): number {
-  return Math.round(montantCfa * TAUX_FRAIS);
+export async function voiePaiement(db: Db): Promise<VoiePaiement> {
+  const cles = await lireClesPaiement(db);
+  return cles.actif && cles.cle ? 'flutterwave' : null;
 }
 
 /* ------------------------------------------------------------------ intentions */
@@ -122,22 +133,25 @@ export type OuverturePaiement = { ok: true; lien: string; reference: string } | 
  * d'encaissement du fournisseur : aucune carte, aucun numéro ne transite par
  * notre application.
  */
-export async function ouvrirPaiementFlutterwave(options: {
-  reference: string;
-  montantCfa: number;
-  devise: string;
-  email: string;
-  nom: string;
-  telephone: string;
-  trainingId: string;
-  retourUrl: string;
-}): Promise<OuverturePaiement> {
-  const cle = texte(process.env.FLUTTERWAVE_SECRET_KEY);
-  if (!cle) return { ok: false, erreur: 'paiement_non_configure' };
+export async function ouvrirPaiementFlutterwave(
+  db: Db,
+  options: {
+    reference: string;
+    montantCfa: number;
+    devise: string;
+    email: string;
+    nom: string;
+    telephone: string;
+    trainingId: string;
+    retourUrl: string;
+  }
+): Promise<OuverturePaiement> {
+  const cles = await lireClesPaiement(db);
+  if (!cles.actif || !cles.cle) return { ok: false, erreur: 'paiement_non_configure' };
 
   const reponse = await fetch(`${FLUTTERWAVE}/payments`, {
     method: 'POST',
-    headers: { authorization: `Bearer ${cle}`, 'content-type': 'application/json' },
+    headers: { authorization: `Bearer ${cles.cle}`, 'content-type': 'application/json' },
     body: JSON.stringify({
       tx_ref: options.reference,
       amount: options.montantCfa,
@@ -178,12 +192,12 @@ export type Verification = {
  * fait foi. Le montant et la devise sont comparés à l'intention — jamais à ce
  * que le client a bien voulu annoncer.
  */
-export async function verifierTransactionFlutterwave(transactionId: string): Promise<Verification> {
-  const cle = texte(process.env.FLUTTERWAVE_SECRET_KEY);
-  if (!cle) return { ok: false, statut: null, montant: null, devise: null, reference: null };
+export async function verifierTransactionFlutterwave(db: Db, transactionId: string): Promise<Verification> {
+  const cles = await lireClesPaiement(db);
+  if (!cles.cle) return { ok: false, statut: null, montant: null, devise: null, reference: null };
 
   const reponse = await fetch(`${FLUTTERWAVE}/transactions/${encodeURIComponent(transactionId)}/verify`, {
-    headers: { authorization: `Bearer ${cle}` },
+    headers: { authorization: `Bearer ${cles.cle}` },
   });
   if (!reponse.ok) return { ok: false, statut: null, montant: null, devise: null, reference: null };
   const donnees = (await reponse.json().catch(() => ({}))) as {

@@ -17,6 +17,12 @@ export const REGLAGES_DEFAUT = {
   'social.tiktok': 'https://tiktok.com/@davaracademie',
   'social.facebook': 'https://facebook.com/davaracademie',
   'paiement.coaching': 'https://d-ueo.mychariow.co/prd_ma8xximn/booking',
+  // Les clés du paiement dans l'application. Elles vivaient dans le fichier
+  // des secrets ; le propriétaire les saisit désormais depuis son espace, et
+  // rien n'est encaissé tant qu'elles ne sont pas posées ici.
+  'paiement.flutterwave.actif': '0',
+  'paiement.flutterwave.cle': '',
+  'paiement.flutterwave.webhook': '',
   'announce.text': '',
   'announce.active': '0',
 } as const;

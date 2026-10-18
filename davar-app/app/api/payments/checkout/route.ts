@@ -2,7 +2,7 @@ import { currentSession } from '@/lib/server/auth';
 import { lireFormationPubliee } from '@/lib/server/campus';
 import { isSameOrigin, jsonNoStore, readJsonBody } from '@/lib/server/http';
 import { trackApiRequest } from '@/lib/server/quota';
-import { creerIntention, fraisDe, ouvrirPaiementFlutterwave, voiePaiement } from '@/lib/server/paiement';
+import { creerIntention, ouvrirPaiementFlutterwave, voiePaiement } from '@/lib/server/paiement';
 
 export const dynamic = 'force-dynamic';
 
@@ -31,7 +31,7 @@ export async function POST(request: Request) {
   const telephone = typeof body.phone === 'string' ? body.phone.trim() : '';
   if (!trainingId) return jsonNoStore({ error: 'invalid_input' }, 400);
 
-  if (voiePaiement() === null) return jsonNoStore({ error: 'paiement_non_configure' }, 503);
+  if ((await voiePaiement(session.db)) === null) return jsonNoStore({ error: 'paiement_non_configure' }, 503);
 
   const formation = await lireFormationPubliee(session.db, trainingId);
   if (!formation) return jsonNoStore({ error: 'introuvable' }, 404);
@@ -42,7 +42,8 @@ export async function POST(request: Request) {
   });
   if (deja.rows.length > 0) return jsonNoStore({ error: 'deja_acquise' }, 409);
 
-  const total = formation.prixCfa + fraisDe(formation.prixCfa);
+  // Le prix affiché, rien de plus : aucun frais ajouté sur cette voie.
+  const total = formation.prixCfa;
   const intentionId = await creerIntention(session.db, {
     userId: session.user.id,
     trainingId,
@@ -52,7 +53,7 @@ export async function POST(request: Request) {
   });
 
   const origine = new URL(request.url).origin;
-  const ouverture = await ouvrirPaiementFlutterwave({
+  const ouverture = await ouvrirPaiementFlutterwave(session.db, {
     reference: intentionId,
     montantCfa: total,
     devise: 'XOF',
@@ -60,7 +61,10 @@ export async function POST(request: Request) {
     nom: session.user.displayName,
     telephone,
     trainingId,
-    retourUrl: `${origine}/api/payments/retour`,
+    // Le prototype ramène l'étudiant sur la page de commande, et c'est cette
+    // page — côté serveur — qui vérifie le paiement avant d'ouvrir quoi que
+    // ce soit. Le fournisseur ajoute lui-même statut et transaction à l'adresse.
+    retourUrl: `${origine}/campus/checkout/${encodeURIComponent(trainingId)}`,
   });
 
   if (!ouverture.ok) return jsonNoStore({ error: ouverture.erreur }, 502);
