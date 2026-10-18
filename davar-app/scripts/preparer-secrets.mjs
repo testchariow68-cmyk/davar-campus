@@ -25,6 +25,9 @@
  *   node scripts/preparer-secrets.mjs                    # écrit le corps, affiche les noms
  *   node scripts/preparer-secrets.mjs --dry-run          # n'écrit rien, compte seulement
  *   node scripts/preparer-secrets.mjs --production       # refuse une base de recette
+ *   node scripts/preparer-secrets.mjs --format env --completer
+ *       # ajoute une valeur inerte aux clés déclarées mais vides, ce
+ *       # qu'exige Cloudflare pour créer un Worker qui n'existe pas encore
  */
 import { readFileSync, writeFileSync, mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
@@ -102,13 +105,14 @@ export function corpsSecrets(valeurs) {
 }
 
 function argumentsDe(argv) {
-  const options = { dryRun: false, production: false, env: null, out: null, format: 'bulk' };
+  const options = { dryRun: false, production: false, env: null, out: null, format: 'bulk', completer: false };
   for (let i = 0; i < argv.length; i += 1) {
     if (argv[i] === '--dry-run') options.dryRun = true;
     else if (argv[i] === '--production') options.production = true;
     else if (argv[i] === '--env') options.env = argv[i + 1] ?? null;
     else if (argv[i] === '--out') options.out = argv[i + 1] ?? null;
     else if (argv[i] === '--format') options.format = argv[i + 1] ?? 'bulk';
+    else if (argv[i] === '--completer') options.completer = true;
   }
   return options;
 }
@@ -169,9 +173,26 @@ export function main(argv = process.argv.slice(2), racine = RACINE) {
     // n'existe pas encore. Le serpent se mord la queue ; --secrets-file le
     // tranche d'un coup.
     const lignes = noms.map((nom) => `${nom}=${corps.secrets[nom].text}`);
+    // Un Worker qui n'existe pas encore ne peut pas être créé sans recevoir
+    // TOUS les secrets qu'il déclare, y compris ceux que le propriétaire n'a
+    // pas remplis : Cloudflare les exige et refuse la création. On les
+    // complète donc avec un simple espace — une valeur inerte, que le campus
+    // reconnaît partout comme « vide » (chaque lecture fait .trim()) et qui ne
+    // peut donc rien déclencher : ni le Pulse marchand (désactivé et qui
+    // exige un préfixe « pulse_ »), ni Brevo (remplacé par le relais Apps
+    // Script), ni le moteur d'assistant sur mesure (exige une longueur après
+    // .trim()). Une clé présente avec un espace vaut mieux qu'une clé absente
+    // qui bloque la mise en ligne.
+    if (options.completer) for (const nom of manquants) lignes.push(`${nom}=" "`);
     writeFileSync(cheminCorps, `${lignes.join('\n')}\n`, { mode: 0o600 });
   } else {
     writeFileSync(cheminCorps, JSON.stringify(corps), { mode: 0o600 });
+  }
+
+  if (options.completer && manquants.length > 0) {
+    console.log('');
+    console.log(`Clés déclarées mais vides, complétées pour la création : ${manquants.join(', ')}`);
+    console.log('  (un espace : une valeur inerte, jamais utilisée par le campus)');
   }
 
   console.log('');

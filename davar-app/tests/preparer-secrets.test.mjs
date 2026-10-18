@@ -146,3 +146,67 @@ test('sans aucun secret renseigné, rien n’est envoyé', async () => {
   assert.equal(code, 1, 'un envoi vide ne doit pas être tenté');
   rmSync(dossier, { recursive: true, force: true });
 });
+
+test('--completer ajoute une valeur inerte aux clés déclarées mais vides', async () => {
+  // Un Worker qui n'existe pas encore ne peut pas être créé sans recevoir
+  // TOUS les secrets qu'il déclare : Cloudflare refuse la création en
+  // listant les manquants. Il faut donc une clé présente — mais une valeur
+  // inerte, qu'aucun service ne pourra prendre pour un vrai réglage.
+  const dossier = mkdtempSync(join(tmpdir(), 'davar-test-complet-'));
+  const cheminEnv = join(dossier, '.env.local');
+  const cheminSortie = join(dossier, 'secrets.env');
+  writeFileSync(cheminEnv, 'GROQ_API_KEY=cle_de_test\n');
+
+  const { main } = await import('../scripts/preparer-secrets.mjs');
+  const vraiLog = console.log;
+  console.log = () => {};
+  try {
+    main(['--env', cheminEnv, '--format', 'env', '--completer', '--out', cheminSortie], dossier);
+  } finally {
+    console.log = vraiLog;
+  }
+
+  const contenu = readFileSync(cheminSortie, 'utf8');
+  assert.ok(contenu.includes('GROQ_API_KEY=cle_de_test'), 'la vraie clé doit être envoyée telle quelle');
+
+  for (const nom of SECRETS_DECLARES) {
+    if (nom === 'GROQ_API_KEY') continue;
+    assert.ok(
+      new RegExp(`^${nom}=`, 'm').test(contenu),
+      `chaque secret déclaré doit être présent pour la création : ${nom} manque`
+    );
+  }
+
+  // La valeur de complément est un espace, jamais une vraie valeur : elle
+  // doit être vide après .trim(), seul test que fait le campus partout.
+  const espace = /^BREVO_API_KEY="([^"]*)"$/m.exec(contenu);
+  assert.ok(espace, 'la clé vide doit être complétée');
+  assert.equal(espace[1].trim(), '', 'la valeur de complément doit être vide après .trim()');
+  assert.ok(!contenu.includes('pulse_'), 'aucune valeur inerte ne doit ressembler à un vrai identifiant');
+
+  rmSync(dossier, { recursive: true, force: true });
+});
+
+test('sans --completer, aucune valeur inerte n’est inventée', async () => {
+  // Sur un Worker déjà en ligne, compléter écraserait une vraie valeur
+  // saisie entre-temps. Le complément est réservé à la création.
+  const dossier = mkdtempSync(join(tmpdir(), 'davar-test-noncomplet-'));
+  const cheminEnv = join(dossier, '.env.local');
+  const cheminSortie = join(dossier, 'secrets.env');
+  writeFileSync(cheminEnv, 'GROQ_API_KEY=cle_de_test\n');
+
+  const { main } = await import('../scripts/preparer-secrets.mjs');
+  const vraiLog = console.log;
+  console.log = () => {};
+  try {
+    main(['--env', cheminEnv, '--format', 'env', '--out', cheminSortie], dossier);
+  } finally {
+    console.log = vraiLog;
+  }
+
+  const contenu = readFileSync(cheminSortie, 'utf8');
+  assert.equal(contenu.trim(), 'GROQ_API_KEY=cle_de_test', 'seules les clés renseignées sont envoyées');
+  assert.ok(!contenu.includes('BREVO_API_KEY'), 'aucune clé vide ne doit être inventée');
+
+  rmSync(dossier, { recursive: true, force: true });
+});
