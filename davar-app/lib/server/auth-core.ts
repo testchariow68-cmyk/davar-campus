@@ -36,7 +36,8 @@ export type AuthErrorCode =
   | 'rate_limited'
   | 'invalid_token'
   | 'kdf_scheme_mismatch'
-  | 'not_configured';
+  | 'not_configured'
+  | 'no_purchase';
 
 export class AuthError extends Error {
   code: AuthErrorCode;
@@ -70,6 +71,8 @@ export function httpStatusForAuthError(code: AuthErrorCode): number {
       return 409;
     case 'not_configured':
       return 503;
+    case 'no_purchase':
+      return 404;
   }
 }
 
@@ -86,7 +89,7 @@ export function normalizeEmail(raw: unknown): string {
 export function validateDisplayName(raw: unknown): string {
   if (typeof raw !== 'string') throw new AuthError('invalid_input', 'display_name');
   const name = raw.trim().replace(/\s+/g, ' ');
-  if (name.length < 2 || name.length > 80) throw new AuthError('invalid_input', 'display_name');
+  if (name.length < 2 || name.length > 21) throw new AuthError('invalid_input', 'display_name');
   return name;
 }
 
@@ -98,7 +101,7 @@ const WEAK_PASSWORDS = new Set([
 export function assertPasswordPolicy(password: unknown, emailNormalized: string): string {
   if (typeof password !== 'string') throw new AuthError('invalid_input', 'password');
   // Borne haute : évite qu'une chaîne géante consomme du CPU de dérivation.
-  if (password.length < 10 || password.length > 200) throw new AuthError('invalid_input', 'password');
+  if (password.length < 8 || password.length > 200) throw new AuthError('invalid_input', 'password');
   const lower = password.toLowerCase();
   if (WEAK_PASSWORDS.has(lower)) throw new AuthError('invalid_input', 'password_weak');
   const localPart = emailNormalized.split('@')[0];
