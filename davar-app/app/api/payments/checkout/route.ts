@@ -2,20 +2,21 @@ import { currentSession } from '@/lib/server/auth';
 import { lireFormationPubliee } from '@/lib/server/campus';
 import { isSameOrigin, jsonNoStore, readJsonBody } from '@/lib/server/http';
 import { trackApiRequest } from '@/lib/server/quota';
+import { creerIntention, fraisDe, ouvrirPaiementFlutterwave, voiePaiement } from '@/lib/server/paiement';
 
 export const dynamic = 'force-dynamic';
 
-/** Opérateurs Money Fusion acceptés. Rien d'autre ne passe. */
-const OPERATEURS = ['wave', 'om', 'momo', 'moov'] as const;
-
 /**
- * PAIEMENT DANS L'APPLICATION — Money Fusion (mobile money) ou Flutterwave
- * (voie universelle). Le premier achat, lui, se fait hors de l'application,
- * chez Chariow : le webhook rattache la formation au compte.
+ * PAIEMENT DANS L'APPLICATION.
  *
- * Les deux passerelles demandent des clés que le propriétaire détient seul.
- * Tant qu'elles ne sont pas branchées, aucun encaissement n'est simulé : la
- * route répond `paiement_non_configure` et rien n'est écrit en base.
+ * Le premier achat se fait hors de l'application, chez Chariow ; le Pulse
+ * rattache la formation au compte. Les achats SUIVANTS passent par ici : le
+ * serveur ouvre un encaissement chez le fournisseur, puis RENVOIE l'adresse de
+ * la page de paiement. Aucune carte, aucun numéro mobile ne transite par notre
+ * application — c'est le fournisseur qui encaisse, sur sa propre page.
+ *
+ * Tant que la clé du fournisseur n'est pas posée, rien n'est simulé et rien
+ * n'est écrit : la route répond `paiement_non_configure`, et l'écran le dit.
  */
 export async function POST(request: Request) {
   await trackApiRequest();
@@ -27,10 +28,10 @@ export async function POST(request: Request) {
   if (!body) return jsonNoStore({ error: 'invalid_input' }, 400);
 
   const trainingId = typeof body.trainingId === 'string' ? body.trainingId : '';
-  const method = typeof body.method === 'string' ? body.method : '';
-  const phone = typeof body.phone === 'string' ? body.phone.trim() : '';
-  if (!trainingId || !OPERATEURS.includes(method as (typeof OPERATEURS)[number]) || phone.length < 8)
-    return jsonNoStore({ error: 'invalid_input' }, 400);
+  const telephone = typeof body.phone === 'string' ? body.phone.trim() : '';
+  if (!trainingId) return jsonNoStore({ error: 'invalid_input' }, 400);
+
+  if (voiePaiement() === null) return jsonNoStore({ error: 'paiement_non_configure' }, 503);
 
   const formation = await lireFormationPubliee(session.db, trainingId);
   if (!formation) return jsonNoStore({ error: 'introuvable' }, 404);
@@ -41,12 +42,27 @@ export async function POST(request: Request) {
   });
   if (deja.rows.length > 0) return jsonNoStore({ error: 'deja_acquise' }, 409);
 
-  /* ----------------------------------------------------------------------------
-     BRANCHEMENT — à compléter quand les clés seront en place :
-       Money Fusion  : POST /api/v1/paiement-produit (clé `MONEYFUSION_API_KEY`)
-       Flutterwave   : POST /v3/payments            (clé `FLUTTERWAVE_SECRET_KEY`)
-     Chacune exige un secret de plus au déploiement ; on n'écrit donc rien en
-     base avant que le propriétaire ne décide de les ajouter.
-     -------------------------------------------------------------------------- */
-  return jsonNoStore({ error: 'paiement_non_configure' }, 503);
+  const total = formation.prixCfa + fraisDe(formation.prixCfa);
+  const intentionId = await creerIntention(session.db, {
+    userId: session.user.id,
+    trainingId,
+    montantCfa: total,
+    devise: 'XOF',
+    provider: 'flutterwave',
+  });
+
+  const origine = new URL(request.url).origin;
+  const ouverture = await ouvrirPaiementFlutterwave({
+    reference: intentionId,
+    montantCfa: total,
+    devise: 'XOF',
+    email: session.user.email,
+    nom: session.user.displayName,
+    telephone,
+    trainingId,
+    retourUrl: `${origine}/api/payments/retour`,
+  });
+
+  if (!ouverture.ok) return jsonNoStore({ error: ouverture.erreur }, 502);
+  return jsonNoStore({ ok: true, lien: ouverture.lien });
 }

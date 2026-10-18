@@ -5,14 +5,6 @@ import Link from 'next/link';
 import { Icon } from '@/components/campus/Icon';
 import { teinte } from '@/components/campus/CarteFormation';
 
-/** Agrégateur Money Fusion (Fusion Pay) : mobile money Wave / OM / MoMo / Moov. */
-const OPERATEURS = [
-  { id: 'wave', libelle: 'Wave', couleur: '#1BB7E8', sous: 'Mobile money' },
-  { id: 'om', libelle: 'Orange Money', couleur: '#FF7900', sous: 'Mobile money' },
-  { id: 'momo', libelle: 'MTN MoMo', couleur: '#FFCC00', sous: 'Mobile money' },
-  { id: 'moov', libelle: 'Moov Money', couleur: '#0057B8', sous: 'Mobile money' },
-] as const;
-
 /** Frais de traitement : 3,5 %, supportés par l'étudiant et ajoutés au prix. */
 const TAUX_FRAIS = 0.035;
 
@@ -21,19 +13,20 @@ const MESSAGES: Record<string, string> = {
     'Le paiement en ligne n’est pas encore branché : réessayez dans un instant, ou écrivez-nous pour payer par un autre moyen.',
   deja_acquise: 'Vous possédez déjà cette formation.',
   invalide: 'Vérifiez le numéro de téléphone indiqué.',
+  fournisseur_indisponible:
+    "Le service de paiement ne répond pas. Réessayez dans un instant, ou écrivez-nous pour payer par un autre moyen.",
+  fournisseur_refuse:
+    "Le service de paiement a refusé l'ouverture de la transaction. Réessayez, ou écrivez-nous pour payer par un autre moyen.",
+  introuvable: 'Cette formation n’est plus disponible.',
+  paiement_refuse:
+    'Le paiement n’a pas abouti : aucun montant n’a été débité et la formation n’a pas été ajoutée. Vous pouvez réessayer.',
+  paiement_attente:
+    'Le paiement est en cours de confirmation : la formation sera ajoutée à votre compte dès que le service l’a confirmé. Rechargez cette page dans un instant.',
   unavailable: 'Service momentanément indisponible. Réessayez plus tard.',
 };
 
 function argent(valeur: number): string {
   return `${valeur.toLocaleString('fr-FR')} FCFA`;
-}
-
-function initiales(libelle: string): string {
-  return libelle
-    .split(' ')
-    .map((mot) => mot[0])
-    .join('')
-    .slice(0, 2);
 }
 
 export type FormationCommande = {
@@ -53,22 +46,29 @@ export function Commande({
   email,
   telephoneInitial,
   dejaAcquise,
+  retourPaiement = null,
 }: {
   formation: FormationCommande;
   nom: string;
   email: string;
   telephoneInitial: string;
   dejaAcquise: boolean;
+  /** Ce qu'a répondu le fournisseur au retour de paiement, s'il y en a eu un. */
+  retourPaiement?: 'refuse' | 'attente' | null;
 }) {
   const [etape, setEtape] = useState<1 | 2 | 3>(1);
-  const [operateur, setOperateur] = useState<string>('wave');
   const [telephone, setTelephone] = useState(telephoneInitial);
   const [envoi, setEnvoi] = useState(false);
-  const [erreur, setErreur] = useState<string | null>(null);
+  const [erreur, setErreur] = useState<string | null>(
+    retourPaiement === 'refuse'
+      ? MESSAGES.paiement_refuse
+      : retourPaiement === 'attente'
+        ? MESSAGES.paiement_attente
+        : null
+  );
 
   const frais = Math.round(formation.prixCfa * TAUX_FRAIS);
   const total = formation.prixCfa + frais;
-  const choix = OPERATEURS.find((item) => item.id === operateur) ?? OPERATEURS[0];
   const teinteFormation = teinte(formation.id);
 
   async function payer() {
@@ -82,11 +82,17 @@ export function Commande({
       const response = await fetch('/api/payments/checkout', {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ trainingId: formation.id, method: operateur, phone: telephone.trim() }),
+        body: JSON.stringify({ trainingId: formation.id, phone: telephone.trim() }),
       });
-      const payload = (await response.json().catch(() => ({}))) as { error?: string };
+      const payload = (await response.json().catch(() => ({}))) as { error?: string; lien?: string };
       if (!response.ok) {
         setErreur(MESSAGES[payload.error ?? 'unavailable'] ?? MESSAGES.unavailable);
+        return;
+      }
+      if (payload.lien) {
+        // Le fournisseur encaisse sur SA page : notre application ne voit
+        // jamais la carte ni le numéro mobile.
+        window.location.assign(payload.lien);
         return;
       }
       setEtape(3);
@@ -130,6 +136,12 @@ export function Commande({
         <b className={etape >= 3 ? 'on' : ''}>3 · Confirmation</b>
       </div>
 
+      {retourPaiement && erreur && (
+        <div className="banner err mb16" role="alert">
+          <span>{erreur}</span>
+        </div>
+      )}
+
       <div className="grid" style={{ gridTemplateColumns: '1.5fr 1fr', alignItems: 'start' }}>
         <div className="card card-pad">
           {etape === 1 && (
@@ -164,37 +176,14 @@ export function Commande({
 
           {etape === 2 && (
             <>
-              <div className="row between" style={{ flexWrap: 'wrap', gap: 8 }}>
-                <h3 style={{ fontSize: 15 }}>Paiement Mobile Money</h3>
-                <span className="badge b-green">Paiement sécurisé · confirmation instantanée</span>
-              </div>
+              <div className="eyebrow">Paiement sécurisé — voie universelle</div>
+              <h3 style={{ fontSize: 15, marginTop: 6 }}>Mobile money ou carte bancaire</h3>
               <p className="xs muted mt4">
-                Wave, Orange Money, MTN MoMo et Moov Money en un seul paiement (Fusion Pay). Les frais
-                de traitement (3,5 %) sont <b>supportés par l’étudiant</b> et ajoutés au prix.
+                Wave, Orange Money, MTN MoMo, Moov Money (Côte d’Ivoire, Sénégal…) et cartes
+                internationales : un seul paiement sécurisé pour tous, où que vous soyez. Vous serez
+                redirigé vers une page de paiement sécurisée. Les frais de traitement (3,5 %) sont{' '}
+                <b>supportés par l’étudiant</b> et ajoutés au prix.
               </p>
-
-              <div className="eyebrow mt16 mb8">Choisissez votre opérateur · 3,5 %</div>
-              {OPERATEURS.map((item) => (
-                <div
-                  key={item.id}
-                  className={`pay-opt ${operateur === item.id ? 'sel' : ''}`}
-                  onClick={() => setOperateur(item.id)}
-                >
-                  <span
-                    className="pay-logo"
-                    style={{ background: item.couleur, ...(item.id === 'momo' ? { color: '#191622' } : null) }}
-                  >
-                    {initiales(item.libelle)}
-                  </span>
-                  <span className="wrap">
-                    <b style={{ fontSize: 13.5 }}>{item.libelle}</b>
-                    <div className="xs muted">
-                      {item.sous} · Côte d’Ivoire, Sénégal, Mali, Bénin, Togo, Burkina
-                    </div>
-                  </span>
-                  {operateur === item.id && <Icon nom="checkCircle" taille={18} />}
-                </div>
-              ))}
 
               <div className="card mt16" style={{ background: '#FBFAFE', borderColor: 'var(--violet-line)' }}>
                 <div style={{ padding: '14px 16px' }}>
@@ -226,12 +215,11 @@ export function Commande({
                 onClick={payer}
                 disabled={envoi}
               >
-                <Icon nom="key" taille={15} />{' '}
-                {envoi ? 'Paiement en cours…' : `Payer ${argent(total)} par ${choix.libelle}`}
+                <Icon nom="key" taille={15} /> {envoi ? 'Redirection…' : `Payer ${argent(total)}`}
               </button>
 
               <div className="xs faint mt8" style={{ textAlign: 'center' }}>
-                Une demande de confirmation {choix.libelle} sera envoyée au téléphone indiqué.
+                Vous serez redirigé vers la page de paiement sécurisée.
                 <br />
                 Confirmation instantanée : la formation est ajoutée à votre compte.
               </div>
@@ -257,9 +245,9 @@ export function Commande({
               </div>
               <h2 style={{ fontSize: 19, marginTop: 14 }}>Achat confirmé 🎉</h2>
               <p className="muted small mt8">
-                Paiement de <b>{argent(total)}</b> confirmé par <b>{choix.libelle}</b> (dont{' '}
-                {argent(frais)} de frais de traitement à votre charge). La formation «{' '}
-                <b>{formation.title}</b> » a été <b>ajoutée à votre compte existant</b> ({email}).
+                Paiement de <b>{argent(total)}</b> confirmé (dont {argent(frais)} de frais de
+                traitement à votre charge). La formation « <b>{formation.title}</b> » a été{' '}
+                <b>ajoutée à votre compte existant</b> ({email}).
               </p>
               <div className="banner ok mt16" style={{ textAlign: 'left' }}>
                 <Icon nom="zap" taille={15} />

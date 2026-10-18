@@ -98,6 +98,10 @@ export type Formation = {
   chariowProductId: string;
   buyUrl: string;
   published: boolean;
+  /** Référence, niveau et durée affichés sur la carte du catalogue. */
+  code: string | null;
+  level: string;
+  hours: number;
   modules: number;
   lecons: number;
   inscrits: number;
@@ -123,6 +127,9 @@ async function lireFormation(db: Db, ligne: Record<string, unknown>): Promise<Fo
     chariowProductId: texte(ligne.chariow_product_id),
     buyUrl: texte(ligne.buy_url),
     published: bool(ligne.published),
+    code: texte(ligne.code),
+    level: texte(ligne.level) ?? 'Débutant',
+    hours: nombre(ligne.hours) || 8,
     modules: nombre(structure.rows[0]?.modules),
     lecons: nombre(structure.rows[0]?.lecons),
     inscrits: nombre(inscrits.rows[0]?.n),
@@ -132,14 +139,14 @@ async function lireFormation(db: Db, ligne: Record<string, unknown>): Promise<Fo
 
 export async function listerFormations(db: Db): Promise<Formation[]> {
   const resultat = await db.execute(
-    'SELECT id,title,description,price_cfa,chariow_product_id,buy_url,published FROM trainings ORDER BY published DESC, title'
+    'SELECT id,title,description,price_cfa,chariow_product_id,buy_url,published,code,level,hours FROM trainings ORDER BY published DESC, title'
   );
   return Promise.all(resultat.rows.map((ligne) => lireFormation(db, ligne)));
 }
 
 export async function lireUneFormation(db: Db, id: string): Promise<Formation | null> {
   const resultat = await db.execute({
-    sql: 'SELECT id,title,description,price_cfa,chariow_product_id,buy_url,published FROM trainings WHERE id=?',
+    sql: 'SELECT id,title,description,price_cfa,chariow_product_id,buy_url,published,code,level,hours FROM trainings WHERE id=?',
     args: [id],
   });
   if (!resultat.rows.length) return null;
@@ -179,6 +186,23 @@ function validerFormation(champs: Partial<ChampsFormation>): { ok: true; valeur:
   return { ok: true, valeur: { titre, description, prixCfa, chariowProductId, buyUrl } };
 }
 
+/**
+ * Référence d'une formation. Le prototype la compose à la création à partir de
+ * l'abréviation saisie ; faute d'abréviation chez nous, on prend les initiales
+ * du titre — la référence reste ainsi lisible et propre à chaque formation.
+ */
+export function codeFormation(titre: string): string {
+  const initiales = titre
+    .toUpperCase()
+    .split(/[^A-ZÀ-Ü]+/)
+    .filter(Boolean)
+    .map((mot) => mot[0])
+    .join('')
+    .slice(0, 4);
+  const base = initiales.length >= 2 ? initiales : 'FOR';
+  return `${base}-${100 + Math.floor(Math.random() * 900)}`;
+}
+
 export async function creerFormation(db: Db, champs: Partial<ChampsFormation>): Promise<Resultat> {
   const valide = validerFormation(champs);
   if (!valide.ok) return echec(valide.erreur);
@@ -186,8 +210,8 @@ export async function creerFormation(db: Db, champs: Partial<ChampsFormation>): 
   const existe = await db.execute({ sql: 'SELECT 1 FROM trainings WHERE id=?', args: [id] });
   if (existe.rows.length) return echec('identifiant_deja_pris');
   await db.execute({
-    sql: `INSERT INTO trainings(id,title,price_cfa,chariow_product_id,published,description,buy_url)
-          VALUES (?,?,?,?,0,?,?)`,
+    sql: `INSERT INTO trainings(id,title,price_cfa,chariow_product_id,published,description,buy_url,code)
+          VALUES (?,?,?,?,0,?,?,?)`,
     args: [
       id,
       valide.valeur.titre,
@@ -195,6 +219,7 @@ export async function creerFormation(db: Db, champs: Partial<ChampsFormation>): 
       valide.valeur.chariowProductId || null,
       valide.valeur.description || null,
       valide.valeur.buyUrl || null,
+      codeFormation(valide.valeur.titre),
     ],
   });
   return { ok: true, message: `Formation créée : « ${valide.valeur.titre} » — elle reste fermée tant que vous ne l'ouvrez pas.` };

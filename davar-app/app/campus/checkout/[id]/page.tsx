@@ -11,10 +11,17 @@ export const metadata = { title: 'Commande — Davar Académie Campus' };
  * COMMANDE — l'écran du prototype, dans la coquille du campus.
  * Une formation non publiée n'existe pas : 404.
  */
-export default async function CommandePage({ params }: { params: Promise<{ id: string }> }) {
+export default async function CommandePage({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ id: string }>;
+  searchParams: Promise<{ paiement?: string }>;
+}) {
   const session = await currentSession();
   if (!session) redirect('/connexion');
   const { id } = await params;
+  const { paiement } = await searchParams;
 
   const formation = await lireFormationPubliee(session.db, id);
   if (!formation) notFound();
@@ -36,6 +43,7 @@ export default async function CommandePage({ params }: { params: Promise<{ id: s
       email={session.user.email}
       telephoneInitial={profil?.telephone ?? ''}
       dejaAcquise={possedee}
+      retourPaiement={paiement === 'refuse' ? 'refuse' : paiement === 'attente' ? 'attente' : null}
     />
   );
 }

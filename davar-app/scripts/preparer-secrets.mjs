@@ -68,6 +68,11 @@ export const SECRETS_DECLARES = [
   // voudrait revenir en arrière ; vides, ils sont simplement ignorés.
   'BREVO_API_KEY',
   'MAIL_FROM_EMAIL',
+  // Paiement dans l'application (achats suivants). Sans la première clé, aucun
+  // encaissement n'est ouvert et l'écran le dit ; sans la seconde, le retour du
+  // fournisseur est ignoré et le webhook refuse de jouer.
+  'FLUTTERWAVE_SECRET_KEY',
+  'FLUTTERWAVE_WEBHOOK_SECRET',
 ];
 
 /** Valeurs à ne JAMAIS envoyer : le déploiement les écrit lui-même. */

@@ -152,6 +152,13 @@ const MIGRATIONS = [
     ddl: 1, // une colonne ajoutée : l'étoile qui met un avis en avant
     creates: [],
   },
+  {
+    version: 19,
+    file: '019_carte_formation.sqlite.sql',
+    sha256: '53269d08c09d48e78ac61aa134e6480cf4969ad46e206b1bd1c8e6f6d6d07f98',
+    ddl: 4, // quatre colonnes ajoutées : référence, niveau, durée et note de la carte
+    creates: [],
+  },
 ];
 const EXPECTED_TABLE_COUNT = 49; // 48 après 013 — 014 et 015 ajoutent des colonnes, 016 ajoute le journal de l'équipe
 const FORBIDDEN = /\b(drop|truncate|delete\s+from)\b/i;
