@@ -57,7 +57,10 @@ test('chaque rôle ouvre son périmètre, et rien de plus', () => {
     ['accueil', 'analytics', 'sante', 'assistants', 'badges', 'activite'],
     'l’analyste reçoit les écrans d’analyse du prototype — et rien d’autre'
   );
-  assert.deepEqual(sectionsPour(['contenu']), ['accueil', 'formations', 'ressources', 'devoirs']);
+  // Le responsable de contenu tient les formations, les ressources et les
+  // exercices — le périmètre du prototype, plus les ressources qu'il dépose.
+  // Il ne note pas : décider d'un devoir reste au correcteur.
+  assert.deepEqual(sectionsPour(['contenu']), ['accueil', 'formations', 'ressources', 'exercices']);
 
   const manager = sectionsPour(['manager']);
   assert.ok(manager.includes('equipe') && manager.includes('cycle'));
@@ -68,7 +71,7 @@ test('chaque rôle ouvre son périmètre, et rien de plus', () => {
 
   // Deux rôles cumulés : les périmètres s'additionnent, sans doublon.
   const mixte = sectionsPour(['support', 'contenu']);
-  assert.deepEqual(mixte, ['accueil', 'formations', 'ressources', 'devoirs', 'conversations']);
+  assert.deepEqual(mixte, ['accueil', 'formations', 'ressources', 'exercices', 'conversations']);
   assert.deepEqual(sectionsPour([]), ['accueil'], 'sans rôle : la vue d’ensemble seulement');
 });
 

@@ -51,16 +51,18 @@ export function Commande({
   formation,
   nom,
   email,
+  telephoneInitial,
   dejaAcquise,
 }: {
   formation: FormationCommande;
   nom: string;
   email: string;
+  telephoneInitial: string;
   dejaAcquise: boolean;
 }) {
   const [etape, setEtape] = useState<1 | 2 | 3>(1);
   const [operateur, setOperateur] = useState<string>('wave');
-  const [telephone, setTelephone] = useState('');
+  const [telephone, setTelephone] = useState(telephoneInitial);
   const [envoi, setEnvoi] = useState(false);
   const [erreur, setErreur] = useState<string | null>(null);
 

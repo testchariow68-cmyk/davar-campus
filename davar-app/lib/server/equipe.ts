@@ -39,6 +39,7 @@ export const SECTIONS = [
   'activite',
   'formations',
   'ressources',
+  'exercices',
   'devoirs',
   'etudiants',
   'conversations',
@@ -71,8 +72,8 @@ export type SectionDirection = (typeof SECTIONS)[number];
  *                 (il tient les VENTES, comme dans le prototype)
  *
  * Transposition assumée, écran par écran :
- *   - « exercices » et « évaluations » du prototype sont réunis dans DEVOIRS
- *     (même écran, même décision) ;
+ *   - « évaluations » du prototype est DEVOIRS : c'est là que l'on décide ;
+ *     « exercices » est un écran de lecture à part, comme dans le prototype ;
  *   - « responsable de contenu » gagne RESSOURCES : c'est là que vivent les
  *     livres et les audios qu'il dépose ;
  *   - « valider une réponse de l'assistant » reste au manager : c'est un geste de
@@ -85,7 +86,7 @@ export const SECTIONS_PAR_ROLE: Record<RoleEquipe, SectionDirection[]> = {
   coach: ['etudiants', 'conversations', 'devoirs'],
   correcteur: ['devoirs', 'conversations'],
   assistant: ['etudiants', 'devoirs'],
-  contenu: ['formations', 'ressources', 'devoirs'],
+  contenu: ['formations', 'ressources', 'exercices'],
   support: ['conversations'],
   // Les écrans d'analyse du prototype, dans son ordre.
   analyste: ['analytics', 'sante', 'assistants', 'badges', 'activite'],
@@ -93,6 +94,7 @@ export const SECTIONS_PAR_ROLE: Record<RoleEquipe, SectionDirection[]> = {
     'analytics',
     'formations',
     'ressources',
+    'exercices',
     'devoirs',
     'etudiants',
     'conversations',

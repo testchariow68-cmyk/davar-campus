@@ -432,3 +432,211 @@ export async function pedagogieDeFormation(db: Db, userId: string, formationId: 
   }
   return [...modules.values()];
 }
+
+/* ------------------------------------------------- les écrans « Mes … » */
+
+export type ExerciceEtudiant = {
+  id: string;
+  title: string;
+  intro: string | null;
+  formationId: string;
+  formation: string;
+  moduleTitre: string;
+  modulePosition: number;
+  leconTitre: string;
+  questions: number;
+  repondu: boolean;
+  pct: number | null;
+};
+
+export type EvaluationEtudiant = {
+  id: string;
+  title: string;
+  intro: string | null;
+  minScore: number;
+  requiresReview: boolean;
+  formationId: string;
+  formation: string;
+  moduleTitre: string;
+  modulePosition: number;
+  leconTitre: string;
+  questions: number;
+  /** Les trois derniers scores, du plus ancien au plus récent. */
+  historique: number[];
+  meilleurPct: number | null;
+  reussie: boolean;
+  /** Le dernier devoir rendu, pour les évaluations corrigées par un coach. */
+  devoir: { statut: string; motif: string | null; renduLeMs: number } | null;
+};
+
+/**
+ * MES EXERCICES — tous les exercices des formations de l'étudiant, avec ce qu'il
+ * en a fait. Un exercice n'est jamais bloquant : son score n'ouvre ni ne ferme
+ * aucune porte.
+ */
+export async function exercicesDeLEtudiant(db: Db, userId: string): Promise<ExerciceEtudiant[]> {
+  const lignes = await db.execute({
+    sql: `SELECT e.id, e.title, e.intro,
+                 t.id AS formation_id, t.title AS formation, m.title AS module_titre, m.position AS module_position,
+                 l.title AS lecon_titre,
+                 (SELECT COUNT(*) FROM quiz_questions q
+                   WHERE q.parent_kind = 'exercise' AND q.parent_id = e.id) AS questions,
+                 (SELECT COUNT(*) FROM quiz_answers a
+                    JOIN quiz_questions q2 ON q2.id = a.question_id
+                   WHERE a.user_id = ? AND q2.parent_kind = 'exercise' AND q2.parent_id = e.id) AS reponses,
+                 (SELECT COUNT(*) FROM quiz_answers a
+                    JOIN quiz_questions q2 ON q2.id = a.question_id
+                   WHERE a.user_id = ? AND q2.parent_kind = 'exercise' AND q2.parent_id = e.id
+                     AND a.correct = 1) AS bonnes
+          FROM lesson_exercises e
+          JOIN course_lessons l ON l.id = e.lesson_id
+          JOIN course_modules m ON m.id = l.module_id
+          JOIN trainings t ON t.id = m.training_id
+          JOIN enrollments en ON en.training_id = t.id AND en.user_id = ?
+          ORDER BY m.position, l.position, e.created_at_ms`,
+    args: [userId, userId, userId],
+  });
+
+  return lignes.rows.map((row) => {
+    const questions = entier(row.questions);
+    const reponses = entier(row.reponses);
+    const bonnes = entier(row.bonnes);
+    return {
+      id: texte(row.id),
+      title: texte(row.title, 'Exercice'),
+      intro: texte(row.intro) || null,
+      formationId: texte(row.formation_id),
+      formation: texte(row.formation, 'Formation'),
+      moduleTitre: texte(row.module_titre, 'Chapitre'),
+      modulePosition: entier(row.module_position),
+      leconTitre: texte(row.lecon_titre, 'Leçon'),
+      questions,
+      repondu: reponses > 0,
+      pct: reponses > 0 && questions > 0 ? Math.round((bonnes / Math.max(reponses, questions)) * 100) : null,
+    };
+  });
+}
+
+/**
+ * MES ÉVALUATIONS — l'historique et la prochaine étape. Chaque tentative reste,
+ * y compris un échec : rien ne s'efface.
+ */
+export async function evaluationsDeLEtudiant(db: Db, userId: string): Promise<EvaluationEtudiant[]> {
+  const lignes = await db.execute({
+    sql: `SELECT a.id, a.title, a.intro, a.min_score, a.requires_review,
+                 t.id AS formation_id, t.title AS formation, m.title AS module_titre, m.position AS module_position,
+                 l.title AS lecon_titre,
+                 (SELECT COUNT(*) FROM quiz_questions q
+                   WHERE q.parent_kind = 'assessment' AND q.parent_id = a.id) AS questions
+          FROM lesson_assessments a
+          JOIN course_lessons l ON l.id = a.lesson_id
+          JOIN course_modules m ON m.id = l.module_id
+          JOIN trainings t ON t.id = m.training_id
+          JOIN enrollments en ON en.training_id = t.id AND en.user_id = ?
+          ORDER BY m.position, l.position, a.created_at_ms`,
+    args: [userId],
+  });
+  if (lignes.rows.length === 0) return [];
+
+  const ids = lignes.rows.map((row) => texte(row.id)).filter((id) => id.length > 0);
+  const marques = ids.map(() => '?').join(',');
+
+  const tentative = await db.execute({
+    sql: `SELECT assessment_id, pct, passed FROM assessment_attempts
+          WHERE user_id = ? AND assessment_id IN (${marques}) ORDER BY at_ms`,
+    args: [userId, ...ids],
+  });
+  const essais = new Map<string, { pct: number[]; reussie: boolean }>();
+  for (const row of tentative.rows) {
+    const id = texte(row.assessment_id);
+    const pct = entier(row.pct);
+    const courant = essais.get(id) ?? { pct: [] as number[], reussie: false };
+    courant.pct.push(pct);
+    if (entier(row.passed) === 1) courant.reussie = true;
+    essais.set(id, courant);
+  }
+
+  const rendus = await db.execute({
+    sql: `SELECT assessment_id, status, feedback, at_ms FROM submissions
+          WHERE user_id = ? AND assessment_id IN (${marques}) ORDER BY at_ms DESC`,
+    args: [userId, ...ids],
+  });
+  const devoirs = new Map<string, { statut: string; motif: string | null; renduLeMs: number }>();
+  for (const row of rendus.rows) {
+    const id = texte(row.assessment_id);
+    if (devoirs.has(id)) continue; // le plus récent suffit
+    devoirs.set(id, {
+      statut: texte(row.status, 'pending'),
+      motif: texte(row.feedback),
+      renduLeMs: entier(row.at_ms),
+    });
+  }
+
+  return lignes.rows.map((row) => {
+    const id = texte(row.id);
+    const essai = essais.get(id);
+    const historique = (essai?.pct ?? []).slice(-3);
+    return {
+      id,
+      title: texte(row.title, 'Évaluation'),
+      intro: texte(row.intro) || null,
+      minScore: entier(row.min_score, 80),
+      requiresReview: entier(row.requires_review) === 1,
+      formationId: texte(row.formation_id),
+      formation: texte(row.formation, 'Formation'),
+      moduleTitre: texte(row.module_titre, 'Chapitre'),
+      modulePosition: entier(row.module_position),
+      leconTitre: texte(row.lecon_titre, 'Leçon'),
+      questions: entier(row.questions),
+      historique,
+      meilleurPct: historique.length ? Math.max(...historique) : null,
+      reussie: essai?.reussie ?? false,
+      devoir: devoirs.get(id) ?? null,
+    };
+  });
+}
+
+export type ExerciceDirection = {
+  id: string;
+  title: string;
+  formation: string;
+  questions: number;
+  tentatives: number;
+  scoreMoyen: number | null;
+};
+
+/**
+ * EXERCICES (direction) — la table du prototype : exercice, formation, nombre de
+ * questions, tentatives et score moyen. Un exercice ne bloque jamais personne :
+ * la colonne « score moyen » est une lecture, jamais un verdict.
+ */
+export async function exercicesDirection(db: Db): Promise<ExerciceDirection[]> {
+  const lignes = await db.execute({
+    sql: `SELECT e.id, e.title, t.title AS formation,
+                 (SELECT COUNT(*) FROM quiz_questions q
+                   WHERE q.parent_kind = 'exercise' AND q.parent_id = e.id) AS questions,
+                 (SELECT COUNT(*) FROM quiz_answers a
+                    JOIN quiz_questions q2 ON q2.id = a.question_id
+                   WHERE q2.parent_kind = 'exercise' AND q2.parent_id = e.id) AS reponses,
+                 (SELECT COUNT(*) FROM quiz_answers a
+                    JOIN quiz_questions q2 ON q2.id = a.question_id
+                   WHERE q2.parent_kind = 'exercise' AND q2.parent_id = e.id AND a.correct = 1) AS bonnes
+          FROM lesson_exercises e
+          JOIN course_lessons l ON l.id = e.lesson_id
+          JOIN course_modules m ON m.id = l.module_id
+          JOIN trainings t ON t.id = m.training_id
+          ORDER BY t.title, m.position, e.created_at_ms`,
+  });
+  return lignes.rows.map((row) => {
+    const reponses = entier(row.reponses);
+    const bonnes = entier(row.bonnes);
+    return {
+      id: texte(row.id),
+      title: texte(row.title, 'Exercice'),
+      formation: texte(row.formation, 'Formation'),
+      questions: entier(row.questions),
+      tentatives: reponses,
+      scoreMoyen: reponses > 0 ? Math.round((bonnes / reponses) * 100) : null,
+    };
+  });
+}

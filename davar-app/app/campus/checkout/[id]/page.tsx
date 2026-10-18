@@ -2,6 +2,7 @@ import { notFound, redirect } from 'next/navigation';
 import { Commande } from '@/components/campus/Commande';
 import { currentSession } from '@/lib/server/auth';
 import { lireFormationPubliee } from '@/lib/server/campus';
+import { lireProfil } from '@/lib/server/profil';
 
 export const dynamic = 'force-dynamic';
 export const metadata = { title: 'Commande — Davar Académie Campus' };
@@ -18,6 +19,7 @@ export default async function CommandePage({ params }: { params: Promise<{ id: s
   const formation = await lireFormationPubliee(session.db, id);
   if (!formation) notFound();
 
+  const profil = await lireProfil(session.db, session.user.id);
   const possedee = session.vueTest
     ? false
     : (
@@ -32,6 +34,7 @@ export default async function CommandePage({ params }: { params: Promise<{ id: s
       formation={{ id: formation.id, title: formation.title, prixCfa: formation.prixCfa }}
       nom={session.user.displayName}
       email={session.user.email}
+      telephoneInitial={profil?.telephone ?? ''}
       dejaAcquise={possedee}
     />
   );

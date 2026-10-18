@@ -29,6 +29,7 @@ export default async function ProfilPage() {
       <ProfilReglages
         nomInitial={profil.nom}
         email={profil.email}
+        telephoneInitial={profil.telephone}
         membreDepuis={new Date(profil.membreDepuisMs).toLocaleDateString('fr-FR', {
           day: 'numeric',
           month: 'long',

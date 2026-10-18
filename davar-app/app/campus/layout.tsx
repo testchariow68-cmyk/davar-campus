@@ -3,11 +3,13 @@ import { redirect } from 'next/navigation';
 import { Icon } from '@/components/campus/Icon';
 import { ThemeButton } from '@/components/campus/ThemeButton';
 import { UserMenu } from '@/components/campus/UserMenu';
+import { MenuCampus } from '@/components/campus/MenuCampus';
 import { BandeauDefilant } from '@/components/campus/BandeauDefilant';
 import { BellMenu } from '@/components/campus/BellMenu';
 import { VueTestBar } from '@/components/campus/VueTestBar';
 import { VueTestMenu } from '@/components/campus/VueTestMenu';
 import { currentSession } from '@/lib/server/auth';
+import { listTrainingsApercu, listUserTrainings } from '@/lib/server/campus';
 import { listerComptesTest, peutTesterUneVue } from '@/lib/server/vue-test';
 import { passageEtudiant } from '@/lib/server/assiduite';
 import { compterNonLues, listerNotifications } from '@/lib/server/notifications';
@@ -51,6 +53,16 @@ export default async function CampusLayout({ children }: { children: React.React
     lireReglages(session.db),
     lirePreferences(session.db, user.id),
   ]);
+  // Le menu du campus annonce la formation en cours, comme le prototype.
+  const formations = session.vueTest
+    ? await listTrainingsApercu(session.db)
+    : await listUserTrainings(session.db, user.id);
+  const active = formations[0] ?? null;
+  const pourcentActive =
+    active && active.lessonCount > 0
+      ? Math.round((active.completedCount / active.lessonCount) * 100)
+      : 0;
+
   const annonceBrute = annonceDepuisReglages(reglages);
   const annonce = annonceViseLUtilisateur(annonceBrute, reel.role) ? annonceBrute : null;
   // Règle du prototype : le Super Admin ne voit jamais le bandeau social.
@@ -76,13 +88,14 @@ export default async function CampusLayout({ children }: { children: React.React
             </div>
           </Link>
 
-          <nav className="tb-nav">
-            <Link href="/campus">Tableau de bord</Link>
-            <Link href="/campus/formations">Mes formations</Link>
-            <Link href="/campus/questions">Mes questions</Link>
-          </nav>
-
           <div className="tb-right">
+            <MenuCampus
+              nom={user.displayName}
+              email={user.email}
+              formation={active?.title ?? null}
+              pourcent={pourcentActive}
+              initiale={(user.displayName.trim()[0] ?? '?').toUpperCase()}
+            />
             <BellMenu
               initiales={notifications.map((notification) => ({
                 id: notification.id,
@@ -97,7 +110,12 @@ export default async function CampusLayout({ children }: { children: React.React
             />
             <ThemeButton />
             <VueTestMenu vues={vuesTest} />
-            <UserMenu nom={user.displayName} email={user.email} estProprietaire={reel.role === 'admin'} />
+            <UserMenu
+              nom={user.displayName}
+              email={user.email}
+              estProprietaire={reel.role === 'admin'}
+              peutVoirDirection={reel.role === 'admin' || reel.role === 'staff'}
+            />
           </div>
         </div>
       </header>

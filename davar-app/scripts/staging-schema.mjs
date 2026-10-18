@@ -138,6 +138,13 @@ const MIGRATIONS = [
     ddl: 3, // la table du journal et ses deux index
     creates: ['staff_events'],
   },
+  {
+    version: 17,
+    file: '017_telephone_pays.sqlite.sql',
+    sha256: '96b77a765dffceee5ab2ba5e2136a08daa858d299fde4bb942297a9d12fcbf8e',
+    ddl: 2, // deux colonnes ajoutées : le téléphone et le pays du compte
+    creates: [],
+  },
 ];
 const EXPECTED_TABLE_COUNT = 49; // 48 après 013 — 014 et 015 ajoutent des colonnes, 016 ajoute le journal de l'équipe
 const FORBIDDEN = /\b(drop|truncate|delete\s+from)\b/i;

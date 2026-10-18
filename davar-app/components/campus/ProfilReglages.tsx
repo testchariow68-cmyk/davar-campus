@@ -39,6 +39,7 @@ export function ProfilReglages({
   nomInitial,
   email,
   membreDepuis,
+  telephoneInitial,
   preferencesInitiales,
   photoUrl,
   depotsPossibles,
@@ -46,11 +47,13 @@ export function ProfilReglages({
   nomInitial: string;
   email: string;
   membreDepuis: string;
+  telephoneInitial: string;
   preferencesInitiales: PreferencesProfil;
   photoUrl: string | null;
   depotsPossibles: boolean;
 }) {
   const [nom, setNom] = useState(nomInitial);
+  const [telephone, setTelephone] = useState(telephoneInitial);
   const [preferences, setPreferences] = useState<PreferencesProfil>(preferencesInitiales);
   const [photo, setPhoto] = useState(photoUrl);
   const [enCours, setEnCours] = useState<string | null>(null);
@@ -81,6 +84,12 @@ export function ProfilReglages({
   function annoncer(texte: string, ok: boolean) {
     setMessage({ texte, ok });
     window.setTimeout(() => setMessage(null), 4000);
+  }
+
+  /** Le téléphone s'enregistre seul, dès qu'on quitte le champ. */
+  async function enregistrerTelephone() {
+    if (telephone === telephoneInitial) return;
+    await appeler({ action: 'telephone', telephone });
   }
 
   async function enregistrerNom() {
@@ -244,6 +253,19 @@ export function ProfilReglages({
             />
             <div className="hint">Ce nom apparaît sur vos certificats.</div>
           </div>
+
+          <div className="field">
+            <label htmlFor="pfPhone">Téléphone</label>
+            <input
+              className="inp"
+              id="pfPhone"
+              value={telephone}
+              placeholder="+225 …"
+              onChange={(evenement) => setTelephone(evenement.target.value)}
+              onBlur={enregistrerTelephone}
+            />
+          </div>
+
           <button className="btn btn-primary btn-sm" onClick={enregistrerNom} disabled={enCours === 'nom'}>
             <Icon nom="check" taille={14} /> {enCours === 'nom' ? 'Enregistrement…' : 'Enregistrer'}
           </button>

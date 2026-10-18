@@ -3,6 +3,8 @@ import { isClientVerifier } from '@/lib/server/auth-core';
 import { isSameOrigin, jsonNoStore, readJsonBody } from '@/lib/server/http';
 import {
   analyserPreference,
+  enregistrerPays,
+  enregistrerTelephone,
   changerCodeSecret,
   definirPhoto,
   ecrirePreference,
@@ -40,6 +42,40 @@ export async function POST(request: Request) {
         );
       }
       return jsonNoStore({ ok: true, message: 'Nom enregistré.', nom: resultat.nom });
+    }
+
+    if (action === 'telephone') {
+      const resultat = await enregistrerTelephone(
+        session.db,
+        session.user.id,
+        typeof body?.telephone === 'string' ? body.telephone : ''
+      );
+      if (!resultat.ok) {
+        return jsonNoStore(
+          {
+            ok: false,
+            erreur: resultat.erreur,
+            message: 'Ce numéro ne peut pas être enregistré : chiffres, espaces et « + » seulement.',
+          },
+          400
+        );
+      }
+      return jsonNoStore({ ok: true, message: 'Numéro enregistré.', telephone: resultat.nom });
+    }
+
+    if (action === 'pays') {
+      const resultat = await enregistrerPays(
+        session.db,
+        session.user.id,
+        typeof body?.pays === 'string' ? body.pays : ''
+      );
+      if (!resultat.ok) {
+        return jsonNoStore(
+          { ok: false, erreur: resultat.erreur, message: 'Ce pays ne peut pas être enregistré.' },
+          400
+        );
+      }
+      return jsonNoStore({ ok: true, message: 'Pays enregistré.', pays: resultat.nom });
     }
 
     if (action === 'preference') {

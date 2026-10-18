@@ -39,6 +39,10 @@ export type Profil = {
   email: string;
   role: string;
   membreDepuisMs: number;
+  /** Téléphone du compte : celui du paiement et du rappel. Vide tant qu'il n'est pas donné. */
+  telephone: string;
+  /** Pays du compte : il décide de la passerelle d'encaissement proposée. */
+  pays: string;
   preferences: Preferences;
 };
 
@@ -115,7 +119,7 @@ export async function supprimerPreference(db: Db, userId: string, cle: ClePrefer
 
 export async function lireProfil(db: Db, userId: string): Promise<Profil | null> {
   const resultat = await db.execute({
-    sql: 'SELECT id, email_normalized, display_name, role, created_at_ms FROM users WHERE id = ?',
+    sql: 'SELECT id, email_normalized, display_name, role, created_at_ms, phone, country FROM users WHERE id = ?',
     args: [userId],
   });
   const ligne = resultat.rows[0];
@@ -126,6 +130,8 @@ export async function lireProfil(db: Db, userId: string): Promise<Profil | null>
     email: texte(ligne.email_normalized) ?? '',
     role: texte(ligne.role) ?? 'student',
     membreDepuisMs: entier(ligne.created_at_ms) ?? 0,
+    telephone: texte(ligne.phone) ?? '',
+    pays: texte(ligne.country) ?? '',
     preferences: await lirePreferences(db, userId),
   };
 }
@@ -138,6 +144,35 @@ export async function enregistrerNom(db: Db, userId: string, nom: string): Promi
   if (propre.length < LONGUEUR_NOM_MIN || propre.length > LONGUEUR_NOM_MAX) return { ok: false, erreur: 'nom_invalide' };
   const resultat = await db.execute({
     sql: 'UPDATE users SET display_name = ? WHERE id = ?',
+    args: [propre, userId],
+  });
+  if (Number(resultat.rowsAffected ?? 0) !== 1) return { ok: false, erreur: 'compte_introuvable' };
+  return { ok: true, nom: propre };
+}
+
+/** Le téléphone : des chiffres, des espaces et le « + », rien d'autre. 25 caractères au plus. */
+export async function enregistrerTelephone(
+  db: Db,
+  userId: string,
+  telephone: string
+): Promise<ResultatNom> {
+  const propre = (telephone ?? '').trim().replace(/\s+/g, ' ');
+  if (propre.length > 25 || (propre.length > 0 && !/^\+?[0-9 ]+$/.test(propre)))
+    return { ok: false, erreur: 'telephone_invalide' };
+  const resultat = await db.execute({
+    sql: 'UPDATE users SET phone = ? WHERE id = ?',
+    args: [propre, userId],
+  });
+  if (Number(resultat.rowsAffected ?? 0) !== 1) return { ok: false, erreur: 'compte_introuvable' };
+  return { ok: true, nom: propre };
+}
+
+/** Le pays du compte : un nom court, 60 caractères au plus. Vide = « Choisir mon pays ». */
+export async function enregistrerPays(db: Db, userId: string, pays: string): Promise<ResultatNom> {
+  const propre = (pays ?? '').trim().replace(/\s+/g, ' ');
+  if (propre.length > 60) return { ok: false, erreur: 'pays_invalide' };
+  const resultat = await db.execute({
+    sql: 'UPDATE users SET country = ? WHERE id = ?',
     args: [propre, userId],
   });
   if (Number(resultat.rowsAffected ?? 0) !== 1) return { ok: false, erreur: 'compte_introuvable' };
