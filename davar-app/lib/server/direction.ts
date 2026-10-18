@@ -269,7 +269,7 @@ export async function vuePilotage(db: Db, maintenant = Date.now()): Promise<VueP
       sql: `SELECT v.verified_at_ms, v.amount_value_text, u.display_name, t.title
             FROM verified_purchases v LEFT JOIN users u ON u.email_normalized = v.buyer_email_normalized
             JOIN trainings t ON t.id = v.training_id
-            ORDER BY v.verified_at_ms DESC LIMIT 8}`,
+            ORDER BY v.verified_at_ms DESC LIMIT 8`,
     }),
     db.execute({
       sql: `SELECT s.at_ms, s.file_key, u.display_name FROM submissions s JOIN users u ON u.id = s.user_id
