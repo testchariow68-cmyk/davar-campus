@@ -73,6 +73,12 @@ export default async function CampusDashboard() {
               la direction ouvre l&apos;accès à la main.
             </p>
           </div>
+          {/* Le prototype : « Bienvenue sur votre campus. Choisissez une formation pour commencer. » */}
+          <div className="mt16" style={{ textAlign: 'center' }}>
+            <Link className="btn btn-primary" href="/campus/catalogue">
+              <Icon nom="search" taille={15} /> Découvrir les formations
+            </Link>
+          </div>
         </div>
       ) : (
         <>

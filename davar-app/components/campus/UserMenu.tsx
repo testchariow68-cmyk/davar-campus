@@ -52,6 +52,9 @@ export function UserMenu({
             <div style={{ fontWeight: 700, fontSize: 13.5 }}>{nom}</div>
             <div className="xs muted">{email}</div>
           </div>
+          <a className="dd-item" href="/campus/catalogue">
+            <Icon nom="search" taille={15} /> Découvrir des formations
+          </a>
           {!estProprietaire && (
             <>
               <a className="dd-item" href="/campus/distinctions">

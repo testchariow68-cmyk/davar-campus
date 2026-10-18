@@ -263,3 +263,77 @@ export async function listFormationsADecouvrir(db: Db, userId: string): Promise<
   }
   return liste;
 }
+
+/* ------------------------------------------------------------------ catalogue */
+
+export type FormationCatalogue = {
+  id: string;
+  title: string;
+  description: string | null;
+  prixCfa: number;
+  lecons: number;
+};
+
+export type Catalogue = { aDecouvrir: FormationCatalogue[]; possedees: FormationCatalogue[] };
+
+/**
+ * CATALOGUE — les formations publiées, partagées en deux : celles que l'étudiant
+ * ne possède pas encore, et celles qu'il possède. Rien d'autre n'est montré :
+ * une formation non publiée n'existe pas pour lui.
+ */
+export async function lireCatalogue(db: Db, userId: string | null): Promise<Catalogue> {
+  const resultat = await db.execute({
+    sql: `SELECT t.id, t.title, t.description, t.price_cfa,
+                 (SELECT COUNT(*) FROM course_modules m JOIN course_lessons l ON l.module_id = m.id
+                   WHERE m.training_id = t.id) AS lecons,
+                 CASE WHEN ? IS NULL THEN 0 ELSE
+                   EXISTS(SELECT 1 FROM enrollments e
+                           WHERE e.training_id = t.id AND e.user_id = ?) END AS possedee
+          FROM trainings t
+          WHERE t.published = 1
+          ORDER BY t.title`,
+    args: [userId, userId],
+  });
+
+  const aDecouvrir: FormationCatalogue[] = [];
+  const possedees: FormationCatalogue[] = [];
+  for (const row of resultat.rows) {
+    const id = text(row.id);
+    const title = text(row.title);
+    if (!id || !title) continue;
+    const formation: FormationCatalogue = {
+      id,
+      title,
+      description: text(row.description),
+      prixCfa: num(row.price_cfa),
+      lecons: num(row.lecons),
+    };
+    (num(row.possedee) === 1 ? possedees : aDecouvrir).push(formation);
+  }
+  return { aDecouvrir, possedees };
+}
+
+/** Une formation publiée, pour la page de commande. */
+export async function lireFormationPubliee(
+  db: Db,
+  trainingId: string
+): Promise<FormationCatalogue | null> {
+  const resultat = await db.execute({
+    sql: `SELECT t.id, t.title, t.description, t.price_cfa,
+                 (SELECT COUNT(*) FROM course_modules m JOIN course_lessons l ON l.module_id = m.id
+                   WHERE m.training_id = t.id) AS lecons
+          FROM trainings t WHERE t.id = ? AND t.published = 1`,
+    args: [trainingId],
+  });
+  const row = resultat.rows[0];
+  const id = text(row?.id);
+  const title = text(row?.title);
+  if (!id || !title) return null;
+  return {
+    id,
+    title,
+    description: text(row?.description),
+    prixCfa: num(row?.price_cfa),
+    lecons: num(row?.lecons),
+  };
+}

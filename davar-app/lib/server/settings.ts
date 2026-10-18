@@ -16,6 +16,7 @@ export const REGLAGES_DEFAUT = {
   'social.instagram': 'https://instagram.com/davaracademie',
   'social.tiktok': 'https://tiktok.com/@davaracademie',
   'social.facebook': 'https://facebook.com/davaracademie',
+  'paiement.coaching': 'https://d-ueo.mychariow.co/prd_ma8xximn/booking',
   'announce.text': '',
   'announce.active': '0',
 } as const;

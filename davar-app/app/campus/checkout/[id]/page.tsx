@@ -1,0 +1,38 @@
+import { notFound, redirect } from 'next/navigation';
+import { Commande } from '@/components/campus/Commande';
+import { currentSession } from '@/lib/server/auth';
+import { lireFormationPubliee } from '@/lib/server/campus';
+
+export const dynamic = 'force-dynamic';
+export const metadata = { title: 'Commande — Davar Académie Campus' };
+
+/**
+ * COMMANDE — l'écran du prototype, dans la coquille du campus.
+ * Une formation non publiée n'existe pas : 404.
+ */
+export default async function CommandePage({ params }: { params: Promise<{ id: string }> }) {
+  const session = await currentSession();
+  if (!session) redirect('/connexion');
+  const { id } = await params;
+
+  const formation = await lireFormationPubliee(session.db, id);
+  if (!formation) notFound();
+
+  const possedee = session.vueTest
+    ? false
+    : (
+        await session.db.execute({
+          sql: 'SELECT 1 FROM enrollments WHERE user_id = ? AND training_id = ? LIMIT 1',
+          args: [session.user.id, id],
+        })
+      ).rows.length > 0;
+
+  return (
+    <Commande
+      formation={{ id: formation.id, title: formation.title, prixCfa: formation.prixCfa }}
+      nom={session.user.displayName}
+      email={session.user.email}
+      dejaAcquise={possedee}
+    />
+  );
+}
