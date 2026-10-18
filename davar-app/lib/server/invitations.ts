@@ -133,7 +133,7 @@ export async function creerInvitation(
   // L'envoi du lien est un service : s'il n'est pas configuré, l'invitation
   // existe quand même et le propriétaire peut transmettre le lien lui-même.
   if (mailerConfigured() && champs.baseUrl) {
-    const lien = `${champs.baseUrl.replace(/\/$/, '')}/invitation?token=${encodeURIComponent(token)}`;
+    const lien = `${champs.baseUrl.replace(/\/$/, '')}/inscription`;
     const jours = DUREE_JOURS[champs.kind];
     try {
       await sendEmail(

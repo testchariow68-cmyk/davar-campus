@@ -13,6 +13,7 @@ import { passageEtudiant } from '@/lib/server/assiduite';
 import { compterNonLues, listerNotifications } from '@/lib/server/notifications';
 import { lirePreferences } from '@/lib/server/profil';
 import { EchelleAffichage } from '@/components/campus/EchelleAffichage';
+import { SupportFab } from '@/components/campus/SupportFab';
 import { lireReglages } from '@/lib/server/settings';
 import { annonceDepuisReglages, annonceViseLUtilisateur, plateformesNonSuivies } from '@/lib/server/social';
 
@@ -105,14 +106,19 @@ export default async function CampusLayout({ children }: { children: React.React
 
       <BandeauDefilant annonce={annonce} reseaux={reseaux} />
 
+      {/* Le bouton d'aide flottant, comme le panneau d'aide du prototype : il
+          est present sur TOUS les ecrans du campus, pas sur une page a part. */}
+      <SupportFab
+        whatsapp={reglages['support.whatsapp']}
+        telephone={reglages['support.phone']}
+        courriel={reglages['support.email']}
+      />
+
       <footer className="container" style={{ paddingBottom: 40 }}>
         <div className="row between small muted" style={{ gap: 10, flexWrap: 'wrap' }}>
           <span>
             <Icon nom="lock" taille={13} /> Espace privé — DAVAR ACADÉMIE
           </span>
-          <Link href="/campus/aide" className="row" style={{ gap: 5 }}>
-            <Icon nom="headset" taille={13} /> Besoin d&apos;aide ?
-          </Link>
         </div>
       </footer>
     </>

@@ -6,7 +6,7 @@ import { badgesDeEtudiant, catalogueBadges, installerCatalogue } from '@/lib/ser
 import { listUserTrainings } from '@/lib/server/campus';
 
 export const dynamic = 'force-dynamic';
-export const metadata = { title: 'Mes distinctions — Davar Académie Campus' };
+export const metadata = { title: 'Mes récompenses — Davar Académie Campus' };
 
 function quand(atMs: number): string {
   return new Date(atMs).toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' });
@@ -36,7 +36,7 @@ export default async function DistinctionsPage() {
     <>
       <div className="page-head">
         <div>
-          <h1>Mes distinctions</h1>
+          <h1>Mes récompenses</h1>
           <p>
             Chaque distinction reconnaît un progrès réel. Elles s’obtiennent par le travail — certaines après
             quelques étapes, d’autres au bout du chemin.

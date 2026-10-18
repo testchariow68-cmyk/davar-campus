@@ -72,9 +72,6 @@ export default async function CampusDashboard() {
               qu&apos;elle est identique à celle de votre achat. Dans le moindre doute, écrivez-nous :
               la direction ouvre l&apos;accès à la main.
             </p>
-            <Link href="/campus/aide" className="btn btn-primary mt16">
-              <Icon nom="headset" taille={15} /> Écrire à la direction
-            </Link>
           </div>
         </div>
       ) : (

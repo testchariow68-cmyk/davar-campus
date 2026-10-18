@@ -15,16 +15,16 @@ const LIBELLES: Record<string, string> = {
   accueil: 'Vue d’ensemble',
   analytics: 'Analytics',
   sante: 'Santé technique',
-  assistants: 'Analyse des assistants',
+  assistants: 'Analyse assistants virtuels',
   badges: 'Badges & distinctions',
-  activite: 'Activité des étudiants',
+  activite: 'Activité étudiants',
   formations: 'Formations',
   ressources: 'Ressources',
-  devoirs: 'Devoirs',
+  devoirs: 'Évaluations',
   etudiants: 'Étudiants',
   conversations: 'Conversations',
   avis: 'Avis',
-  certificats: 'Certificats',
+  certificats: 'Certifications',
   recompenses: 'Récompenses',
   ventes: 'Ventes',
   cycle: 'Cycle de vie',
@@ -33,9 +33,7 @@ const LIBELLES: Record<string, string> = {
   assistant: 'Assistant virtuel',
   exports: 'Exports',
   emails: 'E-mails',
-  integrations: 'Intégrations',
-  reglages: 'Réglages',
-  test: 'Vue test',
+  reglages: 'Configuration',
 };
 const CHEMINS: Record<string, string> = {
   accueil: '/direction',
@@ -59,9 +57,7 @@ const CHEMINS: Record<string, string> = {
   assistant: '/direction/assistant',
   exports: '/direction/exports',
   emails: '/direction/emails',
-  integrations: '/direction/integrations',
   reglages: '/direction/reglages',
-  test: '/direction/test',
 };
 /** Ordre d'affichage, celui du prototype : pilotage, pédagogie, communauté, système. */
 const ORDRE = [
@@ -86,9 +82,7 @@ const ORDRE = [
   'assistant',
   'exports',
   'emails',
-  'integrations',
   'reglages',
-  'test',
 ];
 const TOUT = [...ORDRE];
 

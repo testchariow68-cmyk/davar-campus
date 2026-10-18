@@ -55,7 +55,7 @@ export function UserMenu({
           {!estProprietaire && (
             <>
               <a className="dd-item" href="/campus/distinctions">
-                <Icon nom="award" taille={15} /> Mes distinctions
+                <Icon nom="award" taille={15} /> Mes récompenses
               </a>
               <a className="dd-item" href="/campus/ressources">
                 <Icon nom="book" taille={15} /> Mes ressources

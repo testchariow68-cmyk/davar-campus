@@ -117,7 +117,7 @@ export async function POST(request: Request) {
           // Le lien est montré au propriétaire : il peut le transmettre lui-même
           // si l'envoi d'e-mails n'est pas encore branché.
           lien: linkOrigin(request)
-            ? `${linkOrigin(request)!.replace(/\/$/, '')}/invitation?token=${encodeURIComponent(invitation.token)}`
+            ? `${linkOrigin(request)!.replace(/\/$/, '')}/inscription`
             : null,
           invitations: await listerInvitations(db),
         });

@@ -39,9 +39,6 @@ export default async function MesFormationsPage() {
               Si vous venez d&apos;acheter, écrivez-nous : l&apos;accès se rattache à l&apos;adresse de
               votre achat, et la direction peut l&apos;ouvrir à la main.
             </p>
-            <Link href="/campus/aide" className="btn btn-primary mt16">
-              <Icon nom="headset" taille={15} /> Écrire à la direction
-            </Link>
           </div>
         </div>
       ) : (
