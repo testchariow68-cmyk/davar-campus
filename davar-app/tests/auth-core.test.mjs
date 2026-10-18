@@ -16,7 +16,10 @@ import {
   claimPurchasesForVerifiedUser,
   consumeEmailToken,
   consumeRateLimit,
+  createEmailToken,
   createSession,
+  lireJetonReset,
+  reinitialiserMotDePasseClient,
   hashPassword,
   loginUser,
   normalizeEmail,
@@ -26,6 +29,7 @@ import {
   verifyPassword,
 } from '../lib/server/auth-core.ts';
 import { pathToFileURL } from 'node:url';
+import { randomBytes } from 'node:crypto';
 
 // Itérations réduites : ici on teste la logique, pas le coût du hachage.
 process.env.APP_ENV = 'development';
@@ -200,4 +204,67 @@ test('suspension : un compte suspendu ne peut ni se connecter ni garder sa sessi
     () => loginUser(db, { email: 'suspendu@exemple.com', password: STRONG_PASSWORD }),
     (error) => error instanceof AuthError && error.code === 'account_suspended'
   );
+});
+
+test('mot de passe oublié : lien à usage unique, anciennes sessions fermées, nouveau mot de passe actif', async () => {
+  const db = await freshDb();
+  const email = 'awa@example.com';
+  const inscription = await registerUser(db, {
+    email,
+    displayName: 'Awa Koné',
+    password: STRONG_PASSWORD,
+  });
+  await consumeEmailToken(db, inscription.verificationToken, 'verify_email');
+  const session = await loginUser(db, { email, password: STRONG_PASSWORD });
+  assert.ok(await resolveSession(db, session.token));
+
+  // Le lien est lu sans être consommé : la page doit connaître l'adresse et les
+  // paramètres de dérivation avant que le nouveau mot de passe soit choisi.
+  const jeton = await createEmailToken(db, inscription.userId, 'reset_password');
+  const lu = await lireJetonReset(db, jeton);
+  assert.equal(lu?.userId, inscription.userId);
+  assert.equal(lu?.email, email);
+  assert.ok(await lireJetonReset(db, jeton), 'la lecture ne consomme pas le jeton');
+
+  // Une clé dérivée invalide est refusée : le mot de passe reste celui d'avant.
+  await assert.rejects(() =>
+    reinitialiserMotDePasseClient(db, inscription.userId, {
+      verifier: 'cle-trop-courte',
+      salt: 'sel'.repeat(16),
+      iterations: 210_000,
+    })
+  );
+
+  const nouveauVerifier = randomBytes(32).toString('base64url');
+  await reinitialiserMotDePasseClient(db, inscription.userId, {
+    verifier: nouveauVerifier,
+    salt: 'seldeflux'.repeat(4),
+    iterations: 210_000,
+  });
+
+  // La réinitialisation ferme les sessions ouvertes : personne ne garde l'ancien accès.
+  assert.equal(await resolveSession(db, session.token), null);
+
+  // Le lien ne sert qu'une seule fois.
+  const consomme = await consumeEmailToken(db, jeton, 'reset_password');
+  assert.equal(consomme.userId, inscription.userId);
+  await assert.rejects(() => consumeEmailToken(db, jeton, 'reset_password'));
+
+  // L'ancien mot de passe ne passe plus ; la nouvelle clé dérivée, si.
+  await assert.rejects(() => loginUser(db, { email, password: STRONG_PASSWORD }));
+  const reconnecte = await loginUser(db, { email, verifier: nouveauVerifier });
+  assert.equal(reconnecte.user.id, inscription.userId);
+});
+
+test('mot de passe oublié : un lien expiré ne permet aucun changement', async () => {
+  const db = await freshDb();
+  const inscription = await registerUser(db, {
+    email: 'expire@example.com',
+    displayName: 'Lien Expiré',
+    password: STRONG_PASSWORD,
+  });
+  const passe = Date.now() - 61 * 60 * 1000;
+  const jeton = await createEmailToken(db, inscription.userId, 'reset_password', passe, 60 * 60 * 1000);
+  assert.equal(await lireJetonReset(db, jeton), null);
+  await assert.rejects(() => consumeEmailToken(db, jeton, 'reset_password'));
 });

@@ -565,6 +565,58 @@ export async function consumeEmailToken(
   return { userId, purpose };
 }
 
+/**
+ * Lit un jeton SANS le consommer : la page de réinitialisation doit connaître
+ * l'adresse et les paramètres de dérivation avant que le nouveau mot de passe
+ * soit choisi. Le jeton n'est consommé qu'au moment où il sert vraiment.
+ */
+export type JetonReset = { userId: string; email: string };
+
+export async function lireJetonReset(
+  db: Db,
+  token: string,
+  now = Date.now()
+): Promise<JetonReset | null> {
+  if (typeof token !== 'string' || token.length < 20 || token.length > 200) return null;
+  const tokenHash = await hashToken(token);
+  const lignes = await db.execute({
+    sql: `SELECT u.id AS id, u.email_normalized AS email
+          FROM email_tokens t JOIN users u ON u.id = t.user_id
+          WHERE t.token_hash = ? AND t.purpose = 'reset_password'
+            AND t.used_at_ms IS NULL AND t.expires_at_ms > ?`,
+    args: [tokenHash, now],
+  });
+  const row = lignes.rows[0];
+  if (!row) return null;
+  return { userId: String(row.id ?? ''), email: String(row.email ?? '') };
+}
+
+/**
+ * Remplace le mot de passe d'un compte « client-v1 ». Le navigateur a dérivé la
+ * clé : le mot de passe lui-même n'a jamais quitté l'appareil de l'étudiant.
+ */
+export async function reinitialiserMotDePasseClient(
+  db: Db,
+  userId: string,
+  input: { verifier: string; salt: string; iterations: number; verifierPepper?: string; verifierIterations?: number }
+): Promise<void> {
+  if (!isClientVerifier(input.verifier)) throw new AuthError('invalid_input', 'verifier');
+  if (typeof input.salt !== 'string' || input.salt.length < 16 || input.salt.length > 128)
+    throw new AuthError('invalid_input', 'salt');
+  if (!Number.isInteger(input.iterations) || input.iterations < 100_000 || input.iterations > 2_000_000)
+    throw new AuthError('invalid_input', 'iterations');
+
+  const passwordHash = await hashClientVerifier(input.verifier, input);
+  const maj = await db.execute({
+    sql: `UPDATE users SET password_hash = ?, kdf_scheme = 'client-v1', client_salt = ?, client_iterations = ?
+          WHERE id = ?`,
+    args: [passwordHash, input.salt, input.iterations, userId],
+  });
+  if ((maj.rowsAffected ?? 0) !== 1) throw new AuthError('invalid_token');
+  // Un lien de réinitialisation ne doit pas laisser d'ancienne session ouverte.
+  await db.execute({ sql: 'DELETE FROM sessions WHERE user_id = ?', args: [userId] });
+}
+
 /* ------------------------------------------------------------------- connexion */
 
 export type SessionResult = { token: string; expiresAtMs: number; user: AuthUser };

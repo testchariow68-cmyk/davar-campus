@@ -65,7 +65,7 @@ export async function POST(request: Request) {
   } catch (error) {
     if (error instanceof AuthError) {
       return jsonNoStore(
-        { error: error.code, field: error.field },
+        { error: error.code, retryAfterSeconds: error.retryAfterSeconds },
         httpStatusForAuthError(error.code)
       );
     }
