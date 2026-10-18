@@ -2,14 +2,6 @@
 
 import { useState } from 'react';
 
-const ENVOIS_AUTOMATIQUES = [
-  { quand: 'À l’achat reconnu', quoi: 'Le lien d’accès au campus, à l’adresse utilisée sur Chariow.' },
-  { quand: 'À l’inscription', quoi: 'La confirmation d’adresse, pour que le compte soit le vôtre.' },
-  { quand: 'Invitation d’un membre de l’équipe', quoi: 'Le lien d’entrée, valable une fois.' },
-  { quand: 'Certification délivrée', quoi: 'L’annonce, sans jamais joindre le certificat en fichier.' },
-  { quand: 'Avis demandé', quoi: 'Le rappel d’environ deux semaines, puis d’un mois.' },
-];
-
 /**
  * E-MAILS — l’état de l’envoi, un essai réel, et la liste de ce qui part tout seul.
  * Aucun réglage n’a besoin d’être deviné : si le service n’est pas branché, la page le dit.
@@ -89,16 +81,6 @@ export function EmailsAdmin({
             {erreur ?? note}
           </p>
         )}
-      </div>
-
-      <div className="card card-pad">
-        <h3 className="mb8">Ce qui part automatiquement</h3>
-        {ENVOIS_AUTOMATIQUES.map((ligne) => (
-          <div key={ligne.quand} className="row" style={{ gap: 10, padding: '7px 0', borderBottom: '1px solid var(--line)', flexWrap: 'wrap' }}>
-            <b className="small" style={{ minWidth: 210 }}>{ligne.quand}</b>
-            <span className="small muted" style={{ flex: 1, minWidth: 220 }}>{ligne.quoi}</span>
-          </div>
-        ))}
       </div>
     </div>
   );

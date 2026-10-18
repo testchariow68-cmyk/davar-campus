@@ -130,18 +130,6 @@ export default async function CampusDashboard() {
             ))}
           </div>
 
-          <div className="card card-pad mb24" style={{ background: 'linear-gradient(140deg, var(--violet-soft) 0%, var(--card) 70%)' }}>
-            <div className="eyebrow">
-              <Icon nom="quote" taille={13} /> Votre motivation de la semaine
-            </div>
-            <p style={{ fontSize: 15, fontWeight: 600, fontStyle: 'italic', marginTop: 10 }}>
-              « {motivations.courante} »
-            </p>
-            <div className="xs faint mt8">
-              Chaque dimanche, une nouvelle motivation vous arrive dans la cloche de votre campus.
-            </div>
-          </div>
-
           <div className="card">
             <div className="card-head">
               <h3>Consultés récemment</h3>
