@@ -7,7 +7,7 @@ import { listerFormations } from '@/lib/server/direction';
 import { libellePlafond, stockagePret } from '@/lib/server/stockage';
 
 export const dynamic = 'force-dynamic';
-export const metadata = { title: 'Ressources — Direction' };
+export const metadata = { title: 'Ressources pédagogiques — Direction' };
 
 /** RESSOURCES — livres, audios et documents : création, pages, pistes, dépôt, attribution. */
 export default async function RessourcesDirectionPage() {
@@ -40,11 +40,8 @@ export default async function RessourcesDirectionPage() {
     <>
       <div className="page-head">
         <div>
-          <h1 style={{ fontSize: 19 }}>Ressources</h1>
-          <p>
-            Vos livres, vos audios et vos documents. Une ressource créée sans attribution est <b>offerte à tous</b> les
-            étudiants de la formation ; une ressource attribuée nommément n’est visible que de la personne concernée.
-          </p>
+          <h1 style={{ fontSize: 19 }}>Ressources pédagogiques</h1>
+          <p>Livres (PDF) et livres audio attribués <b>par étudiant ou à tous les étudiants</b>. Saisissez le titre, téléversez le fichier (PDF ou pistes audio) et la couverture : l’étudiant voit la ressource prête à lire ou écouter.</p>
         </div>
       </div>
 

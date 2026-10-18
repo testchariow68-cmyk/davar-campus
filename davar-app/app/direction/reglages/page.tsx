@@ -9,7 +9,7 @@ import { lireMotivations } from '@/lib/server/motivations';
 import { abonnements, totalParPlateforme } from '@/lib/server/social';
 
 export const dynamic = 'force-dynamic';
-export const metadata = { title: 'Réglages — Direction' };
+export const metadata = { title: 'Configuration — Direction' };
 
 /** RÉGLAGES — les contacts, les réseaux et le bandeau d'annonce du campus. */
 export default async function ReglagesPage() {
@@ -27,11 +27,8 @@ export default async function ReglagesPage() {
     <>
       <div className="page-head">
         <div>
-          <h1 style={{ fontSize: 19 }}>Réglages du campus</h1>
-          <p>
-            Les valeurs par défaut viennent de votre prototype. Modifiez-les ici : tout s’applique immédiatement côté
-            étudiant, sans redéploiement.
-          </p>
+          <h1 style={{ fontSize: 19 }}>Configuration</h1>
+          <p>Identité visuelle, paramètres généraux, intégrations, notifications et sécurité.</p>
         </div>
       </div>
       <ApparenceAdmin paletteInitiale={apparence.palette} couleursInitiales={apparence.couleurs} />

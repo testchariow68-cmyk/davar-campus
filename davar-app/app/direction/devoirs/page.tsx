@@ -4,7 +4,7 @@ import { sessionSection } from '@/lib/server/direction-access';
 import { devoirsEnAttente } from '@/lib/server/pedagogie';
 
 export const dynamic = 'force-dynamic';
-export const metadata = { title: 'Devoirs — Direction' };
+export const metadata = { title: 'Évaluations — Direction' };
 
 function quand(atMs: number): string {
   return new Date(atMs).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' });
@@ -20,11 +20,8 @@ export default async function DevoirsPage() {
     <>
       <div className="page-head">
         <div>
-          <h1 style={{ fontSize: 19 }}>Devoirs à corriger</h1>
-          <p>
-            Un devoir n’est accepté qu’après le score minimum de l’évaluation. Votre décision prévient l’étudiant
-            immédiatement, et un refus doit porter une explication.
-          </p>
+          <h1 style={{ fontSize: 19 }}>Évaluations</h1>
+          <p>Bloquantes par conception : score minimum ou validation humaine. Un refus ou une nouvelle tentative est toujours accompagnée d’une explication.</p>
         </div>
       </div>
 

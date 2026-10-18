@@ -5,9 +5,9 @@ import { lireProfil } from '@/lib/server/profil';
 import { stockagePret, urlLecture } from '@/lib/server/stockage';
 
 export const dynamic = 'force-dynamic';
-export const metadata = { title: 'Profil & paramètres — DAVAR ACADÉMIE' };
+export const metadata = { title: 'Mon profil — DAVAR ACADÉMIE' };
 
-/** PROFIL & PARAMÈTRES — la page du prototype, sur la vraie base. */
+/** MON PROFIL — la page du prototype, sur la vraie base. */
 export default async function ProfilPage() {
   const session = await currentSession();
   if (!session) redirect('/connexion');
@@ -21,7 +21,8 @@ export default async function ProfilPage() {
     <>
       <div className="page-head">
         <div>
-          <h1 style={{ fontSize: 19 }}>Profil & paramètres</h1>
+          <h1 style={{ fontSize: 19 }}>Mon profil</h1>
+          <p>Vos informations personnelles.</p>
         </div>
       </div>
 

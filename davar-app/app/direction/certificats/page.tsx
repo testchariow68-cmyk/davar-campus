@@ -4,7 +4,7 @@ import { sessionSection } from '@/lib/server/direction-access';
 import { demandesEnAttente } from '@/lib/server/certificats';
 
 export const dynamic = 'force-dynamic';
-export const metadata = { title: 'Certificats — Direction' };
+export const metadata = { title: 'Certifications — Direction' };
 
 /** CERTIFICATS — chaque demande est une décision humaine. Valider délivre un code. */
 export default async function CertificatsDirectionPage() {
@@ -16,11 +16,8 @@ export default async function CertificatsDirectionPage() {
     <>
       <div className="page-head">
         <div>
-          <h1 style={{ fontSize: 19 }}>Demandes de certificat</h1>
-          <p>
-            Le nom porté sur le certificat est celui du profil au moment de la demande : il sera <b>figé</b>.
-            Valider délivre un code de vérification public.
-          </p>
+          <h1 style={{ fontSize: 19 }}>Certifications</h1>
+          <p>Validation <b>humaine</b> : à 100&apos;%, l’étudiant demande son certificat ; vous évaluez (test physique), puis « Lancer la génération » active votre Apps Script de certification. Un refus exige un motif + réinitialisation ciblée.</p>
         </div>
       </div>
 

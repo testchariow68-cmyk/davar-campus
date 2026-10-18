@@ -4,7 +4,7 @@ import { analyseAssistants } from '@/lib/server/assistants';
 import { sessionSection } from '@/lib/server/direction-access';
 
 export const dynamic = 'force-dynamic';
-export const metadata = { title: 'Analyse des assistants — Direction' };
+export const metadata = { title: 'Analyse assistants virtuels — Direction' };
 
 /**
  * ANALYSE DES ASSISTANTS — ce que les assistants ont réellement fait, et ce qui
@@ -25,11 +25,8 @@ export default async function AssistantsPage() {
     <>
       <div className="page-head">
         <div>
-          <h1 style={{ fontSize: 19 }}>Analyse des assistants</h1>
-          <p>
-            Qui répond, qui prend le relais, et où les questions tombent. Les compteurs sont ceux du fournisseur réel — aucun
-            chiffre n&apos;est estimé.
-          </p>
+          <h1 style={{ fontSize: 19 }}>Analyse assistants virtuels</h1>
+          <p>Fréquence de changement entre TOUS les assistants (0 si aucune bascule). Chaque bascule réelle est journalisée avec sa date.</p>
         </div>
       </div>
 
