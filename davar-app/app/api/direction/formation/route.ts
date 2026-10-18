@@ -30,6 +30,9 @@ export async function POST(request: Request) {
         prixCfa: Number(body?.prixCfa ?? 0),
         chariowProductId: String(body?.chariowProductId ?? ''),
         buyUrl: String(body?.buyUrl ?? ''),
+        code: String(body?.code ?? ''),
+        hours: Number(body?.hours ?? 0),
+        rating: body?.rating === null || body?.rating === '' ? null : Number(body?.rating),
       });
       if (resultat.ok)
         await enregistrerEvenement(db, {
@@ -47,6 +50,9 @@ export async function POST(request: Request) {
         prixCfa: Number(body?.prixCfa ?? 0),
         chariowProductId: String(body?.chariowProductId ?? ''),
         buyUrl: String(body?.buyUrl ?? ''),
+        code: String(body?.code ?? ''),
+        hours: Number(body?.hours ?? 0),
+        rating: body?.rating === null || body?.rating === '' ? null : Number(body?.rating),
       });
       if (resultat.ok)
         await enregistrerEvenement(db, { actorId: reel.id, action: 'formation-modification', detail: id });

@@ -98,10 +98,10 @@ export type Formation = {
   chariowProductId: string;
   buyUrl: string;
   published: boolean;
-  /** Référence, niveau et durée affichés sur la carte du catalogue. */
+  /** Référence, durée et note affichées sur la carte du catalogue. */
   code: string | null;
-  level: string;
   hours: number;
+  rating: number | null;
   modules: number;
   lecons: number;
   inscrits: number;
@@ -128,8 +128,8 @@ async function lireFormation(db: Db, ligne: Record<string, unknown>): Promise<Fo
     buyUrl: texte(ligne.buy_url),
     published: bool(ligne.published),
     code: texte(ligne.code),
-    level: texte(ligne.level) ?? 'Débutant',
-    hours: nombre(ligne.hours) || 8,
+    hours: nombre(ligne.hours),
+    rating: typeof ligne.rating === 'number' || typeof ligne.rating === 'bigint' ? Number(ligne.rating) : null,
     modules: nombre(structure.rows[0]?.modules),
     lecons: nombre(structure.rows[0]?.lecons),
     inscrits: nombre(inscrits.rows[0]?.n),
@@ -139,14 +139,14 @@ async function lireFormation(db: Db, ligne: Record<string, unknown>): Promise<Fo
 
 export async function listerFormations(db: Db): Promise<Formation[]> {
   const resultat = await db.execute(
-    'SELECT id,title,description,price_cfa,chariow_product_id,buy_url,published,code,level,hours FROM trainings ORDER BY published DESC, title'
+    'SELECT id,title,description,price_cfa,chariow_product_id,buy_url,published,code,hours,rating FROM trainings ORDER BY published DESC, title'
   );
   return Promise.all(resultat.rows.map((ligne) => lireFormation(db, ligne)));
 }
 
 export async function lireUneFormation(db: Db, id: string): Promise<Formation | null> {
   const resultat = await db.execute({
-    sql: 'SELECT id,title,description,price_cfa,chariow_product_id,buy_url,published,code,level,hours FROM trainings WHERE id=?',
+    sql: 'SELECT id,title,description,price_cfa,chariow_product_id,buy_url,published,code,hours,rating FROM trainings WHERE id=?',
     args: [id],
   });
   if (!resultat.rows.length) return null;
@@ -171,6 +171,10 @@ export type ChampsFormation = {
   prixCfa: number;
   chariowProductId: string;
   buyUrl: string;
+  /** Ce que la carte du catalogue affiche : référence, durée, note. */
+  code: string;
+  hours: number;
+  rating: number | null;
 };
 
 /** Contrôles communs : un titre et un prix sont obligatoires, le reste est libre. */
@@ -183,7 +187,17 @@ function validerFormation(champs: Partial<ChampsFormation>): { ok: true; valeur:
   const chariowProductId = (champs.chariowProductId ?? '').trim().slice(0, 80);
   const buyUrl = (champs.buyUrl ?? '').trim().slice(0, 400);
   if (buyUrl && !/^https:\/\//i.test(buyUrl)) return { ok: false, erreur: 'lien_non_https' };
-  return { ok: true, valeur: { titre, description, prixCfa, chariowProductId, buyUrl } };
+  const code = (champs.code ?? '').trim().toUpperCase().slice(0, 20);
+  const hours = Number(champs.hours ?? 0);
+  // Une durée négative ou farfelue n'a pas de sens ; zéro veut dire « pas
+  // renseignée », et la carte n'affiche alors rien.
+  if (!Number.isInteger(hours) || hours < 0 || hours > 2000) return { ok: false, erreur: 'duree_invalide' };
+  const brut: unknown = champs.rating;
+  const vide = brut === null || brut === undefined || brut === '' || Number.isNaN(Number(brut));
+  const rating = vide ? null : Number(brut);
+  if (rating !== null && (!Number.isFinite(rating) || rating < 0 || rating > 5))
+    return { ok: false, erreur: 'note_invalide' };
+  return { ok: true, valeur: { titre, description, prixCfa, chariowProductId, buyUrl, code, hours, rating } };
 }
 
 /**
@@ -229,13 +243,17 @@ export async function modifierFormation(db: Db, id: string, champs: Partial<Cham
   const valide = validerFormation(champs);
   if (!valide.ok) return echec(valide.erreur);
   const resultat = await db.execute({
-    sql: `UPDATE trainings SET title=?, description=?, price_cfa=?, chariow_product_id=?, buy_url=? WHERE id=?`,
+    sql: `UPDATE trainings SET title=?, description=?, price_cfa=?, chariow_product_id=?, buy_url=?,
+                 code=?, hours=?, rating=? WHERE id=?`,
     args: [
       valide.valeur.titre,
       valide.valeur.description || null,
       valide.valeur.prixCfa,
       valide.valeur.chariowProductId || null,
       valide.valeur.buyUrl || null,
+      valide.valeur.code || null,
+      valide.valeur.hours,
+      valide.valeur.rating,
       id,
     ],
   });

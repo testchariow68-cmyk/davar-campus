@@ -50,7 +50,7 @@ export default async function FormationsPage() {
                     )}
                   </div>
                   <div className="small muted mt4">
-                    {formation.code ? `${formation.code} · ${formation.level} — ` : `${formation.level} — `}
+                    {formation.code ? `${formation.code} — ` : ''}
                     {prix(formation.priceCfa)} · {formation.modules} module{formation.modules > 1 ? 's' : ''} ·{' '}
                     {formation.lecons} leçon{formation.lecons > 1 ? 's' : ''} · {formation.inscrits} étudiant
                     {formation.inscrits > 1 ? 's' : ''} · {formation.acheteurs} achat{formation.acheteurs > 1 ? 's' : ''}

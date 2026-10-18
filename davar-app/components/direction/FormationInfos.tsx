@@ -13,6 +13,9 @@ export function FormationInfos({ formation }: { formation: Formation }) {
   const [prixCfa, setPrixCfa] = useState(String(formation.priceCfa));
   const [chariowProductId, setChariowProductId] = useState(formation.chariowProductId);
   const [buyUrl, setBuyUrl] = useState(formation.buyUrl);
+  const [code, setCode] = useState(formation.code ?? '');
+  const [heures, setHeures] = useState(formation.hours > 0 ? String(formation.hours) : '');
+  const [note, setNote] = useState(formation.rating !== null ? String(formation.rating) : '');
   const [bilan, setBilan] = useState<{ ok: boolean; texte: string } | null>(null);
   const [enCours, setEnCours] = useState(false);
 
@@ -56,6 +59,46 @@ export function FormationInfos({ formation }: { formation: Formation }) {
         <input id="i-url" className="inp" value={buyUrl} onChange={(e) => setBuyUrl(e.target.value)} />
       </div>
 
+      <div className="eyebrow mt16 mb8">Ce que la carte du catalogue affiche</div>
+      <div className="grid g3" style={{ gap: 12 }}>
+        <div className="field">
+          <label htmlFor="i-code">Référence</label>
+          <input
+            id="i-code"
+            className="inp"
+            placeholder="OR-101"
+            value={code}
+            onChange={(e) => setCode(e.target.value.toUpperCase().slice(0, 20))}
+          />
+        </div>
+        <div className="field">
+          <label htmlFor="i-heures">Durée en heures</label>
+          <input
+            id="i-heures"
+            className="inp"
+            inputMode="numeric"
+            placeholder="non renseignée"
+            value={heures}
+            onChange={(e) => setHeures(e.target.value.replace(/[^0-9]/g, '').slice(0, 4))}
+          />
+        </div>
+        <div className="field">
+          <label htmlFor="i-note">Note sur 5</label>
+          <input
+            id="i-note"
+            className="inp"
+            inputMode="decimal"
+            placeholder="non renseignée"
+            value={note}
+            onChange={(e) => setNote(e.target.value.replace(/[^0-9.,]/g, '').slice(0, 4))}
+          />
+        </div>
+      </div>
+      <p className="xs faint mt4">
+        Laissées vides, la durée et la note ne sont pas affichées : la carte ne montre que ce que
+        vous avez renseigné.
+      </p>
+
       {bilan && (
         <div className={`banner ${bilan.ok ? 'ok' : 'err'} mb16`} role="status">
           <span>{bilan.texte}</span>
@@ -66,7 +109,19 @@ export function FormationInfos({ formation }: { formation: Formation }) {
         <button
           className="btn btn-primary"
           disabled={enCours}
-          onClick={() => envoyer({ action: 'update', titre, description, prixCfa: Number(prixCfa || 0), chariowProductId, buyUrl })}
+          onClick={() =>
+            envoyer({
+              action: 'update',
+              titre,
+              description,
+              prixCfa: Number(prixCfa || 0),
+              chariowProductId,
+              buyUrl,
+              code,
+              hours: Number(heures || 0),
+              rating: note.trim() === '' ? null : Number(note.replace(',', '.')),
+            })
+          }
         >
           Enregistrer
         </button>

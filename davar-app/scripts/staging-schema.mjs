@@ -155,8 +155,8 @@ const MIGRATIONS = [
   {
     version: 19,
     file: '019_carte_formation.sqlite.sql',
-    sha256: '53269d08c09d48e78ac61aa134e6480cf4969ad46e206b1bd1c8e6f6d6d07f98',
-    ddl: 4, // quatre colonnes ajoutées : référence, niveau, durée et note de la carte
+    sha256: '0ab06d2ce6cf81d944ca1b8b3059ebddc485e66bd63e61c2848b95d0b286ff7e',
+    ddl: 3, // trois colonnes ajoutées : référence, durée et note de la carte
     creates: [],
   },
 ];

@@ -27,6 +27,7 @@ import {
   listerEtudiants,
   listerFormations,
   lireStructure,
+  modifierFormation,
   modifierLecon,
   publierFormation,
   purgerContenu,
@@ -302,5 +303,50 @@ test('les comptes de test sont marqués et exclus des chiffres réels', async ()
 
   const inconnu = await basculerCompteTest(db, 'personne@davar.test', true);
   assert.equal(inconnu.ok, false);
+  await db.close();
+});
+
+test('la carte du catalogue : référence, durée et note sont enregistrées telles quelles', async () => {
+  const db = await baseVide();
+  await creerFormation(db, { titre: 'Devenir un excellent orateur', description: '', prixCfa: 39900, chariowProductId: '', buyUrl: '' });
+  const liste = await listerFormations(db);
+  const formation = liste[0];
+  // Une formation créée reçoit une référence, mais ni durée ni note : la carte
+  // n'affiche alors que ce qui est réellement renseigné.
+  assert.ok(formation.code);
+  assert.equal(formation.hours, 0);
+  assert.equal(formation.rating, null);
+
+  const resultat = await modifierFormation(db, formation.id, {
+    titre: 'Devenir un excellent orateur',
+    description: '',
+    prixCfa: 39900,
+    chariowProductId: '',
+    buyUrl: '',
+    code: 'or-101',
+    hours: 12,
+    rating: 4.9,
+  });
+  assert.equal(resultat.ok, true);
+  const apres = (await listerFormations(db))[0];
+  assert.equal(apres.code, 'OR-101');
+  assert.equal(apres.hours, 12);
+  assert.equal(apres.rating, 4.9);
+  await db.close();
+});
+
+test('la carte du catalogue : une durée ou une note absurde est refusée', async () => {
+  const db = await baseVide();
+  await creerFormation(db, { titre: 'Devenir un excellent orateur', description: '', prixCfa: 39900, chariowProductId: '', buyUrl: '' });
+  const id = (await listerFormations(db))[0].id;
+  const base = { titre: 'Devenir un excellent orateur', description: '', prixCfa: 39900, chariowProductId: '', buyUrl: '', code: 'OR-101' };
+
+  assert.equal((await modifierFormation(db, id, { ...base, hours: -3, rating: null })).erreur, 'duree_invalide');
+  assert.equal((await modifierFormation(db, id, { ...base, hours: 5000, rating: null })).erreur, 'duree_invalide');
+  assert.equal((await modifierFormation(db, id, { ...base, hours: 12, rating: 9 })).erreur, 'note_invalide');
+
+  const apres = (await listerFormations(db))[0];
+  assert.equal(apres.hours, 0);
+  assert.equal(apres.rating, null);
   await db.close();
 });

@@ -16,7 +16,6 @@ export type FormationCarte = {
   lecons: number;
   chapitres: number;
   code: string | null;
-  level: string;
   hours: number;
   rating: number | null;
 };
@@ -42,7 +41,6 @@ export function CarteFormation({ formation, possedee }: { formation: FormationCa
           background: `linear-gradient(140deg,hsl(${hue} 45% 12%) 0%,hsl(${hue} 55% 22%) 55%,hsl(${hue} 48% 32%) 100%)`,
         }}
       >
-        <span className="lvl badge b-dark">{formation.level}</span>
         <span className="mono">{formation.title.slice(0, 2).toUpperCase()}</span>
       </div>
       <div className="t-body">
@@ -50,9 +48,11 @@ export function CarteFormation({ formation, possedee }: { formation: FormationCa
         <h3>{formation.title}</h3>
         {formation.description && <p className="desc">{formation.description}</p>}
         <div className="t-meta">
-          <span>
-            <Icon nom="clock" taille={12} /> {formation.hours} h
-          </span>
+          {formation.hours > 0 && (
+            <span>
+              <Icon nom="clock" taille={12} /> {formation.hours} h
+            </span>
+          )}
           <span>
             <Icon nom="layers" taille={12} /> {formation.chapitres} chapitres
           </span>

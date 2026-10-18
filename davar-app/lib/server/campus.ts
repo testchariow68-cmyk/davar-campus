@@ -274,9 +274,8 @@ export type FormationCatalogue = {
   lecons: number;
   /** Chapitres = modules : la carte du prototype compte des chapitres. */
   chapitres: number;
-  /** Référence affichée sous le titre de la carte (« OR-101 · ⭐ 4.9 »). */
+  /** Référence, durée et note de la carte. Vides tant qu'elles ne sont pas renseignées. */
   code: string | null;
-  level: string;
   hours: number;
   rating: number | null;
 };
@@ -290,7 +289,7 @@ export type Catalogue = { aDecouvrir: FormationCatalogue[]; possedees: Formation
  */
 export async function lireCatalogue(db: Db, userId: string | null): Promise<Catalogue> {
   const resultat = await db.execute({
-    sql: `SELECT t.id, t.title, t.description, t.price_cfa, t.code, t.level, t.hours, t.rating,
+    sql: `SELECT t.id, t.title, t.description, t.price_cfa, t.code, t.hours, t.rating,
                  (SELECT COUNT(*) FROM course_modules m JOIN course_lessons l ON l.module_id = m.id
                    WHERE m.training_id = t.id) AS lecons,
                  (SELECT COUNT(*) FROM course_modules m WHERE m.training_id = t.id) AS chapitres,
@@ -317,8 +316,7 @@ export async function lireCatalogue(db: Db, userId: string | null): Promise<Cata
       lecons: num(row.lecons),
       chapitres: num(row.chapitres),
       code: text(row.code),
-      level: text(row.level) ?? 'Débutant',
-      hours: num(row.hours) || 8,
+      hours: num(row.hours),
       rating: typeof row.rating === 'number' || typeof row.rating === 'bigint' ? Number(row.rating) : null,
     };
     (num(row.possedee) === 1 ? possedees : aDecouvrir).push(formation);
@@ -332,7 +330,7 @@ export async function lireFormationPubliee(
   trainingId: string
 ): Promise<FormationCatalogue | null> {
   const resultat = await db.execute({
-    sql: `SELECT t.id, t.title, t.description, t.price_cfa, t.code, t.level, t.hours, t.rating,
+    sql: `SELECT t.id, t.title, t.description, t.price_cfa, t.code, t.hours, t.rating,
                  (SELECT COUNT(*) FROM course_modules m JOIN course_lessons l ON l.module_id = m.id
                    WHERE m.training_id = t.id) AS lecons,
                  (SELECT COUNT(*) FROM course_modules m WHERE m.training_id = t.id) AS chapitres
@@ -351,8 +349,7 @@ export async function lireFormationPubliee(
     lecons: num(row?.lecons),
     chapitres: num(row?.chapitres),
     code: text(row?.code),
-    level: text(row?.level) ?? 'Débutant',
-    hours: num(row?.hours) || 8,
+    hours: num(row?.hours),
     rating:
       typeof row?.rating === 'number' || typeof row?.rating === 'bigint' ? Number(row?.rating) : null,
   };
