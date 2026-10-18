@@ -117,12 +117,9 @@ function Invoke-Externe {
     $ancien = $ErrorActionPreference
     $ErrorActionPreference = 'Continue'
     try {
-        if ($Silencieux) {
-            $lignes = & $Programme @Parametres 2>&1
-            $script:derniereSortie = ($lignes | Out-String).Trim()
-        } else {
-            & $Programme @Parametres 2>&1 | Out-Host
-        }
+        $lignes = & $Programme @Parametres 2>&1
+        $script:derniereSortie = ($lignes | Out-String).Trim()
+        if (-not $Silencieux) { $lignes | Out-Host }
         return $LASTEXITCODE
     } finally {
         $ErrorActionPreference = $ancien
@@ -335,6 +332,61 @@ function Etape-Schema {
 }
 
 # --------------------------------------------------------------------------- #
+# PUBLICATION, AVEC REPARATION AUTOMATIQUE DE LA PREMIERE TENTATIVE
+# --------------------------------------------------------------------------- #
+function Publier-Worker {
+    param([Parameter(Mandatory = $true)][string]$FichierSecrets)
+
+    # Premier essai : le cas normal, celui qui reussit neuf fois sur dix.
+    $code = Invoke-Externe 'npx' @('cf', 'deploy', '--secrets-file', $FichierSecrets)
+    if ($code -eq 0) { return 0 }
+
+    # Cloudflare peut repondre : APIError [10057] cannot inherit bindings:
+    # no previous version exists. Cela arrive quand une premiere tentative a
+    # laisse un Worker "coquille vide" : les fichiers etaient bien montes
+    # (on lit "44 already uploaded"), mais aucune VERSION n a jamais ete
+    # publiee. Au second essai, le serveur veut heriter des reglages de la
+    # version precedente - laquelle n existe pas - et refuse.
+    # Ce message est en meme temps une GARANTIE : sans version, le Worker
+    # n heberge rien et aucun visiteur n a jamais ete servi. L effacer ne
+    # peut donc rien casser.
+    if ($script:derniereSortie -notmatch 'cannot inherit bindings') { return $code }
+
+    Write-Host ''
+    Dire '  Cloudflare refuse de publier, et voici pourquoi :' 'Yellow'
+    Dire '  une premiere tentative a laisse un Worker coquille vide. Vos' 'Yellow'
+    Dire '  fichiers etaient montes, mais aucune version n a jamais ete' 'Yellow'
+    Dire '  publiee. En republiant, le serveur cherche a heriter des reglages' 'Yellow'
+    Dire '  de la version precedente, qui n existe pas : erreur 10057.' 'Yellow'
+    Write-Host ''
+    Dire '  Rien n est perdu : ce Worker n a aucune version, il n heberge donc' 'DarkGray'
+    Dire '  rien et personne ne l a jamais visite. Le script le remet a zero' 'DarkGray'
+    Dire '  tout seul, puis republie. Ne faites rien.' 'DarkGray'
+    Write-Host ''
+
+    Etape 'Reparation 1 sur 2 : remettre le Worker a zero'
+    $c = Invoke-Externe 'npx' @('cf', 'workers', 'delete', $TRAVAILLEUR, '--force')
+    if ($c -eq 0) {
+        Dire '  Coquille vide effacee. Nouvelle publication...' 'Green'
+        $code = Invoke-Externe 'npx' @('cf', 'deploy', '--secrets-file', $FichierSecrets)
+        if ($code -eq 0) { return 0 }
+    } else {
+        Dire '  Impossible d effacer la coquille vide. On continue.' 'Red'
+    }
+
+    # Si le refus persiste, on fabrique la premiere version a la main avec
+    # "versions create" : le serveur a alors une version sur laquelle s appuyer.
+    if ($script:derniereSortie -notmatch 'cannot inherit bindings') { return $code }
+
+    Etape 'Reparation 2 sur 2 : creer la premiere version a la main'
+    $code = Invoke-Externe 'npx' @('cf', 'workers', 'versions', 'create', '--secrets-file', $FichierSecrets)
+    if ($code -eq 0) {
+        $code = Invoke-Externe 'npx' @('cf', 'deploy', '--secrets-file', $FichierSecrets)
+    }
+    return $code
+}
+
+# --------------------------------------------------------------------------- #
 # 3. DEPLOIEMENT DU WORKER
 # --------------------------------------------------------------------------- #
 function Etape-Deploiement {
@@ -378,7 +430,7 @@ function Etape-Deploiement {
     $code = Invoke-Externe 'npx' @('cf', 'deploy', '--dry-run', '--secrets-file', $fichierSecrets)
     if ($code -eq 0) {
         Etape 'Publication reelle'
-        $code = Invoke-Externe 'npx' @('cf', 'deploy', '--secrets-file', $fichierSecrets)
+        $code = Publier-Worker -FichierSecrets $fichierSecrets
     }
     Pop-Location
 
