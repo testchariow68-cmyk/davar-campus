@@ -14,8 +14,39 @@ import { trackApiRequest } from '@/lib/server/quota';
 import { passwordAdapter } from '@/lib/server/password-service';
 import { invitationDuToken, marquerInvitationUtilisee } from '@/lib/server/invitations';
 import { normalizeEmail } from '@/lib/server/auth-core';
+import { ecrirePreference } from '@/lib/server/profil';
+import { deposerContenu, stockagePret } from '@/lib/server/stockage';
 
 export const dynamic = 'force-dynamic';
+
+/**
+ * La photo choisie à l'inscription : 400 Ko au plus. Pourquoi si peu ? Parce
+ * qu'elle voyage DANS la requête de création de compte, et qu'une requête ne
+ * dépasse pas 1 Mo. Une photo plus lourde se dépose depuis le profil, où le
+ * fichier part directement au stockage — là, la limite est celle des documents.
+ */
+const PHOTO_OCTETS_MAX = 400 * 1024;
+const PHOTO_TYPES: Record<string, string> = {
+  jpg: 'image/jpeg',
+  jpeg: 'image/jpeg',
+  png: 'image/png',
+  webp: 'image/webp',
+};
+
+/** Une photo arrive en « data:image/…;base64,… » : rien d'autre n'est accepté. */
+function lirePhoto(valeur: unknown): { extension: string; octets: Uint8Array } | null {
+  if (typeof valeur !== 'string' || !valeur.startsWith('data:image/')) return null;
+  const entete = valeur.slice(5, valeur.indexOf(';'));
+  const extension = entete.replace('image/', '').toLowerCase();
+  if (!PHOTO_TYPES[extension]) return null;
+  const base64 = valeur.slice(valeur.indexOf(',') + 1);
+  if (!/^[A-Za-z0-9+/=]+$/.test(base64)) return null;
+  const binaire = atob(base64);
+  if (binaire.length > PHOTO_OCTETS_MAX) return null;
+  const octets = new Uint8Array(binaire.length);
+  for (let i = 0; i < binaire.length; i += 1) octets[i] = binaire.charCodeAt(i);
+  return { extension: extension === 'jpeg' ? 'jpg' : extension, octets };
+}
 
 /**
  * Création de compte. En production, aucun compte n'est créé si l'envoi
@@ -72,6 +103,17 @@ export async function POST(request: Request) {
       await marquerInvitationUtilisee(db, invitation.id, registration.userId);
     }
 
+    // La photo est facultative : jamais elle ne fait échouer une inscription.
+    const photo = lirePhoto(body.photo);
+    let photoGardee = false;
+    if (photo && stockagePret()) {
+      const cle = `photos/${registration.userId}/inscription-${Date.now().toString(36)}.${photo.extension}`;
+      if (await deposerContenu(cle, photo.octets, PHOTO_TYPES[photo.extension])) {
+        await ecrirePreference(db, registration.userId, 'photo.cle', cle);
+        photoGardee = true;
+      }
+    }
+
     const verifyUrl = `${origin}/verifier-email?token=${encodeURIComponent(registration.verificationToken)}`;
 
     let emailSent = false;
@@ -90,6 +132,7 @@ export async function POST(request: Request) {
       {
         ok: true,
         emailSent,
+        photoGardee,
         // Le lien n'est renvoyé au navigateur QU'EN développement, pour test manuel.
         devVerificationUrl: development && !emailSent ? verifyUrl : undefined,
       },

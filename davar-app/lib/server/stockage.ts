@@ -198,3 +198,27 @@ export function libellePlafond(kind: string): string {
   const octets = kind === 'audio' ? PLAFONDS_OCTETS.audio : kind === 'video' ? PLAFONDS_OCTETS.video : PLAFONDS_OCTETS.document;
   return `${Math.round(octets / (1024 * 1024))} Mo`;
 }
+
+/**
+ * Dépôt DIRECT depuis le serveur — réservé aux petits fichiers, ceux qui
+ * naissent avec le compte (la photo choisie à l'inscription). Tout le reste
+ * (vidéos, livres, audios) part du navigateur du propriétaire vers le stockage,
+ * sans jamais traverser l'application : c'est la règle, et elle ne bouge pas.
+ */
+export async function deposerContenu(
+  cle: string,
+  octets: Uint8Array,
+  contentType: string,
+  maintenant?: number
+): Promise<boolean> {
+  const propre = clePropre(cle);
+  if (!propre) return false;
+  const adresse = await urlDepot(propre, 300, maintenant);
+  if (!adresse) return false;
+  const reponse = await fetch(adresse, {
+    method: 'PUT',
+    headers: { 'content-type': contentType },
+    body: new Blob([new Uint8Array(octets)], { type: contentType }),
+  });
+  return reponse.ok;
+}

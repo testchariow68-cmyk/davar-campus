@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
+import { Icon } from '@/components/campus/Icon';
 import { deriveClientKey, fetchDerivationParameters } from '@/lib/client/derive';
 
 /**
@@ -25,7 +26,7 @@ const MESSAGES: Record<string, string> = {
   unavailable: 'Service momentanément indisponible. Réessayez plus tard.',
 };
 
-type Result = { mode: 'sent' } | { mode: 'dev'; url: string };
+type Result = { mode: 'sent'; photoPerdue?: boolean } | { mode: 'dev'; url: string };
 
 export function SignupForm({ invitation }: { invitation?: string } = {}) {
   const [step, setStep] = useState(1);
@@ -34,6 +35,8 @@ export function SignupForm({ invitation }: { invitation?: string } = {}) {
   const [displayName, setDisplayName] = useState('');
   const [password, setPassword] = useState('');
   const [confirmation, setConfirmation] = useState('');
+  const [photoApercu, setPhotoApercu] = useState<string | null>(null);
+  const [photoDonnees, setPhotoDonnees] = useState<string | null>(null);
   const [busy, setBusy] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<Result | null>(null);
@@ -65,6 +68,29 @@ export function SignupForm({ invitation }: { invitation?: string } = {}) {
     } finally {
       setBusy(null);
     }
+  }
+
+  /** La photo est facultative : elle est lue ici, jamais envoyée ailleurs. */
+  function choisirPhoto(event: React.ChangeEvent<HTMLInputElement>) {
+    const fichier = event.target.files?.[0];
+    if (!fichier) {
+      setPhotoApercu(null);
+      setPhotoDonnees(null);
+      return;
+    }
+    if (fichier.size > 400 * 1024) {
+      setError('Photo trop lourde : 400 Ko au plus à l’inscription. Vous pourrez la changer depuis votre profil.');
+      setPhotoApercu(null);
+      setPhotoDonnees(null);
+      return;
+    }
+    const lecteur = new FileReader();
+    lecteur.onload = () => {
+      const url = typeof lecteur.result === 'string' ? lecteur.result : null;
+      setPhotoApercu(url);
+      setPhotoDonnees(url);
+    };
+    lecteur.readAsDataURL(fichier);
   }
 
   /** Étape 2 : la configuration du compte. */
@@ -101,6 +127,7 @@ export function SignupForm({ invitation }: { invitation?: string } = {}) {
           displayName,
           email,
           ...(invitation ? { invitation } : {}),
+          ...(photoDonnees ? { photo: photoDonnees } : {}),
           verifier,
           salt: parameters.parameters.salt,
           iterations: parameters.parameters.iterations,
@@ -110,12 +137,17 @@ export function SignupForm({ invitation }: { invitation?: string } = {}) {
         error?: string;
         emailSent?: boolean;
         devVerificationUrl?: string;
+        photoGardee?: boolean;
       };
       if (!response.ok) {
         setError(MESSAGES[payload.error ?? 'unavailable'] ?? 'Inscription refusée.');
         return;
       }
-      setResult(payload.devVerificationUrl ? { mode: 'dev', url: payload.devVerificationUrl } : { mode: 'sent' });
+      setResult(
+        payload.devVerificationUrl
+          ? { mode: 'dev', url: payload.devVerificationUrl }
+          : { mode: 'sent', photoPerdue: Boolean(photoDonnees) && payload.photoGardee !== true }
+      );
     } catch {
       setError(MESSAGES.unavailable);
     } finally {
@@ -136,6 +168,14 @@ export function SignupForm({ invitation }: { invitation?: string } = {}) {
             <span>
               Mode développement : aucun e-mail n’est envoyé. Lien de confirmation à ouvrir manuellement —{' '}
               <a href={result.url}>confirmer mon adresse</a>.
+            </span>
+          </div>
+        )}
+        {result.mode === 'sent' && result.photoPerdue && (
+          <div className="banner warn mt16" role="status">
+            <span>
+              Votre photo n’a pas pu être enregistrée : vous pourrez l’ajouter depuis votre profil, une
+              fois connecté.
             </span>
           </div>
         )}
@@ -237,6 +277,25 @@ export function SignupForm({ invitation }: { invitation?: string } = {}) {
           value={confirmation}
           onChange={(event) => setConfirmation(event.target.value)}
         />
+        <label>Photo de profil (facultatif)</label>
+        <div className="row" style={{ gap: 10 }}>
+          {photoApercu ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img className="photo-up" src={photoApercu} alt="" />
+          ) : (
+            <span className="avatar lg" style={{ background: 'rgba(255,255,255,.15)' }}>
+              <Icon nom="camera" taille={20} />
+            </span>
+          )}
+          <input
+            id="suPhoto"
+            className="inp"
+            type="file"
+            accept="image/*"
+            style={{ flex: 1 }}
+            onChange={choisirPhoto}
+          />
+        </div>
         <button type="submit" disabled={busy !== null}>
           {busy === 'params'
             ? 'Préparation…'
