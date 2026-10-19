@@ -159,8 +159,15 @@ const MIGRATIONS = [
     ddl: 3, // trois colonnes ajoutées : référence, durée et note de la carte
     creates: [],
   },
+  {
+    version: 20,
+    file: '020_empreinte_appareil.sqlite.sql',
+    sha256: '39e52abf55b8e910b3bb08da15f3f8f819f7e0b6d2cbefa477627f75f3ce12a8',
+    ddl: 3, // deux tables + un index : les clés d'appareil et leurs défis
+    creates: ['passkeys', 'passkey_challenges'],
+  },
 ];
-const EXPECTED_TABLE_COUNT = 49; // 48 après 013 — 014 et 015 ajoutent des colonnes, 016 ajoute le journal de l'équipe
+const EXPECTED_TABLE_COUNT = 51; // 48 après 013 — 014, 015 et 019 ajoutent des colonnes, 016 le journal, 020 les clés d'appareil
 const FORBIDDEN = /\b(drop|truncate|delete\s+from)\b/i;
 
 const mode = process.argv[2];

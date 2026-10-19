@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { EmpreinteConnexion } from './EmpreinteConnexion';
 import Link from 'next/link';
 import { deriveClientKey, fetchDerivationParameters } from '@/lib/client/derive';
 
@@ -157,6 +158,8 @@ export function LoginForm() {
       <button type="submit" disabled={busy}>
         {step === 'deriving' ? 'Protection de votre mot de passe…' : step === 'verifying' ? 'Connexion…' : 'Se connecter'}
       </button>
+      {/* L'empreinte, seulement si cet appareil en garde une pour un compte. */}
+      <EmpreinteConnexion />
       <div className="gl-links">
         <button type="button" className="gl-lien" onClick={() => { setOubliFait(false); setOubliOuvert(true); }}>
           Mot de passe oublié ?

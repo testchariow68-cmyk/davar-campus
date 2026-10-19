@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { Icon } from './Icon';
 import { BoutonAide, type Contacts } from './PanneauAide';
+import { SecuriteEmpreinte } from './SecuriteEmpreinte';
 
 /** Les échelles du prototype : 90, 100, 110 et 125 %. */
 const ECHELLES = [0.9, 1, 1.1, 1.25];
@@ -18,12 +19,16 @@ export function ParametresEcran({
   notificationsInitiales,
   telephoneInitial,
   paysInitial,
+  empreinteActive,
+  utilisateurId,
 }: {
   contacts: Contacts;
   echelleInitiale: number;
   notificationsInitiales: boolean;
   telephoneInitial: string;
   paysInitial: string;
+  empreinteActive: boolean;
+  utilisateurId: string;
 }) {
   const [theme, setTheme] = useState<'dark' | 'light'>('dark');
   const [echelle, setEchelle] = useState(echelleInitiale);
@@ -117,7 +122,8 @@ export function ParametresEcran({
           Recevez les réponses de votre coach, les corrections et vos certificats en temps réel.
         </div>
 
-        <div className="divider" />
+
+        <SecuriteEmpreinte activeInitiale={empreinteActive} utilisateurId={utilisateurId} />
 
         <div className="eyebrow mb8">Pays &amp; téléphone</div>
         <div className="field">

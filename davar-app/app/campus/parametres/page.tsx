@@ -3,6 +3,7 @@ import { ParametresEcran } from '@/components/campus/ParametresEcran';
 import { currentSession } from '@/lib/server/auth';
 import { lireProfil } from '@/lib/server/profil';
 import { lireReglages } from '@/lib/server/settings';
+import { etatEmpreinte } from '@/lib/server/passkeys';
 
 export const dynamic = 'force-dynamic';
 export const metadata = { title: 'Paramètres — Davar Académie Campus' };
@@ -11,9 +12,10 @@ export const metadata = { title: 'Paramètres — Davar Académie Campus' };
 export default async function ParametresPage() {
   const session = await currentSession();
   if (!session) redirect('/connexion');
-  const [profil, reglages] = await Promise.all([
+  const [profil, reglages, empreinte] = await Promise.all([
     lireProfil(session.db, session.user.id),
     lireReglages(session.db),
+    etatEmpreinte(session.db, session.reel.id),
   ]);
   if (!profil) redirect('/connexion');
 
@@ -35,6 +37,8 @@ export default async function ParametresPage() {
         notificationsInitiales={profil.preferences.notifications}
         telephoneInitial={profil.telephone}
         paysInitial={profil.pays}
+        empreinteActive={empreinte.active}
+        utilisateurId={session.reel.id}
       />
     </>
   );
