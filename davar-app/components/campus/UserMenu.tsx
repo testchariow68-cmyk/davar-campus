@@ -17,11 +17,14 @@ export function UserMenu({
   email,
   estProprietaire,
   peutVoirDirection = false,
+  variante = 'barre',
 }: {
   nom: string;
   email: string;
   estProprietaire: boolean;
   peutVoirDirection?: boolean;
+  /** « avatar » : le bouton du bandeau, comme `cpUserMenu()` du prototype. */
+  variante?: 'barre' | 'avatar';
 }) {
   const [ouvert, setOuvert] = useState(false);
   const zone = useRef<HTMLDivElement>(null);
@@ -45,7 +48,13 @@ export function UserMenu({
 
   return (
     <div className="dd-anchor" ref={zone}>
-      <button className="icon-btn" style={{ padding: 2 }} onClick={() => setOuvert(!ouvert)} aria-label="Mon compte">
+      <button
+        className={variante === 'avatar' ? 'cp-ava-btn' : 'icon-btn'}
+        style={variante === 'avatar' ? undefined : { padding: 2 }}
+        onClick={() => setOuvert(!ouvert)}
+        title="Mon compte"
+        aria-label="Mon compte"
+      >
         <span className="avatar" aria-hidden="true">
           {initiale}
         </span>

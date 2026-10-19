@@ -8,7 +8,7 @@ import { Icon } from './Icon';
  * l'icône annonce le mode vers lequel on bascule, et le choix est mémorisé sous
  * la clé `davar_theme` (la clé du prototype, pour rester compatible).
  */
-export function ThemeButton() {
+export function ThemeButton({ variante = 'barre' }: { variante?: 'barre' | 'rail' | 'mobile' } = {}) {
   const [theme, setTheme] = useState<'dark' | 'light'>('dark');
 
   useEffect(() => {
@@ -27,9 +27,13 @@ export function ThemeButton() {
     setTheme(suivant);
   }
 
+  const libelle = `Mode ${theme === 'dark' ? 'clair' : 'sombre'}`;
+  const classe = variante === 'rail' ? 'rail-ico' : variante === 'mobile' ? 'icon-btn d-lg-none' : 'icon-btn';
+
   return (
-    <button className="icon-btn" onClick={basculer} title={`Mode ${theme === 'dark' ? 'clair' : 'sombre'}`} aria-label="Changer de thème">
-      <Icon nom={theme === 'dark' ? 'sun' : 'moon'} taille={18} />
+    <button className={classe} onClick={basculer} title={libelle} aria-label="Changer de thème">
+      <Icon nom={theme === 'dark' ? 'sun' : 'moon'} taille={variante === 'rail' ? 18 : 17} />
+      {variante === 'rail' && <span>Thème</span>}
     </button>
   );
 }

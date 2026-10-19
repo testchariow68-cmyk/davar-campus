@@ -65,12 +65,15 @@ export function MenuCampus({
   formation,
   pourcent,
   initiale,
+  variante = 'barre',
 }: {
   nom: string;
   email: string;
   formation: string | null;
   pourcent: number;
   initiale: string;
+  /** « barre » : la barre du haut. « rail » : le rail de gauche. « mobile » : le bouton du bandeau. */
+  variante?: 'barre' | 'rail' | 'mobile';
 }) {
   const [ouvert, setOuvert] = useState(false);
   const [theme, setTheme] = useState<'dark' | 'light'>('dark');
@@ -98,9 +101,21 @@ export function MenuCampus({
 
   return (
     <>
-      <button className="icon-btn" onClick={() => setOuvert(true)} title="Menu" aria-label="Menu">
-        <Icon nom="menu" taille={18} />
-      </button>
+      {variante === 'rail' ? (
+        <button className="rail-ico" onClick={() => setOuvert(true)} title="Menu" aria-label="Menu">
+          <Icon nom="menu" taille={18} />
+          <span>Menu</span>
+        </button>
+      ) : (
+        <button
+          className={variante === 'mobile' ? 'icon-btn d-lg-none' : 'icon-btn'}
+          onClick={() => setOuvert(true)}
+          title="Menu"
+          aria-label="Menu"
+        >
+          <Icon nom="menu" taille={variante === 'mobile' ? 17 : 18} />
+        </button>
+      )}
 
       {ouvert && (
         <div

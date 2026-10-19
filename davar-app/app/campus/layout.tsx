@@ -1,16 +1,15 @@
-import Link from 'next/link';
 import { redirect } from 'next/navigation';
-import { Icon } from '@/components/campus/Icon';
+import { RailCampus } from '@/components/campus/RailCampus';
+import { FilAriane } from '@/components/campus/FilAriane';
+import { BoutonAccueil } from '@/components/campus/BoutonAccueil';
 import { ThemeButton } from '@/components/campus/ThemeButton';
 import { UserMenu } from '@/components/campus/UserMenu';
 import { MenuCampus } from '@/components/campus/MenuCampus';
 import { BandeauDefilant } from '@/components/campus/BandeauDefilant';
 import { BellMenu } from '@/components/campus/BellMenu';
 import { VueTestBar } from '@/components/campus/VueTestBar';
-import { VueTestMenu } from '@/components/campus/VueTestMenu';
 import { currentSession } from '@/lib/server/auth';
 import { listTrainingsApercu, listUserTrainings } from '@/lib/server/campus';
-import { listerComptesTest, peutTesterUneVue } from '@/lib/server/vue-test';
 import { passageEtudiant } from '@/lib/server/assiduite';
 import { compterNonLues, listerNotifications } from '@/lib/server/notifications';
 import { lirePreferences } from '@/lib/server/profil';
@@ -24,12 +23,14 @@ export const dynamic = 'force-dynamic';
 /**
  * COQUILLE DU CAMPUS — reconstruction fidèle de `studentShell()` du prototype.
  *
- * Même structure que le prototype, au même endroit :
- *   barre supérieure (marque + navigation + thème + compte), puis la page.
+ * La structure est celle du prototype, au même endroit : le rail de gauche
+ * (`aside.rail`), puis la colonne principale avec son bandeau supérieur, le
+ * fil d'Ariane, la page, et le bandeau défilant en bas.
  *
- * Le bandeau du bas (annonces + réseaux) est celui du prototype : les
- * plateformes non suivies défilent, et elles disparaissent dès que l'étudiant
- * confirme son abonnement. Le propriétaire, lui, ne voit jamais le bandeau social.
+ * Deux blocs volontairement ABSENTS, parce que le prototype ne les met pas
+ * dans la coquille de l'étudiant : le bouton « Tester une vue » (il est dans
+ * l'Espace Direction, où `viewAsBtnHTML()` l'affiche) et un pied de page
+ * (la coquille du prototype n'en a aucun).
  */
 export default async function CampusLayout({ children }: { children: React.ReactNode }) {
   const session = await currentSession();
@@ -37,10 +38,9 @@ export default async function CampusLayout({ children }: { children: React.React
   const { user, reel, vueTest } = session;
 
   /**
-   * Vue test : deux affichages, jamais confondus.
-   *   - ouvert : le bandeau « Vue test : … » avec Quitter, et le bouton disparaît ;
-   *   - fermé  : le bouton « Tester une vue », et pour le propriétaire SEULEMENT.
-   * Aucun autre compte ne reçoit la liste des comptes de test : elle n'est même pas lue.
+   * Vue test : pendant la visite, le bandeau « Vue test : … » avec Quitter.
+   * Le bouton pour ENTRER dans une vue, lui, est dans l'Espace Direction —
+   * la coquille de l'étudiant du prototype ne le porte pas.
    */
   // Le passage d'assiduité : ce que le prototype faisait à chaque connexion.
   // Il ne concerne QUE les étudiants réels — jamais le staff, jamais une vue test,
@@ -68,77 +68,81 @@ export default async function CampusLayout({ children }: { children: React.React
   // Règle du prototype : le Super Admin ne voit jamais le bandeau social.
   const reseaux = reel.role === 'admin' ? [] : await plateformesNonSuivies(session.db, user.id);
 
-  const vuesTest =
-    !vueTest && peutTesterUneVue(reel)
-      ? (await listerComptesTest(session.db)).map((compte) => ({ id: compte.id, libelle: compte.libelle }))
-      : [];
+  const initiale = (user.displayName.trim()[0] ?? '?').toUpperCase();
 
   return (
     <>
       <EchelleAffichage echelle={preferences.echelle} />
-      {vueTest && <VueTestBar nom={user.displayName} />}
 
-      <header className="topbar">
-        <div className="tb-inner">
-          <Link className="brand" href="/campus">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img className="brand-img" src="/logo-structure.png" alt="Davar Académie" />
-            <div className="brand-txt">
-              DAVAR<span>Académie</span>
+      <div className="cp-app">
+        <RailCampus
+          nom={user.displayName}
+          email={user.email}
+          formation={active?.title ?? null}
+          pourcent={pourcentActive}
+          initiale={initiale}
+        />
+
+        <div className="cp-main">
+          {vueTest && <VueTestBar nom={user.displayName} />}
+
+          <header className="cp-top">
+            <div className="row" style={{ gap: 8, minWidth: 0 }}>
+              <FilAriane formations={formations.map((formation) => ({ id: formation.id, title: formation.title }))} />
             </div>
-          </Link>
+            <div className="row" style={{ gap: 6 }}>
+              <MenuCampus
+                nom={user.displayName}
+                email={user.email}
+                formation={active?.title ?? null}
+                pourcent={pourcentActive}
+                initiale={initiale}
+                variante="mobile"
+              />
+              <div style={{ position: 'relative' }}>
+                <BellMenu
+                  initiales={notifications.map((notification) => ({
+                    id: notification.id,
+                    kind: notification.kind,
+                    titre: notification.titre,
+                    corps: notification.corps,
+                    route: notification.route,
+                    atMs: notification.atMs,
+                    lue: notification.lue,
+                  }))}
+                  nonLuesInitiales={nonLues}
+                />
+              </div>
+              <ThemeButton variante="mobile" />
+              <UserMenu
+                nom={user.displayName}
+                email={user.email}
+                estProprietaire={reel.role === 'admin'}
+                peutVoirDirection={reel.role === 'admin' || reel.role === 'staff'}
+                variante="avatar"
+              />
+            </div>
+          </header>
 
-          <div className="tb-right">
-            <MenuCampus
-              nom={user.displayName}
-              email={user.email}
-              formation={active?.title ?? null}
-              pourcent={pourcentActive}
-              initiale={(user.displayName.trim()[0] ?? '?').toUpperCase()}
-            />
-            <BellMenu
-              initiales={notifications.map((notification) => ({
-                id: notification.id,
-                kind: notification.kind,
-                titre: notification.titre,
-                corps: notification.corps,
-                route: notification.route,
-                atMs: notification.atMs,
-                lue: notification.lue,
-              }))}
-              nonLuesInitiales={nonLues}
-            />
-            <ThemeButton />
-            <VueTestMenu vues={vuesTest} />
-            <UserMenu
-              nom={user.displayName}
-              email={user.email}
-              estProprietaire={reel.role === 'admin'}
-              peutVoirDirection={reel.role === 'admin' || reel.role === 'staff'}
-            />
-          </div>
+          <main className="cp-content" id="cpPage">
+            {children}
+          </main>
+
+          <BandeauDefilant annonce={annonce} reseaux={reseaux} />
         </div>
-      </header>
 
-      <main className="container">{children}</main>
+        {/* Le bouton d'accueil flottant : un tap revient en arrière, deux taps
+            ramènent à l'accueil, et on le glisse où l'on veut. */}
+        <BoutonAccueil />
 
-      <BandeauDefilant annonce={annonce} reseaux={reseaux} />
-
-      {/* Le bouton d'aide flottant, comme le panneau d'aide du prototype : il
-          est present sur TOUS les ecrans du campus, pas sur une page a part. */}
-      <SupportFab
-        whatsapp={reglages['support.whatsapp']}
-        telephone={reglages['support.phone']}
-        courriel={reglages['support.email']}
-      />
-
-      <footer className="container" style={{ paddingBottom: 40 }}>
-        <div className="row between small muted" style={{ gap: 10, flexWrap: 'wrap' }}>
-          <span>
-            <Icon nom="lock" taille={13} /> Espace privé — DAVAR ACADÉMIE
-          </span>
-        </div>
-      </footer>
+        {/* Le bouton d'aide flottant, comme le panneau d'aide du prototype : il
+            est present sur TOUS les ecrans du campus, pas sur une page a part. */}
+        <SupportFab
+          whatsapp={reglages['support.whatsapp']}
+          telephone={reglages['support.phone']}
+          courriel={reglages['support.email']}
+        />
+      </div>
     </>
   );
 }
