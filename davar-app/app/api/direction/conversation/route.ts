@@ -43,8 +43,7 @@ export async function POST(request: Request) {
             userId: etudiantId,
             kind: 'coach',
             titre: 'Votre coach a répondu',
-            corps: texte.slice(0, 140),
-            route: `/campus/questions/${conversationId}`,
+            corps: 'Consultez sa réponse dans votre conversation.',
           },
           maintenant
         );

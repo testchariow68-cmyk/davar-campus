@@ -286,12 +286,13 @@ export async function attribuerApresPaiement(
     'write'
   );
 
+  const formation = await db.execute({ sql: 'SELECT title FROM trainings WHERE id = ?', args: [intention.trainingId] });
+  const titreFormation = typeof formation.rows[0]?.title === 'string' ? formation.rows[0].title : 'votre formation';
   await notifier(db, {
     userId: intention.userId,
     kind: 'paiement',
-    titre: 'Paiement confirmé 🎉',
-    corps: 'Votre formation est ajoutée à votre compte. Bonne formation !',
-    route: `/campus/formation/${intention.trainingId}`,
+    titre: 'Formation activée ✓',
+    corps: `Paiement confirmé : « ${titreFormation} » a été ajoutée à votre compte.`,
   });
 
   return 'attribue';

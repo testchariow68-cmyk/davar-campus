@@ -22,7 +22,20 @@ import { MOTIVATIONS_DEFAUT } from './settings.ts';
 export const CLE_LISTE = 'motivations.liste';
 export const CLE_INDEX = 'motivations.index';
 export const CLE_SUIVANTE = 'motivations.suivante';
-export const SEUIL_ALERTE = 10;
+/**
+ * L'ALERTE DE STOCK — le propriétaire est prévenu, par notification, quand le
+ * stock approche de sa fin.
+ *
+ * Le prototype n'alertait qu'au dernier moment : `if (left <= 10)`. Les trois
+ * jalons demandés — 50, 20, puis 10 — s'y ajoutent ; en dessous de 10, chaque
+ * envoi alerte, comme le prototype le faisait.
+ */
+export const JALONS_ALERTE = [50, 20, 10];
+export function doitAlerter(restantes: number): boolean {
+  if (!Number.isFinite(restantes) || restantes < 0) return false;
+  if (restantes < JALONS_ALERTE[JALONS_ALERTE.length - 1]) return true;
+  return JALONS_ALERTE.includes(restantes);
+}
 
 function texte(valeur: unknown, defaut = ''): string {
   return typeof valeur === 'string' ? valeur : defaut;
@@ -241,7 +254,7 @@ export async function envoyerMotivation(
     if (!userId) continue;
     await notifier(
       db,
-      { userId, kind: 'encouragement', titre: 'Votre motivation de la semaine', corps: motivation, route: '/campus' },
+      { userId, kind: 'encouragement', titre: 'Votre motivation de la semaine 💪', corps: motivation },
       maintenant
     );
     envoyees += 1;
@@ -250,7 +263,7 @@ export async function envoyerMotivation(
   await ecrire(db, CLE_INDEX, String(etat.index + 1), maintenant);
   const restantes = Math.max(0, etat.liste.length - (etat.index + 1));
 
-  if (restantes <= SEUIL_ALERTE) {
+  if (doitAlerter(restantes)) {
     const proprietaire = await db.execute("SELECT id FROM users WHERE role = 'admin' LIMIT 1");
     const adminId = texte(proprietaire.rows[0]?.id);
     if (adminId) {
@@ -261,7 +274,6 @@ export async function envoyerMotivation(
           kind: 'system',
           titre: 'Stock de motivations presque épuisé',
           corps: `Il reste ${restantes} motivation(s) : pensez à en ajouter.`,
-          route: '/direction/reglages',
         },
         maintenant
       );

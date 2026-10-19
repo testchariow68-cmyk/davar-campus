@@ -60,9 +60,8 @@ export async function POST(request: Request) {
           {
             userId: etudiant,
             kind: 'devoir',
-            titre: decision === 'approved' ? 'Votre devoir est validé' : 'Votre devoir demande une reprise',
-            corps: motif || null,
-            route: '/campus',
+            titre: decision === 'approved' ? 'Évaluation validée ✓' : 'Évaluation refusée',
+            corps: decision === 'approved' ? 'Votre travail a été accepté.' : motif || null,
           },
           maintenant
         );
@@ -92,9 +91,8 @@ export async function POST(request: Request) {
           {
             userId: etudiant,
             kind: 'certificat',
-            titre: decision === 'approved' ? 'Votre certificat est délivré' : 'Votre demande de certificat',
-            corps: decision === 'approved' ? `Code de vérification : ${resultat.code}` : motif || null,
-            route: '/campus/certificats',
+            titre: decision === 'approved' ? 'Certificat délivré 🎓' : 'Demande de certificat : évaluation à refaire',
+            corps: decision === 'approved' ? `Votre certificat est disponible.` : motif || null,
           },
           maintenant
         );

@@ -38,6 +38,30 @@ export type Notification = {
   expiresAtMs: number;
 };
 
+/**
+ * OÙ MÈNE UNE NOTIFICATION — la table du prototype, et rien d'autre.
+ *
+ * Le prototype (`notifRoute`) ne met un lien QUE là où l'on peut agir : une
+ * réponse de coach ramène à « Mes questions », une décision de devoir ramène
+ * à « Mes formations ». Les notifications purement informatives — distinction,
+ * motivation, nouvelle ressource — ne mènent nulle part : elles se lisent,
+ * point. Rien n'est inventé ici : chaque ligne reproduit le prototype.
+ */
+const ROUTES: Record<string, string | null> = {
+  coach: '/campus/questions',
+  ai: '/campus/questions',
+  devoir: '/campus/formations',
+  retour: '/campus/formations',
+  rappel: '/campus/formations',
+  certificat: '/campus/certificats',
+  // Celles-ci ne mènent nulle part, exactement comme dans le prototype.
+  badge: null,
+  paiement: null,
+  ressource: null,
+  encouragement: null,
+  system: null,
+};
+
 export async function notifier(
   db: Db,
   options: { userId: string; kind?: string; titre: string; corps?: string | null; route?: string | null },
@@ -55,7 +79,7 @@ export async function notifier(
       kind,
       options.titre,
       options.corps ?? null,
-      options.route ?? null,
+      options.route ?? ROUTES[kind] ?? null,
       maintenant,
       maintenant + DUREE_MAXIMALE_MS,
     ],

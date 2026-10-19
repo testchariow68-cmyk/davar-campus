@@ -199,7 +199,6 @@ export async function attribuerBadge(
       kind: 'badge',
       titre: 'Nouvelle distinction',
       corps: phrase ? `${nom} — ${phrase}` : nom,
-      route: '/campus/distinctions',
     }, maintenant);
   }
   return true;

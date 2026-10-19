@@ -137,9 +137,16 @@ export async function POST(request: Request) {
       const userId = typeof utilisateur.rows[0]?.id === 'string' ? utilisateur.rows[0].id : '';
       if (!resourceId || !userId) return jsonNoStore({ error: 'etudiant_introuvable' }, 400);
       await attribuerRessource(db, { resourceId, userId, par: reel.id }, maintenant);
+      const ressource = await db.execute({ sql: 'SELECT title FROM resources WHERE id = ?', args: [resourceId] });
+      const titreRessource = typeof ressource.rows[0]?.title === 'string' ? ressource.rows[0].title : 'Une ressource';
       await notifier(
         db,
-        { userId, kind: 'ressource', titre: 'Une nouvelle ressource vous est attribuée', corps: 'Retrouvez-la dans « Mes ressources ».', route: '/campus/ressources' },
+        {
+          userId,
+          kind: 'ressource',
+          titre: 'Nouvelle ressource disponible',
+          corps: `« ${titreRessource} » a été ajouté(e) à vos ressources.`,
+        },
         maintenant
       );
       await enregistrerEvenement(db, {

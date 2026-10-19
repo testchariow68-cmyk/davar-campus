@@ -14,8 +14,14 @@ export type NotificationAffichee = {
   lue: boolean;
 };
 
-/** Ce qui appartient à une formation : le prototype les met devant, le reste derrière. */
-const FORMATION = ['ecrit', 'video', 'badge', 'paiement'];
+/**
+ * LES DEUX COLONNES DU PROTOTYPE (`vNotifs`) : « Formation (prioritaire) »
+ * puis « Campus ». La première ne prend que les types que le prototype y met
+ * (`exercise, eval, coach, module, quiz, formation`) — ici : une réponse de
+ * coach et une décision sur un devoir. Une distinction, une motivation, une
+ * ressource ou un rappel restent dans « Campus », comme le prototype les range.
+ */
+const FORMATION = ['coach', 'devoir'];
 
 function jour(atMs: number): string {
   return new Date(atMs).toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' });
