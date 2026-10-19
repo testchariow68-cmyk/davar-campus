@@ -1,6 +1,7 @@
 'use client';
 
 import { useMemo, useState } from 'react';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { messageDe, poster } from './api';
 
@@ -75,7 +76,9 @@ export function EtudiantsOutils({ etudiants, formations }: { etudiants: Etudiant
               <div className="row between" style={{ gap: 10, flexWrap: 'wrap' }}>
                 <div>
                   <div style={{ fontWeight: 700 }}>
-                    {etudiant.nom}{' '}
+                    <Link href={`/direction/etudiants/${etudiant.id}`} className="link">
+                      {etudiant.nom}
+                    </Link>{' '}
                     {etudiant.statut === 'suspended' ? <span className="dv-tag closed">suspendu</span> : null}{' '}
                     {etudiant.confirme ? null : <span className="dv-tag closed">e-mail à confirmer</span>}{' '}
                     {etudiant.estTest ? <span className="dv-tag">compte de test</span> : null}

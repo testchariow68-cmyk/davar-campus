@@ -24,6 +24,15 @@ import { createClient } from '@libsql/client';
 import { randomClientSalt, hashClientVerifier } from '../lib/server/auth-core.ts';
 import { deriveClientKey } from '../lib/client/derive.ts';
 
+/* `.env.local` vit à la racine de davar-app/. On le charge sans jamais l'afficher :
+ * sans lui, le serveur et le script ne dériveraient pas la même clé et la
+ * connexion serait refusée (HTTP 401). */
+try {
+  process.loadEnvFile(new URL('../.env.local', import.meta.url));
+} catch {
+  console.log('Note : aucun .env.local lisible — les valeurs doivent venir de l’environnement.');
+}
+
 const BASE = process.env.BASE ?? 'http://127.0.0.1:3000';
 const URL_BASE = process.env.TURSO_DATABASE_URL ?? 'file:dev-data/davar-dev.db';
 if (!URL_BASE.startsWith('file:') || !URL_BASE.includes('dev-data/')) {
@@ -103,7 +112,11 @@ try {
   const directionAvant = await appel(pot, '/direction');
   const htmlAvant = await directionAvant.text();
   controler('Espace Direction ouvert', directionAvant.status === 200);
-  controler('la navigation complète est là', htmlAvant.includes('Réglages') && htmlAvant.includes('Vue test'));
+  controler(
+    'la navigation complète est là',
+    htmlAvant.includes('Configuration') && htmlAvant.includes('Évaluations'),
+    'le propriétaire voit tous les écrans, dans les libellés du prototype'
+  );
 
   // Les deux écrans de la dictée vocale des avis : celui où le propriétaire
   // choisit le moteur, et celui où l'étudiant dicte.
@@ -154,10 +167,10 @@ try {
   controler('le bandeau de vue test est affiché', htmlPendant.includes('Vue test'));
   controler(
     'la navigation est celle du coach, pas celle du propriétaire',
-    htmlPendant.includes('Conversations') && htmlPendant.includes('Devoirs') && !htmlPendant.includes('Réglages'),
-    'Réglages doit disparaître de la navigation'
+    htmlPendant.includes('Conversations') && htmlPendant.includes('Évaluations') && !htmlPendant.includes('Configuration'),
+    'Configuration doit disparaître de la navigation'
   );
-  controler('la vue d’ensemble parle de l’équipe', htmlPendant.includes('Vue d’ensemble de l’équipe'));
+  controler('la vue d’ensemble est celle du coach', htmlPendant.includes('Coach (test)'));
 
   const reglagesPendant = await appel(pot, '/direction/reglages');
   controler(
@@ -180,7 +193,7 @@ try {
   });
   const directionApres = await appel(pot, '/direction');
   const htmlApres = await directionApres.text();
-  controler('« Quitter » rend la navigation complète', htmlApres.includes('Réglages'));
+  controler('« Quitter » rend la navigation complète', htmlApres.includes('Configuration'));
 
   // Les nouveaux écrans d'analyse : le propriétaire, puis l'analyste en vue test.
   const ECRANS_ANALYSE = [

@@ -1090,3 +1090,110 @@ export async function definirRolesEquipe(
   }
   return { ok: true, message: libellesPourMessage(roles), roles };
 }
+
+/* ------------------------------------------------- LA FICHE D'UN ÉTUDIANT ---- */
+
+export type SoumissionEtudiant = {
+  id: string;
+  fichier: string;
+  formation: string;
+  statut: string;
+  atMs: number;
+};
+
+export type FicheEtudiant = {
+  id: string;
+  nom: string;
+  courriel: string;
+  telephone: string;
+  inscritLeMs: number;
+  formations: { id: string; titre: string; pct: number; terminee: boolean }[];
+  soumissions: SoumissionEtudiant[];
+  conversations: { id: string; extrait: string; atMs: number; mode: string }[];
+  certificats: { id: string; code: string; formation: string; statut: string }[];
+};
+
+/**
+ * LA FICHE D'UN ÉTUDIANT — l'écran du prototype « Étudiants › son nom » :
+ * ses formations et leur progression, ses soumissions, ses conversations,
+ * ses certificats. Rien de plus : pas de note inventée, pas de jugement.
+ */
+export async function ficheEtudiant(db: Db, userId: string): Promise<FicheEtudiant | null> {
+  const compte = await db.execute({
+    sql: `SELECT id, email_normalized, display_name, phone, created_at_ms
+          FROM users WHERE id = ? AND role = 'student' LIMIT 1`,
+    args: [userId],
+  });
+  const ligne = compte.rows[0];
+  if (!ligne) return null;
+
+  const [inscriptions, soumissions, conversations, certificats] = await Promise.all([
+    db.execute({
+      sql: `SELECT t.id, t.title,
+                   (SELECT COUNT(*) FROM course_modules m JOIN course_lessons l ON l.module_id = m.id
+                     WHERE m.training_id = t.id) AS total,
+                   (SELECT COUNT(*) FROM lesson_completions c
+                     JOIN course_lessons l ON l.id = c.lesson_id
+                     JOIN course_modules m ON m.id = l.module_id
+                     WHERE m.training_id = t.id AND c.user_id = e.user_id) AS faits
+            FROM enrollments e JOIN trainings t ON t.id = e.training_id
+            WHERE e.user_id = ?
+            ORDER BY e.acquired_at_ms DESC`,
+      args: [userId],
+    }),
+    db.execute({
+      sql: `SELECT s.id, s.file_key, s.status, s.at_ms, COALESCE(t.title, '') AS formation
+            FROM submissions s LEFT JOIN trainings t ON t.id = s.training_id
+            WHERE s.user_id = ? ORDER BY s.at_ms DESC LIMIT 40`,
+      args: [userId],
+    }),
+    db.execute({
+      sql: `SELECT c.id, c.mode, c.updated_at_ms,
+                   (SELECT text FROM conversation_messages m WHERE m.conversation_id = c.id ORDER BY at_ms LIMIT 1) AS premier
+            FROM conversations c WHERE c.user_id = ? ORDER BY c.updated_at_ms DESC LIMIT 20`,
+      args: [userId],
+    }),
+    db.execute({
+      sql: `SELECT id, code, formation_title, status FROM certificates
+            WHERE user_id = ? ORDER BY issued_at_ms DESC`,
+      args: [userId],
+    }),
+  ]);
+
+  return {
+    id: texte(ligne.id),
+    nom: texte(ligne.display_name),
+    courriel: texte(ligne.email_normalized),
+    telephone: texte(ligne.phone),
+    inscritLeMs: nombre(ligne.created_at_ms),
+    formations: inscriptions.rows.map((r) => {
+      const total = nombre(r.total);
+      const faits = nombre(r.faits);
+      return {
+        id: texte(r.id),
+        titre: texte(r.title),
+        pct: total > 0 ? Math.round((faits / total) * 100) : 0,
+        terminee: total > 0 && faits >= total,
+      };
+    }),
+    soumissions: soumissions.rows.map((r) => ({
+      id: texte(r.id),
+      fichier: (texte(r.file_key).split('/').pop() || 'pièce jointe').slice(0, 120),
+      formation: texte(r.formation),
+      statut: texte(r.status),
+      atMs: nombre(r.at_ms),
+    })),
+    conversations: conversations.rows.map((r) => ({
+      id: texte(r.id),
+      extrait: texte(r.premier).slice(0, 60),
+      atMs: nombre(r.updated_at_ms),
+      mode: texte(r.mode),
+    })),
+    certificats: certificats.rows.map((r) => ({
+      id: texte(r.id),
+      code: texte(r.code),
+      formation: texte(r.formation_title),
+      statut: texte(r.status),
+    })),
+  };
+}

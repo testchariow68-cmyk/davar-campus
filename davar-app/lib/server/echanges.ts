@@ -210,6 +210,46 @@ export async function toutesConversations(db: Db, options: { seulementEnAttente?
   }));
 }
 
+/** Une seule conversation, avec son contexte — l'écran de détail de la Direction. */
+export async function ficheConversation(
+  db: Db,
+  conversationId: string
+): Promise<ConversationAvecContexte | null> {
+  const lignes = await db.execute({
+    sql: `SELECT c.id, c.user_id, c.training_id, c.module_id, c.mode, c.resolved, c.ai_validated,
+                 c.created_at_ms, c.updated_at_ms,
+                 u.display_name AS etudiant, u.email_normalized AS courriel,
+                 t.title AS formation, m.title AS module,
+                 (SELECT COUNT(*) FROM conversation_messages cm WHERE cm.conversation_id = c.id) AS nb
+          FROM conversations c
+          JOIN users u ON u.id = c.user_id
+          LEFT JOIN trainings t ON t.id = c.training_id
+          LEFT JOIN course_modules m ON m.id = c.module_id
+          WHERE c.id = ?
+          LIMIT 1`,
+    args: [conversationId],
+  });
+  const row = lignes.rows[0];
+  if (!row) return null;
+  return {
+    id: texte(row.id) ?? '',
+    userId: texte(row.user_id) ?? '',
+    formationId: texte(row.training_id) ?? '',
+    moduleId: texte(row.module_id),
+    mode: (texte(row.mode) ?? 'ai') as Mode,
+    resolue: entier(row.resolved) === 1,
+    iaValidee: entier(row.ai_validated) === 1,
+    atMs: entier(row.created_at_ms) ?? 0,
+    updatedAtMs: entier(row.updated_at_ms) ?? 0,
+    etudiant: texte(row.etudiant) ?? 'Étudiant',
+    courriel: texte(row.courriel) ?? '',
+    formation: texte(row.formation) ?? 'Aide',
+    module: texte(row.module),
+    dernierMessage: null,
+    nbMessages: entier(row.nb) ?? 0,
+  };
+}
+
 /** Le coach répond, valide ou corrige. Il n'est jamais bloqué par l'assistant. */
 export async function repondreCommeCoach(db: Db, conversationId: string, texteReponse: string, maintenant = Date.now()): Promise<void> {
   await ajouterMessage(db, { conversationId, auteur: 'coach', texte: texteReponse }, maintenant);
