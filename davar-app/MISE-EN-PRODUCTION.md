@@ -68,7 +68,8 @@ compte dont on ne peut pas confirmer l'adresse.
 1. Ouvrez <https://script.google.com> depuis le compte Google de l'académie → **Nouveau projet**.
 2. Effacez tout et collez le contenu du fichier.
 3. **Projet → Propriétés du script** → ajoutez `DAVAR_MAIL_SECRET` = une longue chaîne aléatoire
-   (32 caractères ou plus). C'est votre jeton.
+   (16 caractères au minimum). C'est votre jeton. Le script le lit dans la propriété,
+   jamais dans le code : ne le collez pas dans le fichier.
 4. **Déployer → Nouveau déploiement → Application Web** : exécuter en tant que **moi**, accès
    **tout le monde** (c'est le jeton, pas la connexion Google, qui protège l'accès).
    Google affiche un avertissement : c'est votre propre script → *Paramètres avancés* → *Accéder*.

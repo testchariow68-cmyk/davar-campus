@@ -16,7 +16,7 @@
  *   3. Menu « Projet » (icône engrenage) → « Propriétés du script » →
  *      « Ajouter une propriété de script » :
  *         Nom   : DAVAR_MAIL_SECRET
- *         Valeur: une longue chaîne aléatoire (32 caractères ou plus)
+ *         Valeur: une longue chaîne aléatoire (16 caractères au minimum)
  *      Cette valeur est le « jeton » que vous saisirez aussi dans Cloudflare.
  *   4. Menu « Déployer » → « Nouveau déploiement » → type « Application Web » :
  *         Description      : Relais e-mail DAVAR
@@ -33,6 +33,12 @@
  *      MAIL_APPS_SCRIPT_URL   = l'URL /exec copiée à l'étape 5
  *      MAIL_APPS_SCRIPT_TOKEN = la valeur choisie à l'étape 3
  *
+ * L'ANCIEN SCRIPT SUPABASE NE PEUT PLUS SERVIR. Il attendait `token` et
+ * `htmlBody` ; la plateforme envoie `secret`, `to`, `subject` et `text`. Avec
+ * l'ancien script, chaque appel répondait « Token invalide » — et quand bien
+ * même il aurait passé, le corps du message serait parti vide. Si vous aviez
+ * ce script, remplacez-le entièrement par celui-ci : rien n'en est repris.
+ *
  * PIÈGE CONNU, DÉJÀ TRAITÉ CÔTÉ APPLICATION : une application Web Apps Script
  * répond toujours par une redirection (302) avant le vrai résultat. Suivie
  * automatiquement, cette redirection change le POST en GET : c'est alors
@@ -46,8 +52,8 @@
  * tout fonctionne, vous pouvez aussi restreindre les adresses d'expédition ci-dessous.
  */
 
-/** Adresse d'expédition affichée (doit appartenir au compte ou être un alias vérifié). */
-const EXPEDITEUR_NOM = 'Davar Académie';
+/** Nom affiché comme expéditeur, en majuscules : c'est la marque. */
+const EXPEDITEUR_NOM = 'DAVAR ACADÉMIE';
 /** Nombre maximal d'envois par jour, pour ne jamais dépasser le quota Google. */
 const PLAFOND_JOURNALIER = 250;
 
@@ -62,7 +68,10 @@ function doPost(e) {
     }
 
     const attendu = PropertiesService.getScriptProperties().getProperty('DAVAR_MAIL_SECRET');
-    if (!attendu || attendu.length < 32) return reponse('jeton non configuré côté script', 500);
+    // 16 caractères au minimum : en dessous, ce n'est plus un secret. Si vous
+    // en générez un nouveau, prenez-le long (32 ou plus) et changez les deux
+    // côtés — le script et Cloudflare — le même jour.
+    if (!attendu || attendu.length < 16) return reponse('jeton non configuré côté script', 500);
     if (!egalConstante(String(corps.secret || ''), attendu)) {
       console.warn('Appel refusé : jeton invalide');
       return reponse('non autorisé', 401);
