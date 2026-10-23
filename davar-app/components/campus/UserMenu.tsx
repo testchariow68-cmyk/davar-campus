@@ -4,25 +4,18 @@ import { useEffect, useRef, useState } from 'react';
 import { Icon } from './Icon';
 
 /**
- * MENU DU COMPTE — `cpUserMenu()` du prototype : le nom, l'adresse, « Mon
- * profil », « Paramètres », puis la déconnexion.
- *
- * Deux raccords, assumés et provisoires : « Mes avis » et « Direction ». Le
- * prototype y arrive par une notification et par le lien d'accueil du fil
- * d'Ariane — deux chemins que le campus n'a pas encore. Sans ces deux lignes,
- * deux écrans qui fonctionnent n'auraient plus aucune porte d'entrée.
+ * MENU DU COMPTE — `cpUserMenu()` du prototype, à la ligne près : le nom,
+ * l'adresse, « Mon profil », « Paramètres », un séparateur, puis
+ * « Se déconnecter ». Rien de plus : rien de ce que le prototype ne montre
+ * pas n'a le droit d'entrer dans ce menu.
  */
 export function UserMenu({
   nom,
   email,
-  estProprietaire,
-  peutVoirDirection = false,
   variante = 'barre',
 }: {
   nom: string;
   email: string;
-  estProprietaire: boolean;
-  peutVoirDirection?: boolean;
   /** « avatar » : le bouton du bandeau, comme `cpUserMenu()` du prototype. */
   variante?: 'barre' | 'avatar';
 }) {
@@ -72,16 +65,6 @@ export function UserMenu({
           <a className="dd-item" href="/campus/parametres">
             <Icon nom="settings" taille={15} /> Paramètres
           </a>
-          {!estProprietaire && (
-            <a className="dd-item" href="/campus/avis">
-              <Icon nom="quote" taille={15} /> Mes avis
-            </a>
-          )}
-          {peutVoirDirection && (
-            <a className="dd-item" href="/direction">
-              <Icon nom="shieldCheck" taille={15} /> Direction
-            </a>
-          )}
           <div className="dd-sep" />
           <form action="/api/auth/logout" method="post">
             <button className="dd-item" type="submit" style={{ width: '100%', textAlign: 'left' }}>

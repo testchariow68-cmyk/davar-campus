@@ -26,11 +26,12 @@ export const CLE_SUIVANTE = 'motivations.suivante';
  * L'ALERTE DE STOCK — le propriétaire est prévenu, par notification, quand le
  * stock approche de sa fin.
  *
- * Le prototype n'alertait qu'au dernier moment : `if (left <= 10)`. Les trois
- * jalons demandés — 50, 20, puis 10 — s'y ajoutent ; en dessous de 10, chaque
- * envoi alerte, comme le prototype le faisait.
+ * Deux jalons : 20, puis 10. En dessous de 10, chaque envoi alerte, comme le
+ * prototype le faisait (`if (left <= 10)`). Le seuil de 50 a été écarté : un
+ * stock tient couramment une cinquantaine de citations, l'alerte sonnerait au
+ * premier envoi.
  */
-export const JALONS_ALERTE = [50, 20, 10];
+export const JALONS_ALERTE = [20, 10];
 export function doitAlerter(restantes: number): boolean {
   if (!Number.isFinite(restantes) || restantes < 0) return false;
   if (restantes < JALONS_ALERTE[JALONS_ALERTE.length - 1]) return true;

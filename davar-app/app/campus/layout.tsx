@@ -114,13 +114,7 @@ export default async function CampusLayout({ children }: { children: React.React
                 />
               </div>
               <ThemeButton variante="mobile" />
-              <UserMenu
-                nom={user.displayName}
-                email={user.email}
-                estProprietaire={reel.role === 'admin'}
-                peutVoirDirection={reel.role === 'admin' || reel.role === 'staff'}
-                variante="avatar"
-              />
+              <UserMenu nom={user.displayName} email={user.email} variante="avatar" />
             </div>
           </header>
 
