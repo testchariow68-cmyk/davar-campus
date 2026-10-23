@@ -23,6 +23,7 @@
 import type { Db } from './auth-core';
 import { notifier } from './notifications.ts';
 import { lireReglages } from './settings.ts';
+import { envoyerScenario } from './courriels.ts';
 
 export type VoiePaiement = 'flutterwave' | null;
 
@@ -294,6 +295,15 @@ export async function attribuerApresPaiement(
     titre: 'Formation activée ✓',
     corps: `Paiement confirmé : « ${titreFormation} » a été ajoutée à votre compte.`,
   });
+
+  // Le reçu par e-mail : la facture est nommée dans le texte du prototype, et
+  // reste téléchargeable depuis l'écran de succès.
+  if (acheteur) {
+    await envoyerScenario(db, 'paiement-confirme', acheteur, {
+      titre: titreFormation,
+      userId: intention.userId,
+    });
+  }
 
   return 'attribue';
 }

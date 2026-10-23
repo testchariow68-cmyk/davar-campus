@@ -12,6 +12,7 @@
  * Chaque envoi est compté (`email.sent`) pour protéger le quota gratuit.
  */
 import { budgetFor, countOp, recordOpEvent, type Db } from './quota.ts';
+import { envoyerViaGmail, gmailConfigue } from './gmail.ts';
 
 export class MailerNotConfiguredError extends Error {
   constructor() {
@@ -27,11 +28,11 @@ export class MailQuotaReachedError extends Error {
   }
 }
 
-export type MailerKind = 'none' | 'apps_script';
+export type MailerKind = 'none' | 'apps_script' | 'gmail';
 
 export function mailerKind(): MailerKind {
   const declared = process.env.MAILER_KIND?.trim();
-  if (declared === 'apps_script') return declared;
+  if (declared === 'apps_script' || declared === 'gmail') return declared;
   return 'none';
 }
 
@@ -50,10 +51,12 @@ export function mailerConfigured(): boolean {
     const token = process.env.MAIL_APPS_SCRIPT_TOKEN?.trim();
     return Boolean(httpsUrl(process.env.MAIL_APPS_SCRIPT_URL) && token && token.length >= 16);
   }
+  if (mailerKind() === 'gmail') return gmailConfigue();
   return false;
 }
 
-export type OutgoingEmail = { to: string; subject: string; text: string };
+/** L'adresse d'expédition est celle du rôle (support@, direction@…) : un alias de la boîte. */
+export type OutgoingEmail = { to: string; subject: string; text: string; de?: string };
 
 async function sendViaAppsScript(message: OutgoingEmail): Promise<void> {
   const url = httpsUrl(process.env.MAIL_APPS_SCRIPT_URL)!;
@@ -79,7 +82,11 @@ export async function sendEmail(message: OutgoingEmail, db?: Db): Promise<void> 
     if (db) await recordOpEvent(db, 'email_refused');
     throw new MailQuotaReachedError();
   }
-  else await sendViaAppsScript(message);
+  if (mailerKind() === 'gmail') {
+    // Les jetons vivent en base : sans base, pas d'envoi possible.
+    if (!db) throw new MailerNotConfiguredError();
+    await envoyerViaGmail(db, message);
+  } else await sendViaAppsScript(message);
   if (db) await recordOpEvent(db, 'email_sent');
 }
 

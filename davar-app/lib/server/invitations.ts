@@ -12,6 +12,7 @@
 import { hashToken, newToken, normalizeEmail, type Db } from './auth-core.ts';
 import { normaliserRoles, rolesEnLigne } from './equipe.ts';
 import { mailerConfigured, sendEmail } from './mailer.ts';
+import { composerCourriel } from './courriels.ts';
 
 function texte(valeur: unknown, defaut = ''): string {
   return typeof valeur === 'string' ? valeur : defaut;
@@ -135,35 +136,16 @@ export async function creerInvitation(
   if (mailerConfigured() && champs.baseUrl) {
     const lien = `${champs.baseUrl.replace(/\/$/, '')}/inscription`;
     const jours = DUREE_JOURS[champs.kind];
+    // Les mots sont ceux du prototype (invitation de la Direction, accès
+    // gracieux) ; le lien, lui, est le nôtre : sans lui, l'invitation ne sert
+    // à rien. Il est donc ajouté sous le texte officiel.
+    const message = composerCourriel(
+      champs.kind === 'staff' ? 'invitation-staff' : 'grace-etudiant',
+      email,
+      { roles: champs.roles ?? '' }
+    );
     try {
-      await sendEmail(
-        {
-          to: email,
-          subject:
-            champs.kind === 'staff'
-              ? 'DAVAR ACADÉMIE — vous êtes invité(e) à rejoindre l’équipe'
-              : 'DAVAR ACADÉMIE — votre accès au campus',
-          text:
-            champs.kind === 'staff'
-              ? `Bonjour,
-
-Vous êtes invité(e) à rejoindre l'équipe de DAVAR ACADÉMIE.
-
-Créez votre accès ici (lien valable ${jours} jours) :
-${lien}
-
-Si vous n'êtes pas concerné(e), ignorez simplement ce message.`
-              : `Bonjour,
-
-Le propriétaire de DAVAR ACADÉMIE vous offre un accès au campus.
-
-Créez votre accès ici (lien valable ${jours} jours) :
-${lien}
-
-Si vous n'êtes pas concerné(e), ignorez simplement ce message.`,
-        },
-        db
-      );
+      await sendEmail({ ...message, text: `${message.text}\n\nCréez votre accès ici : ${lien}` }, db);
     } catch {
       /* le lien reste affiché au propriétaire : rien n'est perdu */
     }

@@ -10,6 +10,7 @@
  *     nom du porteur, la formation et la date.
  */
 import type { Db } from './auth-core';
+import { envoyerScenario } from './courriels.ts';
 
 function texte(valeur: unknown, defaut = ''): string {
   return typeof valeur === 'string' ? valeur : defaut;
@@ -57,7 +58,20 @@ export async function demanderCertificat(
           VALUES (?,?,?,?,'pending',?)`,
     args: [`creq_${maintenant.toString(36)}${Math.random().toString(36).slice(2, 8)}`, options.userId, options.formationId, nom, maintenant],
   });
+  // Le support accuse réception ; la Direction, elle, est déjà prévenue par la
+  // cloche du campus, comme dans le prototype.
+  await envoyerScenario(db, 'demande-certificat', await emailDe(db, options.userId) ?? '', {
+    nom,
+    userId: options.userId,
+  });
   return { ok: true };
+}
+
+/** L'adresse d'un compte, telle qu'elle est normalisée en base. */
+async function emailDe(db: Db, userId: string): Promise<string | null> {
+  const ligne = await db.execute({ sql: 'SELECT email_normalized FROM users WHERE id = ?', args: [userId] });
+  const valeur = ligne.rows[0]?.email_normalized;
+  return typeof valeur === 'string' && valeur.includes('@') ? valeur : null;
 }
 
 /** Un code lisible et unique : CERT-2026-0147, comme dans le prototype. */
@@ -97,7 +111,7 @@ export async function deciderCertificat(
   }
 
   const formation = await db.execute({
-    sql: 'SELECT title FROM trainings WHERE id = ?',
+    sql: 'SELECT title, code FROM trainings WHERE id = ?',
     args: [texte(ligne.training_id)],
   });
   const titreFormation = texte(formation.rows[0]?.title, 'Formation DAVAR');
@@ -122,6 +136,15 @@ export async function deciderCertificat(
     sql: "UPDATE certificate_requests SET status = 'approved', decided_at_ms = ?, decided_by = ? WHERE id = ?",
     args: [maintenant, options.decideur, options.requestId],
   });
+  // La Direction annonce l'émission, avec le code de la formation quand il
+  // existe — exactement le `t.abbr || t.code` du prototype.
+  const destinataire = await emailDe(db, texte(ligne.user_id) ?? '');
+  if (destinataire) {
+    await envoyerScenario(db, 'certificat-pret', destinataire, {
+      code: texte(formation.rows[0]?.code) ?? code,
+      userId: texte(ligne.user_id) ?? undefined,
+    });
+  }
   return { ok: true, code };
 }
 

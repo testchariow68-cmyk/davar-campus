@@ -9,6 +9,7 @@ import {
 } from '@/lib/server/auth-core';
 import { clientIp, isDevelopment, isSameOrigin, jsonNoStore, linkOrigin, readJsonBody } from '@/lib/server/http';
 import { mailerConfigured, sendVerificationEmail } from '@/lib/server/mailer';
+import { envoyerScenario } from '@/lib/server/courriels';
 import { openDb } from '@/lib/server/turso';
 import { trackApiRequest } from '@/lib/server/quota';
 import { passwordAdapter } from '@/lib/server/password-service';
@@ -124,6 +125,12 @@ export async function POST(request: Request) {
           db
         );
         emailSent = true;
+        // La bienvenue part avec la confirmation : le prototype souhaite la
+        // bienvenue dès l'inscription, et prévient aussi dans la cloche.
+        await envoyerScenario(db, 'bienvenue', registration.email, {
+          nom: String(body.displayName),
+          userId: registration.userId,
+        });
       } catch {
         emailSent = false;
       }

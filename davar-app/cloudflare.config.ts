@@ -111,6 +111,10 @@ export default defineConfig({
       // l'adresse ne peut pas être confirmée.
       MAIL_APPS_SCRIPT_URL: bindings.secret(),
       MAIL_APPS_SCRIPT_TOKEN: bindings.secret(),
+      // Envoi par la messagerie Gmail de l'académie (MAILER_KIND=gmail).
+      // Vide = le relais Apps Script reste la voie d'envoi ; rien ne change.
+      GMAIL_CLIENT_ID: bindings.secret(),
+      GMAIL_CLIENT_SECRET: bindings.secret(),
       // Assistant virtuel : les clés des moteurs gratuits. Elles vivent ICI, côté
       // serveur, et ne sont JAMAIS exposées au navigateur — une clé lisible depuis
       // une page serait copiable par n'importe quel étudiant. Une seule clé suffit

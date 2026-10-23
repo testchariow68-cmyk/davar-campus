@@ -1,5 +1,6 @@
 import { redirect } from 'next/navigation';
 import { EmailsAdmin, type LigneEnvoi } from '@/components/direction/EmailsAdmin';
+import { AutorisationGmail } from '@/components/direction/AutorisationGmail';
 import { Icon } from '@/components/campus/Icon';
 import { sessionProprietaire } from '@/lib/server/direction-access';
 import { emailBudget } from '@/lib/server/mailer';
@@ -64,6 +65,8 @@ export default async function EmailsPage() {
           </span>
         </div>
       )}
+
+      <AutorisationGmail actif={budget.kind === 'gmail'} />
 
       <EmailsAdmin
         modeles={MODELES_COURRIEL.map((modele) => ({

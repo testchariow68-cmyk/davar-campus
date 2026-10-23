@@ -19,6 +19,7 @@
  */
 import { newId, normalizeEmail, type Db } from './auth-core.ts';
 import { normaliserRoles, rolesEnLigne, type RoleEquipe } from './equipe.ts';
+import { envoyerScenario } from './courriels.ts';
 
 const texte = (valeur: unknown) => (valeur == null ? '' : String(valeur));
 const nombre = (valeur: unknown) => (valeur == null ? 0 : Number(valeur));
@@ -1012,13 +1013,18 @@ export async function definirStatut(db: Db, email: string, statut: string): Prom
   if (!['active', 'suspended'].includes(statut)) return echec('statut_inconnu');
   const normalise = normalizeEmail(email);
   const utilisateur = await db.execute({
-    sql: "SELECT id,role FROM users WHERE email_normalized=? AND role='student'",
+    sql: "SELECT id,role,display_name FROM users WHERE email_normalized=? AND role='student'",
     args: [normalise],
   });
   if (!utilisateur.rows.length) return echec('compte_introuvable');
-  await db.execute({ sql: 'UPDATE users SET status=? WHERE id=?', args: [statut, texte(utilisateur.rows[0].id)] });
+  const userId = texte(utilisateur.rows[0].id);
+  const nom = texte(utilisateur.rows[0].display_name) ?? '';
+  await db.execute({ sql: 'UPDATE users SET status=? WHERE id=?', args: [statut, userId] });
   if (statut === 'suspended')
-    await db.execute({ sql: 'DELETE FROM sessions WHERE user_id=?', args: [texte(utilisateur.rows[0].id)] });
+    await db.execute({ sql: 'DELETE FROM sessions WHERE user_id=?', args: [userId] });
+  // La Direction écrit, comme dans le prototype : suspension et réactivation
+  // sont des décisions, elles partent de la Direction.
+  await envoyerScenario(db, statut === 'suspended' ? 'suspension' : 'reactivation', normalise, { nom, userId });
   return {
     ok: true,
     message: statut === 'suspended' ? `${normalise} est suspendu ; ses sessions sont fermées.` : `${normalise} est réactivé.`,

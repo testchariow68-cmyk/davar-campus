@@ -6,6 +6,14 @@ import { modeleParId } from '@/lib/server/modeles-courriel';
 import { ecrireReglages, lireReglages, lienSocialValide } from '@/lib/server/settings';
 import { creerCle, listerCles, revoquerCle } from '@/lib/server/cles-api';
 import { emailBudget, mailerConfigured, sendEmail } from '@/lib/server/mailer';
+import {
+  compteGmail,
+  echangerCodeGmail,
+  gmailAutorise,
+  gmailConfigue,
+  revoquerGmail,
+  urlAutorisationGmail,
+} from '@/lib/server/gmail';
 import { CLE_URL_SHEETS, envoyerVersSheets, urlSheetsValide } from '@/lib/server/sheets';
 import { CLE_COULEURS, CLE_PALETTE } from '@/lib/server/apparence';
 import { paletteValide } from '@/lib/palette';
@@ -31,6 +39,19 @@ const CLES_REGLAGES = new Set([
   'paiement.flutterwave.cle',
   'paiement.flutterwave.webhook',
 ]);
+
+/** L'origine publique déclarée, ou celle de la requête : l'adresse de retour Google. */
+function nouvelleURL(request: Request, chemin: string): string {
+  const declaree = process.env.APP_PUBLIC_ORIGIN?.trim();
+  if (declaree) {
+    try {
+      return new URL(chemin, declaree).toString();
+    } catch {
+      /* on retombe sur l'origine de la requête */
+    }
+  }
+  return new URL(chemin, request.url).toString();
+}
 
 /**
  * RÉGLAGES, CLÉS, E-MAILS, SHEETS — tout ce qui se règle depuis l'espace du
@@ -161,10 +182,39 @@ export async function POST(request: Request) {
       return jsonNoStore({ ok: resultat.ok, message: resultat.message, lignes: resultat.lignes });
     }
 
+    if (action === 'gmail_lien') {
+      // L'adresse de retour doit être, au caractère près, celle déclarée dans
+      // la console Google : on la montre pour qu'elle soit recopiée telle quelle.
+      const retour = nouvelleURL(request, '/direction/emails');
+      const url = urlAutorisationGmail(retour);
+      if (!url) return jsonNoStore({ error: 'gmail_non_configure', message: 'Les identifiants Google ne sont pas enregistrés.' }, 400);
+      return jsonNoStore({ ok: true, url, retour });
+    }
+
+    if (action === 'gmail_autoriser') {
+      const code = String(body?.code ?? '').trim();
+      if (code.length < 10) return jsonNoStore({ error: 'code_invalide', message: 'Collez le code fourni par Google.' }, 400);
+      const retour = String(body?.retour ?? '').trim() || nouvelleURL(request, '/direction/emails');
+      const echange = await echangerCodeGmail(db, code, retour);
+      await enregistrerEvenement(db, { actorId: reel.id, action: 'reglages-campus', detail: 'gmail autorisé' }, maintenant);
+      return jsonNoStore({
+        ok: true,
+        compte: echange.compte,
+        message: echange.compte ? `Autorisation enregistrée pour ${echange.compte}.` : 'Autorisation enregistrée.',
+      });
+    }
+
+    if (action === 'gmail_revoquer') {
+      await revoquerGmail(db);
+      await enregistrerEvenement(db, { actorId: reel.id, action: 'reglages-campus', detail: 'gmail révoqué' }, maintenant);
+      return jsonNoStore({ ok: true, message: 'Autorisation retirée.' });
+    }
+
     if (action === 'etat') {
       return jsonNoStore({
         ok: true,
         email: emailBudget(),
+        gmail: { configure: gmailConfigue(), autorise: await gmailAutorise(db), compte: await compteGmail(db) },
         cles: await listerCles(db),
         reglages: await lireReglages(db),
       });
