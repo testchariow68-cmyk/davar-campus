@@ -138,22 +138,7 @@ export function composerCourriel(
   const modele = SCENARIOS[scenario];
   let corps = modele.corps(variables) + SIGNATURES[modele.role];
   if (modele.role === 'infos') corps += piedInfos(destinataire);
-  return { to: destinataire, subject: modele.objet(variables), text: corps, de: adresseDuRole(modele.role) };
-}
-
-/**
- * L'annonce à la Direction quand un certificat est demandé : le prototype
- * prévient l'équipe, c'est le seul envoi qui ne part pas vers l'étudiant.
- */
-export function composerAnnonceCertificat(nom: string, code: string, destinataire: string): OutgoingEmail {
-  return {
-    to: destinataire,
-    subject: `Demande de certificat — ${nom} (${code})`,
-    text:
-      `Une demande de certificat requiert votre validation : ${nom} — formation ${code}.` +
-      SIGNATURES.direction,
-    de: adresseDuRole('direction'),
-  };
+  return { to: destinataire, subject: modele.objet(variables), text: corps };
 }
 
 /**
@@ -169,6 +154,7 @@ export async function envoyerScenario(
 ): Promise<boolean> {
   const modele = SCENARIOS[scenario];
   const message = composerCourriel(scenario, destinataire, variables);
+  const de = adresseDuRole(modele.role);
   try {
     await sendEmail(message, db);
   } catch {
@@ -184,7 +170,7 @@ export async function envoyerScenario(
           userId: variables.userId,
           kind: 'info',
           titre: message.subject,
-          corps: `Notification hybride : le détail vous est adressé par e-mail (${message.de}).`,
+          corps: `Notification hybride : le détail vous est adressé par e-mail (${de}).`,
         },
         Date.now()
       );

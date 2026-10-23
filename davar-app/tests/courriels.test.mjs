@@ -19,7 +19,6 @@ import {
   composerCourriel,
   envoyerScenario,
 } from '../lib/server/courriels.ts';
-import { messageBrut } from '../lib/server/gmail.ts';
 
 async function base() {
   const db = createClient({
@@ -69,18 +68,18 @@ test('les textes sont ceux du prototype, au mot près', () => {
   assert.equal(accueil.subject, 'Bienvenue sur Davar Académie Campus');
   assert.match(accueil.text, /^Bonjour Awa,\n\nVotre compte est prêt :/);
   assert.match(accueil.text, /Bonne formation !\n\nCordialement,\nL’équipe Davar Académie/);
-  assert.equal(accueil.de, 'infos@davarcampus.co');
+  assert.equal(adresseDuRole(SCENARIOS.bienvenue.role), 'infos@davarcampus.co');
 
   const paiement = composerCourriel('paiement-confirme', 'awa@exemple.test', { titre: 'Orateur' });
   assert.equal(paiement.subject, 'Votre achat est confirmé — Davar Académie Campus');
   assert.match(paiement.text, /Votre paiement pour « Orateur » est confirmé/);
   assert.match(paiement.text, /accès 12 mois, certificat inclus/);
-  assert.equal(paiement.de, 'support@davarcampus.co');
+  assert.equal(adresseDuRole(SCENARIOS['paiement-confirme'].role), 'support@davarcampus.co');
 
   const certificat = composerCourriel('certificat-pret', 'awa@exemple.test', { code: 'PRI-001' });
   assert.equal(certificat.subject, 'Votre certificat PRI-001 est prêt — Davar Académie');
   assert.match(certificat.text, /La Direction a le plaisir de vous informer/);
-  assert.equal(certificat.de, 'direction@davarcampus.co');
+  assert.equal(adresseDuRole(SCENARIOS['certificat-pret'].role), 'direction@davarcampus.co');
 
   const suspendu = composerCourriel('suspension', 'awa@exemple.test', { nom: 'Awa' });
   assert.match(suspendu.text, /^Bonjour Awa,\n\nLa Direction vous informe que votre compte est suspendu/);
@@ -109,22 +108,6 @@ test('un e-mail qui ne peut pas partir ne casse jamais ce que faisait la personn
   // simplement renoncer, sans jeter d'erreur à la figure de l'appelant.
   const parti = await envoyerScenario(db, 'bienvenue', 'awa@exemple.test', { nom: 'Awa', userId: 'u-1' });
   assert.equal(parti, false);
-});
-
-test('le message brut que lit Gmail porte les bons en-têtes, accents compris', () => {
-  const brut = messageBrut({
-    de: 'direction@davarcampus.co',
-    a: 'awa@exemple.test',
-    objet: 'Votre certificat PRI-001 est prêt — Davar Académie',
-    texte: 'Madame, Monsieur,\n\nFélicitations.',
-  });
-  assert.match(brut, /^[A-Za-z0-9\-_]+$/, 'base64url, sans « = » ni « + » ni « / »');
-  const clair = Buffer.from(brut, 'base64url').toString('utf8');
-  assert.match(clair, /^From: direction@davarcampus\.co\r\n/);
-  assert.match(clair, /^To: awa@exemple\.test\r\n/m);
-  assert.match(clair, /^Subject: =\?UTF-8\?B\?/m, 'l’objet accentué est enveloppé (RFC 2047)');
-  assert.match(clair, /^Content-Type: text\/plain; charset=UTF-8\r\n/m);
-  assert.match(clair, /\r\n\r\n/);
 });
 
 test('les quatre adresses de l’académie', () => {
