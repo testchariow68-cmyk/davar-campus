@@ -33,6 +33,14 @@
  *      MAIL_APPS_SCRIPT_URL   = l'URL /exec copiée à l'étape 5
  *      MAIL_APPS_SCRIPT_TOKEN = la valeur choisie à l'étape 3
  *
+ * PIÈGE CONNU, DÉJÀ TRAITÉ CÔTÉ APPLICATION : une application Web Apps Script
+ * répond toujours par une redirection (302) avant le vrai résultat. Suivie
+ * automatiquement, cette redirection change le POST en GET : c'est alors
+ * doGet — et non doPost — qui s'exécute, le relais répond « actif »… et aucun
+ * e-mail ne part. La plateforme suit la redirection à la main, en conservant
+ * le POST. Si vous déployez ce fichier, redéployez-le entier (la réponse
+ * porte maintenant « envoye », que l'application vérifie).
+ *
  * SÉCURITÉ : le jeton est vérifié à chaque appel, avec une comparaison à durée
  * constante ; un appel sans jeton correct est refusé et journalisé. Une fois que
  * tout fonctionne, vous pouvez aussi restreindre les adresses d'expédition ci-dessous.
@@ -81,7 +89,10 @@ function doPost(e) {
       verrou.releaseLock();
     }
 
-    return reponse('envoyé', 200);
+    // « envoye » est la preuve que doPost a bien tourné. Sans ce mot, la
+    // plateforme refuse de croire que l'e-mail est parti — c'est volontaire :
+    // une réponse de doGet (« actif ») ressemble à un succès et n'envoie rien.
+    return reponse('envoyé', 200, true);
   } catch (erreur) {
     console.error(erreur);
     return reponse('erreur interne', 500);
@@ -100,7 +111,8 @@ function egalConstante(a, b) {
   return difference === 0;
 }
 
-function reponse(message, code) {
-  return ContentService.createTextOutput(JSON.stringify({ ok: code === 200, message: message }))
-    .setMimeType(ContentService.MimeType.JSON);
+function reponse(message, code, envoye) {
+  return ContentService.createTextOutput(
+    JSON.stringify({ ok: code === 200, envoye: envoye === true, message: message })
+  ).setMimeType(ContentService.MimeType.JSON);
 }

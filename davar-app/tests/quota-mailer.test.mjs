@@ -175,7 +175,7 @@ test('appel Apps Script : le secret part dans le corps attendu, jamais ailleurs'
   const originalFetch = globalThis.fetch;
   globalThis.fetch = async (url, init) => {
     captured = { url, init, body: JSON.parse(init.body) };
-    return new Response('{"ok":true}', { status: 200 });
+    return new Response('{"ok":true,"envoye":true,"message":"envoyé"}', { status: 200 });
   };
   try {
     await sendEmail({ to: 'etudiant@example.com', subject: 'Confirmez', text: 'Lien : https://exemple.ci/x' });
@@ -209,7 +209,7 @@ test('relais Google Apps Script : contrat exact attendu par le script fourni', a
   const originalFetch = globalThis.fetch;
   globalThis.fetch = async (url, init) => {
     captured = { url, init, body: JSON.parse(init.body) };
-    return new Response('{"ok":true}', { status: 200 });
+    return new Response('{"ok":true,"envoye":true,"message":"envoyé"}', { status: 200 });
   };
   try {
     await sendVerificationEmail({ to: 'etudiant@example.com', displayName: 'Awa', verifyUrl: 'https://campus.ci/verifier-email?token=abc' });
@@ -241,7 +241,7 @@ test('quota d’e-mails atteint : refus net et journalisation, aucune tentative 
   const originalFetch = globalThis.fetch;
   globalThis.fetch = async () => {
     calls += 1;
-    return new Response('{}', { status: 201 });
+    return new Response('{"ok":true,"envoye":true,"message":"envoyé"}', { status: 200 });
   };
   try {
     await sendEmail({ to: 'a@b.com', subject: 'x', text: 'y' }, db);
@@ -254,4 +254,71 @@ test('quota d’e-mails atteint : refus net et journalisation, aucune tentative 
     delete process.env.QUOTA_DAILY_EMAILS;
     clearPending();
   }
+});
+
+/* --------------------------------------------------------- le piège d'Apps Script */
+
+/**
+ * Une application Web Apps Script répond par une redirection avant le vrai
+ * résultat. Ces deux tests sont la preuve que la plateforme ne tombe pas
+ * dedans : sans eux, on « envoie » des e-mails qui ne partent jamais.
+ */
+test('Apps Script : la redirection est suivie sans changer le POST en GET', async () => {
+  const avant = { ...process.env };
+  process.env.MAILER_KIND = 'apps_script';
+  process.env.MAIL_APPS_SCRIPT_URL = 'https://script.google.com/macros/s/exemple/exec';
+  process.env.MAIL_APPS_SCRIPT_TOKEN = 'jeton-de-test-de-plus-de-seize-caracteres';
+  process.env.QUOTA_DAILY_EMAILS = '300';
+
+  const appels = [];
+  const originalFetch = globalThis.fetch;
+  globalThis.fetch = async (url, init) => {
+    appels.push({ url: String(url), method: init?.method });
+    if (appels.length === 1) {
+      return new Response('', {
+        status: 302,
+        headers: { location: 'https://script.googleusercontent.com/userCodeAppPanel?lib=XYZ' },
+      });
+    }
+    return new Response('{"ok":true,"envoye":true,"message":"envoyé"}', { status: 200 });
+  };
+  try {
+    await sendEmail({ to: 'etudiant@example.com', subject: 'Sujet', text: 'Corps' });
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+
+  assert.equal(appels.length, 2, 'deux appels : /exec, puis la cible de la redirection');
+  assert.equal(appels[1].method, 'POST', 'le POST doit survivre à la redirection');
+  assert.match(appels[1].url, /script\.googleusercontent\.com/);
+  Object.keys(process.env).forEach((cle) => {
+    if (!(cle in avant)) delete process.env[cle];
+  });
+  Object.assign(process.env, avant);
+});
+
+test('Apps Script : une réponse 200 venue de doGet n’est jamais prise pour un envoi', async () => {
+  const avant = { ...process.env };
+  process.env.MAILER_KIND = 'apps_script';
+  process.env.MAIL_APPS_SCRIPT_URL = 'https://script.google.com/macros/s/exemple/exec';
+  process.env.MAIL_APPS_SCRIPT_TOKEN = 'jeton-de-test-de-plus-de-seize-caracteres';
+  process.env.QUOTA_DAILY_EMAILS = '300';
+
+  const originalFetch = globalThis.fetch;
+  globalThis.fetch = async () =>
+    // Exactement ce que renvoie doGet quand la redirection a mangé le POST.
+    new Response('{"ok":true,"message":"relais e-mail DAVAR actif"}', { status: 200 });
+  try {
+    await assert.rejects(
+      () => sendEmail({ to: 'etudiant@example.com', subject: 'Sujet', text: 'Corps' }),
+      /relais/,
+      'un e-mail qu’on croit envoyé est pire qu’un e-mail annoncé non envoyé'
+    );
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+  Object.keys(process.env).forEach((cle) => {
+    if (!(cle in avant)) delete process.env[cle];
+  });
+  Object.assign(process.env, avant);
 });

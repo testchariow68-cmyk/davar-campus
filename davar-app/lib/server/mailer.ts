@@ -12,7 +12,6 @@
  * Chaque envoi est compté (`email.sent`) pour protéger le quota gratuit.
  */
 import { budgetFor, countOp, recordOpEvent, type Db } from './quota.ts';
-import { envoyerViaGmail, gmailConfigue } from './gmail.ts';
 
 export class MailerNotConfiguredError extends Error {
   constructor() {
@@ -28,11 +27,11 @@ export class MailQuotaReachedError extends Error {
   }
 }
 
-export type MailerKind = 'none' | 'apps_script' | 'gmail';
+export type MailerKind = 'none' | 'apps_script';
 
 export function mailerKind(): MailerKind {
   const declared = process.env.MAILER_KIND?.trim();
-  if (declared === 'apps_script' || declared === 'gmail') return declared;
+  if (declared === 'apps_script') return declared;
   return 'none';
 }
 
@@ -51,24 +50,68 @@ export function mailerConfigured(): boolean {
     const token = process.env.MAIL_APPS_SCRIPT_TOKEN?.trim();
     return Boolean(httpsUrl(process.env.MAIL_APPS_SCRIPT_URL) && token && token.length >= 16);
   }
-  if (mailerKind() === 'gmail') return gmailConfigue();
   return false;
 }
 
-/** L'adresse d'expédition est celle du rôle (support@, direction@…) : un alias de la boîte. */
-export type OutgoingEmail = { to: string; subject: string; text: string; de?: string };
+export type OutgoingEmail = { to: string; subject: string; text: string };
+
+/**
+ * Apps Script répond en deux temps : `/exec` renvoie d'abord une redirection
+ * (302) vers `script.googleusercontent.com`. Suivie normalement, cette
+ * redirection change le POST en GET — c'est la règle du HTTP. Le script
+ * exécute alors `doGet` au lieu de `doPost`, répond « actif » avec un 200…
+ * et AUCUN e-mail ne part, sans que rien ne le signale. On croit avoir
+ * envoyé, on n'a rien envoyé.
+ *
+ * On suit donc la redirection à la main, en gardant le POST.
+ */
+async function posterVersAppsScript(url: string, corps: string, signal: AbortSignal): Promise<Response> {
+  const entetes = { 'content-type': 'application/json' };
+  const premier = await fetch(url, {
+    method: 'POST',
+    headers: entetes,
+    body: corps,
+    redirect: 'manual',
+    cache: 'no-store',
+    signal,
+  });
+  const redirection = [301, 302, 303, 307, 308].includes(premier.status);
+  if (!redirection) return premier;
+  const cible = premier.headers.get('location');
+  if (!cible) return premier;
+  return await fetch(new URL(cible, url).toString(), {
+    method: 'POST',
+    headers: entetes,
+    body: corps,
+    redirect: 'manual',
+    cache: 'no-store',
+    signal,
+  });
+}
 
 async function sendViaAppsScript(message: OutgoingEmail): Promise<void> {
   const url = httpsUrl(process.env.MAIL_APPS_SCRIPT_URL)!;
   const token = process.env.MAIL_APPS_SCRIPT_TOKEN!.trim();
-  const response = await fetch(url, {
-    method: 'POST',
-    headers: { 'content-type': 'application/json' },
-    body: JSON.stringify({ secret: token, to: message.to, subject: message.subject, text: message.text }),
-    cache: 'no-store',
-    signal: AbortSignal.timeout(10_000),
+  const corps = JSON.stringify({
+    secret: token,
+    to: message.to,
+    subject: message.subject,
+    text: message.text,
   });
-  if (!response.ok) throw new Error(`Envoi d'e-mail refusé (${response.status})`);
+  const reponse = await posterVersAppsScript(url, corps, AbortSignal.timeout(10_000));
+  const donnees = (await reponse.json().catch(() => ({}))) as {
+    ok?: boolean;
+    envoye?: boolean;
+    message?: string;
+  };
+  // Le relais confirme l'envoi par `envoye` (ou le mot « envoyé »). Toute
+  // autre réponse — y compris un 200 « actif » venu de doGet — est un échec :
+  // mieux vaut le dire que faire croire qu'un e-mail est parti.
+  const parti = donnees.envoye === true || donnees.message === 'envoyé';
+  if (!reponse.ok || !parti) {
+    const detail = typeof donnees.message === 'string' ? ` : ${donnees.message.slice(0, 120)}` : '';
+    throw new Error(`Envoi refusé par le relais (${reponse.status}${detail})`);
+  }
 }
 
 /**
@@ -82,11 +125,7 @@ export async function sendEmail(message: OutgoingEmail, db?: Db): Promise<void> 
     if (db) await recordOpEvent(db, 'email_refused');
     throw new MailQuotaReachedError();
   }
-  if (mailerKind() === 'gmail') {
-    // Les jetons vivent en base : sans base, pas d'envoi possible.
-    if (!db) throw new MailerNotConfiguredError();
-    await envoyerViaGmail(db, message);
-  } else await sendViaAppsScript(message);
+  await sendViaAppsScript(message);
   if (db) await recordOpEvent(db, 'email_sent');
 }
 
