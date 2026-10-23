@@ -63,7 +63,7 @@ applicatif au Worker. Le jeton de migration, lui, se supprime.
 Sans relais d'e-mail, **l'inscription est refusée en 503** : c'est volontaire, on ne crée pas un
 compte dont on ne peut pas confirmer l'adresse.
 
-**Le script est prêt à coller : `apps-script/Relais-e-mail.gs`.** Marche à suivre :
+**Le script est prêt à coller : `apps-script/Relais-E-mail.gs`.** Marche à suivre :
 
 1. Ouvrez <https://script.google.com> depuis le compte Google de l'académie → **Nouveau projet**.
 2. Effacez tout et collez le contenu du fichier.
