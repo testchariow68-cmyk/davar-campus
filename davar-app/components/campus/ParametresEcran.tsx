@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { Icon } from './Icon';
 import { BoutonAide, type Contacts } from './PanneauAide';
+import { abonner, desabonner } from '@/lib/client/push';
 import { SecuriteEmpreinte } from './SecuriteEmpreinte';
 
 /** Les échelles du prototype : 90, 100, 110 et 125 %. */
@@ -73,6 +74,26 @@ export function ParametresEcran({
     const suivant = !notifications;
     setNotifications(suivant);
     await appeler({ action: 'preference', cle: 'notifications.actives', valeur: suivant ? '1' : '0' });
+    // L'appareil suit la décision. Le prototype se contentait d'afficher
+    // « Notifications activées ✓ » : ici, il est réellement abonné, et la
+    // notification part réellement. Sans permission du navigateur, la cloche
+    // du campus continue de fonctionner — rien d'autre n'est promis.
+    if (suivant) {
+      const cle = await clePubliqueDuCampus();
+      if (cle) await abonner(cle);
+    } else {
+      await desabonner();
+    }
+  }
+
+  async function clePubliqueDuCampus(): Promise<string | null> {
+    const reponse = await fetch('/api/campus/push', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ action: 'cle-publique' }),
+    });
+    const donnees = (await reponse.json().catch(() => ({}))) as { cle?: string };
+    return typeof donnees.cle === 'string' ? donnees.cle : null;
   }
 
   return (

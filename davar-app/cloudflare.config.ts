@@ -1,4 +1,4 @@
-import {bindings, defineConfig, defineWorker} from 'cf/config';
+import {bindings, defineConfig, defineWorker, triggers} from 'cf/config';
 
 /**
  * Cible de déploiement — UN SEUL fichier, deux profils explicitement séparés.
@@ -56,7 +56,14 @@ export default defineConfig({
   worker: defineWorker({
     // Un Worker DISTINCT par environnement : la production ne peut pas écraser la recette.
     name: production ? 'davar-campus-production-2026' : 'davar-campus-next-staging-2026',
-    entrypoint: 'vinext/server/fetch-handler',
+    // Notre entrée : elle reprend le gestionnaire du cadre et y ajoute
+    // `scheduled`, la fonction que Cloudflare appelle seule à l'heure dite.
+    entrypoint: 'worker/entree.ts',
+    // Le robot du dimanche : un passage toutes les quinze minutes. Il se
+    // limite lui-même — la motivation ne part qu'une fois par semaine, et les
+    // notifications par lots de quarante (un Worker gratuit tient cinquante
+    // requêtes par passage). Un compte gratuit a droit à cinq déclencheurs.
+    triggers: [triggers.scheduled({schedule: '*/15 * * * *'})],
     compatibilityDate: '2026-10-02',
     compatibilityFlags: ['nodejs_compat'],
     // URL gratuite *.workers.dev : le propriétaire n'a pas encore de domaine enregistré.

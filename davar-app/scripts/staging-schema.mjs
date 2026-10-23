@@ -166,8 +166,15 @@ const MIGRATIONS = [
     ddl: 3, // deux tables + un index : les clés d'appareil et leurs défis
     creates: ['passkeys', 'passkey_challenges'],
   },
+  {
+    version: 21,
+    file: '021_notifications_poussees.sqlite.sql',
+    sha256: '33442b4c9b492eef5dc9bad944422c6f614457e0fff7b033e6d8b981bea68791',
+    ddl: 3, // une table + un index + une colonne additive : les appareils abonnés aux notifications poussées
+    creates: ['push_subscriptions'],
+  },
 ];
-const EXPECTED_TABLE_COUNT = 51; // 48 après 013 — 014, 015 et 019 ajoutent des colonnes, 016 le journal, 020 les clés d'appareil
+const EXPECTED_TABLE_COUNT = 52; // 48 après 013 — 014, 015 et 019 ajoutent des colonnes, 016 le journal, 020 les clés d'appareil, 021 les appareils abonnés
 const FORBIDDEN = /\b(drop|truncate|delete\s+from)\b/i;
 
 const mode = process.argv[2];
