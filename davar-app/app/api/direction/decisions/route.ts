@@ -1,0 +1,111 @@
+import { verrouEcriture, verrouProprietaire } from '@/lib/server/direction-access';
+import { jsonNoStore, readJsonBody } from '@/lib/server/http';
+import { trackApiRequest } from '@/lib/server/quota';
+import { enregistrerEvenement } from '@/lib/server/journal';
+import { deciderDevoir } from '@/lib/server/pedagogie';
+import { deciderCertificat } from '@/lib/server/certificats';
+import { mettreEnAvant } from '@/lib/server/avis';
+import { notifier } from '@/lib/server/notifications';
+
+export const dynamic = 'force-dynamic';
+
+/**
+ * LES DÉCISIONS HUMAINES.
+ *   - un devoir : validé, ou refusé AVEC une explication obligatoire — le
+ *     correcteur et l'assistant pédagogique décident aussi (règle du prototype) ;
+ *   - un certificat : validé (il reçoit alors son code), ou refusé AVEC un motif —
+ *     geste de direction, réservé au propriétaire.
+ * Toute décision notifie l'étudiant : personne n'attend dans le vide.
+ */
+export async function POST(request: Request) {
+  await trackApiRequest();
+  const body = await readJsonBody(request);
+  const action = typeof body?.action === 'string' ? body.action : '';
+  const verrou =
+    action === 'devoir' ? await verrouEcriture(request, 'decider-devoir') : await verrouProprietaire(request);
+  if (!verrou.ok) return verrou.reponse;
+  const { db, reel } = verrou.session;
+
+  const id = typeof body?.id === 'string' ? body.id : '';
+  const motif = typeof body?.motif === 'string' ? body.motif.trim().slice(0, 800) : '';
+  if (!id) return jsonNoStore({ error: 'invalid_input' }, 400);
+
+  // Mettre un avis en avant (ou le retirer) : l'étoile du prototype, qui
+  // affiche le témoignage sur la page du catalogue. Le texte n'est jamais
+  // modifié — seul son emplacement change.
+  if (action === 'avis_en_avant') {
+    const valeur = body?.valeur === true || body?.valeur === 1 || body?.valeur === '1';
+    const ok = await mettreEnAvant(db, id, valeur);
+    if (!ok) return jsonNoStore({ error: 'introuvable' }, 404);
+    await enregistrerEvenement(db, { actorId: reel.id, action: 'avis-en-avant', detail: id });
+    return jsonNoStore({ ok: true, message: valeur ? 'Avis mis en avant ✦' : 'Mise en avant retirée.' });
+  }
+  const maintenant = Date.now();
+
+  try {
+    if (action === 'devoir') {
+      const decision = body?.decision === 'approved' ? 'approved' : 'refused';
+      const resultat = await deciderDevoir(db, { submissionId: id, decision, feedback: motif, decideur: reel.id }, maintenant);
+      if (!resultat.ok) {
+        return jsonNoStore(
+          { error: resultat.erreur, message: resultat.erreur === 'explication_obligatoire' ? 'Un refus sans explication serait un mur : écrivez le motif.' : 'Décision impossible.' },
+          400
+        );
+      }
+      const devoir = await db.execute({ sql: 'SELECT user_id FROM submissions WHERE id = ?', args: [id] });
+      const etudiant = typeof devoir.rows[0]?.user_id === 'string' ? devoir.rows[0].user_id : '';
+      if (etudiant) {
+        await notifier(
+          db,
+          {
+            userId: etudiant,
+            kind: 'devoir',
+            titre: decision === 'approved' ? 'Évaluation validée ✓' : 'Évaluation refusée',
+            corps: decision === 'approved' ? 'Votre travail a été accepté.' : motif || null,
+          },
+          maintenant
+        );
+      }
+      await enregistrerEvenement(db, {
+        actorId: reel.id,
+        action: 'decision-devoir',
+        detail: `devoir ${id} · ${decision === 'approved' ? 'validé' : 'refusé'}`,
+      });
+      return jsonNoStore({ ok: true, message: decision === 'approved' ? 'Devoir validé : l’étudiant est prévenu.' : 'Devoir refusé, avec votre explication.' });
+    }
+
+    if (action === 'certificat') {
+      const decision = body?.decision === 'approved' ? 'approved' : 'refused';
+      const resultat = await deciderCertificat(db, { requestId: id, decision, motif, decideur: reel.id }, maintenant);
+      if (!resultat.ok) {
+        return jsonNoStore(
+          { error: resultat.erreur, message: resultat.erreur === 'motif_obligatoire' ? 'Un refus doit porter un motif écrit.' : 'Décision impossible.' },
+          400
+        );
+      }
+      const demande = await db.execute({ sql: 'SELECT user_id FROM certificate_requests WHERE id = ?', args: [id] });
+      const etudiant = typeof demande.rows[0]?.user_id === 'string' ? demande.rows[0].user_id : '';
+      if (etudiant) {
+        await notifier(
+          db,
+          {
+            userId: etudiant,
+            kind: 'certificat',
+            titre: decision === 'approved' ? 'Certificat délivré 🎓' : 'Demande de certificat : évaluation à refaire',
+            corps: decision === 'approved' ? `Votre certificat est disponible.` : motif || null,
+          },
+          maintenant
+        );
+      }
+      return jsonNoStore({
+        ok: true,
+        code: resultat.code,
+        message: decision === 'approved' ? `Certificat délivré — code ${resultat.code}.` : 'Demande refusée, avec votre motif.',
+      });
+    }
+
+    return jsonNoStore({ error: 'action_inconnue' }, 400);
+  } catch {
+    return jsonNoStore({ error: 'unavailable' }, 503);
+  }
+}

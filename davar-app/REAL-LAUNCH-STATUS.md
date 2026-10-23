@@ -2,6 +2,43 @@
 
 **Décision utilisateur :** application Next.js `davar-app/`, cible publique progressive, Turso **seule** base applicative ; **paiements dans l'app reportés** jusqu'à ce que le reste fonctionne. Une base Turso de production **distincte** existe selon le propriétaire ; des accès sandbox Flutterwave et MoneyFusion existent, mais le statut LIVE est inconnu, **aucun identifiant/secret n'a été fourni ici**. Le propriétaire **refuse Workers Paid pour l'instant**. **L'accès étudiant après achat Chariow externe doit être automatisé**, avant les paiements intégrés (choix explicite du propriétaire). Le webhook est codé en mode fermé, **pas encore opérationnel ni branché sur le marchand** ; CinetPay est exclu. Aucune création de base ou purge.
 
+## Mise à jour du 6 octobre 2026 — authentification et campus réellement utilisables (en local)
+
+Nouvelle tranche livrée sur la branche `arena/09f3da07-davar-campus` : voir
+[`MISE-EN-SERVICE.md`](MISE-EN-SERVICE.md) pour le détail, les commandes et les
+preuves. En résumé, et sans embellissement :
+
+- **Comptes réels, serveur uniquement** : inscription, confirmation d'e-mail à
+  usage unique, connexion/session hachée, déconnexion, suspension, limitation de
+  débit en base, contrôle d'origine obligatoire. Mot de passe PBKDF2-HMAC-SHA256
+  à 600 000 itérations (plancher 210 000 hors développement), Argon2id non
+  portable sans dépendance native — point à revoir avec l'hébergeur.
+- **Campus réel** : `/campus` et `/campus/formation/<id>` lisent les modules,
+  leçons et la progression ; une formation non achetée renvoie 404 ; la
+  progression exige une inscription vérifiée.
+- **Achat Chariow externe automatisé** : le rattachement de la vente au compte
+  n'a lieu qu'après confirmation de l'e-mail, de façon idempotente. Vérifié en
+  local sur le cas « achat avant création du compte ».
+- **Migration 002 additive** (`turso/migrations/002_auth_campus.sqlite.sql`),
+  jamais appliquée à une base hébergée ; `scripts/staging-schema.mjs` devient un
+  manifeste fermé couvrant 001+002 (empreintes et DDL revus).
+- **Toujours interdit tant que non prouvé** : Pulse Chariow activé
+  (`CHARIOW_ENABLE_PULSE` reste `false` → 503), envoi d'e-mails réel
+  (hors développement, l'inscription est refusée plutôt que de créer un compte
+  invérifiable), paiements Flutterwave/MoneyFusion, reset de mot de passe,
+  déploiement. **Aucune base hébergée n'a été lue ni écrite ; rien n'est en
+  ligne.**
+- **Blocage du plan Cloudflare gratuit : LEVÉ, sans payer et sans affaiblir le
+  hachage.** PBKDF2 à 600 000 itérations coûte ~121 ms de CPU, au-delà des 10 ms
+  par requête de Workers Free : le hachage est donc **délégué** à un service
+  auto-hébergeable livré dans ce dépôt (`auth-kdf-service/`, zéro dépendance,
+  signature HMAC, plafond journalier), destiné à une offre gratuite mesurée en
+  temps CPU mensuel (Oracle Always Free, Cloud Run free tier, ou la machine de
+  l'opérateur). Le reste tient dans les offres gratuites Cloudflare/Turso/Brevo.
+  Voir **[`ARCHITECTURE-GRATUITE.md`](ARCHITECTURE-GRATUITE.md)** : objectif tenu
+  de 0 € jusqu'à 3 000 étudiants actifs, avec budget de charge chiffré et
+  protection des quotas (`/api/internal/quota`).
+
 ## État honnête de ce livrable
 
 - **Pas de mise en ligne ni d'écriture hébergée.** Le diagnostic staging précédent prouve la connectivité à Turso du Worker de diagnostic, pas de cette application Next.js ni de la base Turso de production.
@@ -35,3 +72,34 @@ Le propriétaire a délégué le choix. **Cible retenue : Cloudflare Workers pou
 5. Vérifier autorisations multi-utilisateurs, cours/progression, erreurs/réessais, sauvegarde/restauration, coûts et observabilité ; déployer d'abord sous environnement privé, puis seulement après revue de sécurité, du domaine, des secrets et du plan de retour arrière, demander validation explicite pour ouvrir les fonctionnalités publiques achevées.
 
 **Conclusion : première tranche de code préparée et verrouillée. L'application n'est PAS encore opérationnelle pour des comptes ou paiements réels.** Ne pas déployer cette branche comme un lancement public : elle affiche volontairement des écrans d'attente et refuse les opérations sensibles.
+
+## Les 11 couches de sécurité du prototype : non implémentées, par décision (13 octobre 2026)
+
+`reference/prototype-campus/SECURITY.md` décrit un système de sécurité autonome à 11 couches.
+Les 11 scripts `layerN-*.mjs` existent **uniquement** dans `reference/prototype-campus/security/workers/`.
+**Aucune de ces couches n'est présente dans `davar-app/`** — vérifié : aucun dossier `security/`,
+aucune occurrence de `layer1`…`layer11`, `honeypot`, `liboqs`, `llama-guard`, `DID`, `ComputeFHE`, `AETHER`.
+
+Question posée au propriétaire, réponse : **« rien pour l'instant, on met en ligne d'abord »**.
+Décision consignée ici pour être rouverte après l'ouverture publique.
+
+Plusieurs de ces couches entrent de toute façon en conflit avec des contraintes déjà arrêtées :
+
+- **couche 1 (Cloudflare Access)** : interdite — 50 utilisateurs gratuits, soit 21 000 $/mois à 3 000 étudiants ;
+- **couches 3 et 8 (Workers AI)** et **6 et 9 (Durable Objects)** : non utilisés par l'application,
+  et l'ADN du projet est de protéger les quotas, pas de les dépenser ;
+- **couche 10 (chiffrement homomorphe)** : `CAPACITY.md` indique lui-même un coût CPU supérieur au
+  plafond gratuit de 10 ms, à tenir hors du chemin de requête.
+
+Ce qui est **réellement en place** dans `davar-app/` : PBKDF2 600 000 itérations côté navigateur avec
+vérificateur dérivé côté serveur, limitation de débit, contrôle d'origine, protection CSRF
+(`lib/server/http.ts`), signature HMAC du webhook Chariow avec contre-vérification par API,
+sessions datées et révocables, rôles et périmètres, anti-énumération (adresse connue et inconnue
+indiscernables), journal des actions de l'équipe (`staff_events`), purge jamais automatique sans
+geste explicite.
+
+Deux règles du document ne sont **pas** tenues : la chaîne de hash SHA-256 sur le journal
+(le journal existe, sans chaînage) et la rotation automatique des secrets toutes les 24 h.
+Avec Turnstile sur connexion/inscription (absent), ce sont les seules briques peu coûteuses identifiées.
+
+**Ceci ne bloque pas la mise en ligne.**
