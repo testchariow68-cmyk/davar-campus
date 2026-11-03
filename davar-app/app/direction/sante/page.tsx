@@ -34,7 +34,7 @@ export default async function SantePage() {
     <>
       <div className="page-head">
         <div>
-          <h1 style={{ fontSize: 19 }}>Santé technique — paiements &amp; assistants</h1>
+          <h1 style={{ fontSize: 19 }}>Santé technique</h1>
           <p>Utilisation réelle des passerelles : appels, webhooks, chronologie des bascules. Aucune donnée financière.</p>
         </div>
       </div>

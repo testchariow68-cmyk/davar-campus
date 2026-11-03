@@ -90,7 +90,7 @@ export function LecteurAudio({
             {pistes.length} piste{pistes.length > 1 ? 's' : ''} — dans l’ordre du livre audio
           </div>
         </div>
-        <Link className="btn btn-sm" href="/campus/ressources">
+        <Link className="btn btn-sm" href="/campus/ressources/audio">
           <Icon nom="back" taille={13} /> Mes ressources
         </Link>
       </div>

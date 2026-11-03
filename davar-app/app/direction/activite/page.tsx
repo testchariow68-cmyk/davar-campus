@@ -5,7 +5,7 @@ import { sessionSection } from '@/lib/server/direction-access';
 import { depuis } from '@/lib/server/campus-recents';
 
 export const dynamic = 'force-dynamic';
-export const metadata = { title: 'Activité des étudiants — Direction' };
+export const metadata = { title: 'Activité étudiants — Direction' };
 
 /**
  * ACTIVITÉ DES ÉTUDIANTS — qui vient, qui travaille, qui décroche.
@@ -25,7 +25,7 @@ export default async function ActivitePage() {
     <>
       <div className="page-head">
         <div>
-          <h1 style={{ fontSize: 19 }}>Activité des étudiants</h1>
+          <h1 style={{ fontSize: 19 }}>Activité étudiants</h1>
           <p>Fréquence de connexion (30 j) et dernière activité — staff exclu.</p>
         </div>
       </div>

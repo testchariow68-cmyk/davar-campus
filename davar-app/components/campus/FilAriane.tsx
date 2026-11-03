@@ -17,7 +17,6 @@ const NOMS: Record<string, string> = {
   profil: 'Mon profil',
   parametres: 'Paramètres',
   catalogue: 'Découvrir des formations',
-  ressources: 'Mes ressources',
 };
 
 /**
@@ -41,10 +40,10 @@ export function FilAriane({ formations = [] }: { formations?: Array<{ id: string
     if (morceaux[2] === 'evaluation') miettes.push({ label: 'Évaluation' });
   } else if (morceaux[0] === 'ressources') {
     if (morceaux[1] === 'livre') {
-      miettes.push({ label: 'Mes livres', href: '/campus/ressources' });
+      miettes.push({ label: 'Mes livres', href: '/campus/ressources/livre' });
       if (morceaux[2]) miettes.push({ label: 'Lecture' });
     } else if (morceaux[1] === 'audio') {
-      miettes.push({ label: 'Mes audios', href: '/campus/ressources' });
+      miettes.push({ label: 'Mes audios', href: '/campus/ressources/audio' });
       if (morceaux[2]) miettes.push({ label: 'Écoute' });
     } else {
       miettes.push({ label: 'Mes ressources' });

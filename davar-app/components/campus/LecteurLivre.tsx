@@ -66,7 +66,7 @@ export function LecteurLivre({
       <div className="rd-wrap">
         <div className="row between mb12" style={{ flexWrap: 'wrap', gap: 10 }}>
           <h1 style={{ fontSize: 19, margin: 0 }}>{titre}</h1>
-          <Link className="btn btn-sm" href="/campus/ressources">
+          <Link className="btn btn-sm" href="/campus/ressources/livre">
             <Icon nom="back" taille={13} /> Mes ressources
           </Link>
         </div>
@@ -89,7 +89,7 @@ export function LecteurLivre({
             Page {page} sur {total}
           </div>
         </div>
-        <Link className="btn btn-sm" href="/campus/ressources">
+        <Link className="btn btn-sm" href="/campus/ressources/livre">
           <Icon nom="back" taille={13} /> Mes ressources
         </Link>
       </div>

@@ -23,8 +23,8 @@ affiché à l'écran), pas l'adresse. Ce qui compte, c'est ce que lit l'étudian
 | Mes formations | `/campus/formations` | « Mes formations » | conforme |
 | Mes exercices | `/campus/exercices` | « Mes exercices » | conforme |
 | Mes évaluations | `/campus/evaluations` | « Mes évaluations » | conforme |
-| Mes livres | `/campus/ressources` | « Mes livres » | regroupé (voir §3) |
-| Mes audios | `/campus/ressources` | « Mes audios » | regroupé (voir §3) |
+| Mes livres | `/campus/ressources/livre` | « Mes livres » | conforme |
+| Mes audios | `/campus/ressources/audio` | « Mes audios » | conforme |
 | Mes certificats | `/campus/certificats` | « Mes certificats » | conforme |
 | Mes récompenses | `/campus/distinctions` | « Mes récompenses » | conforme |
 | Mes questions | `/campus/questions` | « Mes questions » | conforme |
@@ -46,12 +46,12 @@ Les écrans fils suivent : `/campus/formation/[id]`, `/campus/ressources/livre/[
 |---|---|---|---|---|
 | Pilotage | Vue d'ensemble | `/direction` | « Vue d'ensemble » | conforme |
 | Pilotage | Analytics | `/direction/analytics` | « Analytics » | conforme |
-| Pilotage | Santé technique | `/direction/sante` | « Santé technique — paiements & assistants » | titre allongé |
+| Pilotage | Santé technique | `/direction/sante` | « Santé technique » | conforme |
 | Pilotage | Analyse assistants virtuels | `/direction/assistants` | « Analyse assistants virtuels » | conforme |
 | Pilotage | Badges & distinctions | `/direction/badges` | « Badges & distinctions » | conforme |
-| Pilotage | Activité étudiants | `/direction/activite` | « Activité des étudiants » | titre légèrement différent |
+| Pilotage | Activité étudiants | `/direction/activite` | « Activité étudiants » | conforme |
 | Pédagogie | Formations | `/direction/formations` | « Formations » | conforme |
-| Pédagogie | Ressources | `/direction/ressources` | « Ressources pédagogiques » | titre légèrement différent |
+| Pédagogie | Ressources | `/direction/ressources` | « Ressources » | conforme |
 | Pédagogie | Exercices | `/direction/exercices` | « Exercices » | conforme |
 | Pédagogie | Évaluations | `/direction/devoirs` | « Évaluations » | conforme |
 | Communauté | Étudiants | `/direction/etudiants` | « Étudiants » | conforme |
@@ -77,39 +77,29 @@ est toujours le mot du prototype.
 
 ---
 
-## 3. Les écarts — quatre, et ils sont tous assumés
+## 3. Les écarts — deux, et ils sont tous les deux décidés
 
-**1. « Mes livres » et « Mes audios » partagent un seul écran.** Le prototype leur
-donne deux lignes de menu séparées ; le campus les réunit dans « Mes ressources »
-(nom que le prototype donne à leur section). À l'intérieur, les deux libellés sont
-ceux du prototype.
+**1. `/campus/avis` (« Mes avis »)** n'existe plus au menu : décision du
+propriétaire — un avis émis est définitif, l'étudiant n'y revient pas. L'écran
+reste accessible par son adresse, ce qui a été accepté.
 
-**2. Un onglet « Mes documents » s'y ajoute**, que le prototype n'a pas. C'est le
-seul ajout visible de tout l'espace étudiant.
-
-**3. `/campus/avis` (« Mes avis »)** existe toujours mais ne figure plus au menu :
-décision du propriétaire — un avis émis est définitif, l'étudiant n'y revient pas.
-
-**4. Trois titres de la direction ne sont pas le mot exact du prototype :**
-
-| Le prototype dit | Le campus affiche |
-|---|---|
-| Activité étudiants | Activité des étudiants |
-| Ressources | Ressources pédagogiques |
-| Santé technique | Santé technique — paiements & assistants |
-
-Les trois écrans existent et font ce que fait le prototype ; seul le titre
-affiché s'écarte de quelques mots.
-
-**5. `/campus/catalogue` et `/campus/checkout/[id]`** existent et ne sont pas dans
+**2. `/campus/catalogue` et `/campus/checkout/[id]`** existent et ne sont pas dans
 le prototype : décision du propriétaire, les prix affichés n'étaient pas les siens,
 la vente se fait sur sa page officielle.
 
-Aucun de ces écarts n'est invisible : ils sont tous soit décidés par le
-propriétaire, soit corrigibles sur un mot de lui. Les trois titres du point 4
-peuvent être remis au mot près en une minute.
-
 ---
+
+### Corrigé le 3 novembre, sur décision du propriétaire
+
+Ces trois points figuraient dans la première version de cet audit. Ils sont réglés :
+
+- **« Mes livres » et « Mes audios » sont redevenus deux écrans**, comme les deux
+  lignes de menu du prototype. Elles pointaient avant vers des adresses qui
+  n'existaient pas : le menu conduisait à une page introuvable.
+- **L'onglet « Mes documents » a disparu.** Il n'était pas demandé et n'existe pas
+  dans le prototype.
+- **Les trois titres de la direction sont revenus au mot exact du prototype** :
+  « Activité étudiants », « Ressources », « Santé technique ».
 
 ## 4. Ce qui n'est pas du code
 
