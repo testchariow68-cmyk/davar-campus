@@ -112,6 +112,12 @@ test('un e-mail qui ne peut pas partir ne casse jamais ce que faisait la personn
   assert.equal(parti, false);
 });
 
+test('la signature porte la ville, pas le quartier', () => {
+  const modele = composerCourriel('bienvenue', 'awa@exemple.test', { nom: 'Awa' });
+  assert.match(modele.text, /Abidjan — Côte d’Ivoire/);
+  assert.doesNotMatch(modele.text, /Yopougon/, 'le propriétaire a retiré le quartier de la signature');
+});
+
 test('les quatre adresses de l’académie', () => {
   assert.equal(adresseDuRole('support'), 'support@davarcampus.co');
   assert.equal(adresseDuRole('contact'), 'contact@davarcampus.co');

@@ -26,7 +26,7 @@ import { sendEmail, type OutgoingEmail } from './mailer.ts';
 export type RoleCourriel = 'support' | 'contact' | 'infos' | 'direction';
 
 const DOMAINE = 'davarcampus.co';
-const LIGNE_ADRESSE = 'Yopougon, Abidjan — Côte d’Ivoire';
+const LIGNE_ADRESSE = 'Abidjan — Côte d’Ivoire';
 const SITE = 'https://davarcampus.co';
 
 export function adresseDuRole(role: RoleCourriel): string {
