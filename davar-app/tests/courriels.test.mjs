@@ -32,17 +32,17 @@ test('les neuf scénarios, et pas un de plus', () => {
   assert.deepEqual(
     Object.keys(SCENARIOS).sort(),
     [
+      'acces-ouvert',
       'bienvenue',
       'certificat-pret',
       'demande-certificat',
       'grace-etudiant',
       'invitation-staff',
-      'paiement-confirme',
       'reactivation',
       'reset-mdp',
       'suspension',
     ],
-    'les dix modèles de l’écran « E-mails », moins la motivation qui part en notification'
+    'huit modèles de l’écran « E-mails », l’accès ouvert à la place de l’achat confirmé'
   );
 });
 
@@ -56,7 +56,7 @@ test('chaque scénario parle avec la voix du rôle que le prototype lui donne', 
     reactivation: 'direction',
     'certificat-pret': 'direction',
     'demande-certificat': 'support',
-    'paiement-confirme': 'support',
+    'acces-ouvert': 'support',
   };
   for (const [scenario, role] of Object.entries(roles)) {
     assert.equal(SCENARIOS[scenario].role, role, scenario);
@@ -70,11 +70,13 @@ test('les textes sont ceux du prototype, au mot près', () => {
   assert.match(accueil.text, /Bonne formation !\n\nCordialement,\nL’équipe Davar Académie/);
   assert.equal(adresseDuRole(SCENARIOS.bienvenue.role), 'infos@davarcampus.co');
 
-  const paiement = composerCourriel('paiement-confirme', 'awa@exemple.test', { titre: 'Orateur' });
-  assert.equal(paiement.subject, 'Votre achat est confirmé — Davar Académie Campus');
-  assert.match(paiement.text, /Votre paiement pour « Orateur » est confirmé/);
-  assert.match(paiement.text, /accès 12 mois, certificat inclus/);
-  assert.equal(adresseDuRole(SCENARIOS['paiement-confirme'].role), 'support@davarcampus.co');
+  // L'achat est confirmé par Chariow : nous annonçons l'accès, rien d'autre.
+  const acces = composerCourriel('acces-ouvert', 'awa@exemple.test', { titre: 'Orateur' });
+  assert.equal(acces.subject, 'Votre accès est ouvert — Davar Académie Campus');
+  assert.match(acces.text, /Votre accès à « Orateur » est actif/);
+  assert.match(acces.text, /répondez à ce message : nous sommes là/);
+  assert.doesNotMatch(acces.text, /facture|paiement/, 'la facture appartient à Chariow');
+  assert.equal(adresseDuRole(SCENARIOS['acces-ouvert'].role), 'support@davarcampus.co');
 
   const certificat = composerCourriel('certificat-pret', 'awa@exemple.test', { code: 'PRI-001' });
   assert.equal(certificat.subject, 'Votre certificat PRI-001 est prêt — Davar Académie');
@@ -98,7 +100,7 @@ test('les textes sont ceux du prototype, au mot près', () => {
 test('la désinscription ne s’affiche que sur le canal « infos »', () => {
   const infos = composerCourriel('bienvenue', 'awa@exemple.test', {});
   assert.match(infos.text, /Pour vous désinscrire : https:\/\/davarcampus\.co\/#\/desinscription\?e=awa%40exemple\.test/);
-  const support = composerCourriel('paiement-confirme', 'awa@exemple.test', { titre: 'X' });
+  const support = composerCourriel('acces-ouvert', 'awa@exemple.test', { titre: 'X' });
   assert.doesNotMatch(support.text, /Pour vous désinscrire/);
 });
 

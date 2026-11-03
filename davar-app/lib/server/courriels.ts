@@ -11,6 +11,12 @@
  * modèles d'essai. Ici, ce sont les neuf scénarios que la plateforme envoie
  * vraiment — le dixième, la motivation, part en notification et n'a jamais
  * été un e-mail dans le prototype.
+ *
+ * Décision du propriétaire : l'achat est confirmé par Chariow, pas par nous.
+ * Notre e-mail d'achat ne répétait donc que ce que Chariow avait déjà dit.
+ * À la place, la plateforme envoie `acces-ouvert` : le message que le
+ * prototype a écrit (`access_open`) sans jamais l'envoyer, et qui dit
+ * exactement ce qu'elle fait — vérifier, ouvrir, laisser étudier.
  */
 import type { Db } from './auth-core';
 import { notifier } from './notifications.ts';
@@ -53,7 +59,7 @@ export type ScenarioCourriel =
   | 'reactivation'
   | 'certificat-pret'
   | 'demande-certificat'
-  | 'paiement-confirme';
+  | 'acces-ouvert';
 
 export type VariablesCourriel = {
   nom?: string;
@@ -121,11 +127,11 @@ export const SCENARIOS: Record<ScenarioCourriel, Scenario> = {
     corps: () =>
       `Bonjour,\n\nNous avons bien reçu votre demande de certificat. Elle est en cours de traitement ; le document officiel vous sera adressé par e-mail de la Direction dès émission.`,
   },
-  'paiement-confirme': {
+  'acces-ouvert': {
     role: 'support',
-    objet: () => 'Votre achat est confirmé — Davar Académie Campus',
+    objet: () => 'Votre accès est ouvert — Davar Académie Campus',
     corps: (v) =>
-      `Bonjour,\n\nVotre paiement pour « ${v.titre} » est confirmé. La formation est ajoutée à votre compte existant (accès 12 mois, certificat inclus). Votre facture est téléchargeable depuis l’écran de succès puis depuis votre compte.`,
+      `Bonjour,\n\nVotre accès à « ${v.titre} » est actif. En cas de difficulté de lecture ou de connexion, répondez à ce message : nous sommes là.`,
   },
 };
 

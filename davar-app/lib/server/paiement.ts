@@ -296,10 +296,10 @@ export async function attribuerApresPaiement(
     corps: `Paiement confirmé : « ${titreFormation} » a été ajoutée à votre compte.`,
   });
 
-  // Le reçu par e-mail : la facture est nommée dans le texte du prototype, et
-  // reste téléchargeable depuis l'écran de succès.
+  // L'accès est ouvert : c'est notre part. La confirmation du paiement et la
+  // facture appartiennent à Chariow, qui les envoie de son côté.
   if (acheteur) {
-    await envoyerScenario(db, 'paiement-confirme', acheteur, {
+    await envoyerScenario(db, 'acces-ouvert', acheteur, {
       titre: titreFormation,
       userId: intention.userId,
     });
