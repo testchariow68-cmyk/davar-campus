@@ -1,0 +1,28 @@
+# DAVAR Campus — Turso comme seule base applicative (plan actuel)
+
+**Décision du propriétaire, 2 octobre 2026 :** avancer progressivement vers **Turso comme seule base de données applicative du campus**. Décision ultérieure : priorité à **`../davar-app/` (Next.js)** pour viser un lancement public avec comptes, cours et paiements ; une base Turso de production distincte et des accès sandbox Flutterwave/MoneyFusion existent selon le propriétaire. **État réel et verrous de la première tranche : `../davar-app/REAL-LAUNCH-STATUS.md`.** Le projet de réplication/failover CockroachDB → D1 est **mis en pause**, pas supprimé ; les ressources et travaux précédents sont conservés sans les exploiter. **Aucune base nouvelle, aucune purge, aucune migration distante ni branchement au campus public n'est autorisé par cette décision.** L'accord de principe antérieur sur la version 0 des trois bases est suspendu : son périmètre n'est plus celui du projet actuel.
+
+## Ce qui fonctionne effectivement aujourd'hui
+
+- Worker de **diagnostic** staging : lecture sur Turso, Cockroach et D1 vérifiée par le propriétaire ; le jeton Turso `TURSO_AUTH_TOKEN` de ce Worker est destiné à la lecture seulement. Le préflight v4 a donné `clear:true` pour Turso et D1 ; le seul objet Cockroach supplémentaire était le catalogue système `pg_extension` (faux positif du filtre v4, correction locale non déployée). Ces diagnostics sont manuels, non un routeur de production.
+- Turso staging ne montre **aucune table applicative** lors du dernier inventaire ; cette observation est un instantané et doit être revalidée avant toute écriture.
+- Le campus actuel utilise encore `localStorage`/le mode démo ; **aucun** compte, vente ou formation du campus n'est servi par Turso. Les scripts SQL et tests SQLite/Node préparés auparavant ne constituent pas un backend applicatif déployé.
+
+## Cible choisie
+
+- **Turso = unique source autoritative** pour données, droits et écritures applicatives. Le navigateur ne voit jamais son jeton ; une API serveur privée applique authentification, rôles, autorisations, validation, transactions et idempotence.
+- CockroachDB et D1 : **en veille**, sans migrations, sans réplication, sans trafic applicatif, sans sonde périodique de 30 s. Conserver les ressources et le diagnostic déjà déployé, mais ne lancer les routes de santé/inventaire que manuellement si nécessaire. Ne pas débrancher leurs bindings ni supprimer les bases dans la précipitation : ce n'est ni une purge ni un rollback.
+- IndexedDB peut être étudié ensuite comme **cache local limité**, distinct d'une base de secours serveur. Si Turso ou l'API ne répond pas, l'application affiche un mode dégradé explicite : pas de confirmation de paiement, délivrance de certificat ou attribution de droit hors ligne.
+- Contrepartie assumée : **pas de bascule automatique** sur CockroachDB/D1. La continuité dépend de Turso, de l'API et d'une stratégie de sauvegarde/restauration ; aucun objectif de disponibilité élevé n'est démontré.
+
+## Suite dans l'ordre — sans exécution distante implicite
+
+1. **Figer le périmètre métier réellement retenu** (écrans, rôles, transactions) puis revoir les schémas locaux avant application. `backend/sql/staging.sqlite.sql` a été conçu pour la réplication à trois bases ; il comprend `replication_checkpoint` et `operation_receipts`. `davar-app/turso/schema.sql` reflète d'anciens choix : **ne lancer aucun des deux fichiers tel quel**. Préparer un schéma Turso minimal, versionné, cohérent avec les décisions actuelles ; tester localement contraintes, idempotence et absence de contenu réel.
+2. **Préparer l'opérateur Turso staging uniquement** : confirmer la cible, refaire l'inventaire en lecture seule, documenter sauvegarde/PITR et restauration disponible sans nouvelle base, estimer quotas/coûts, puis isoler un accès opérateur à durée limitée (distinct du jeton lecture seule du Worker diagnostic). Ne transmettre aucun secret dans le chat ou le dépôt. Sans cible de restauration isolée, ne pas prétendre avoir testé une restauration réelle.
+3. **Présenter le SQL, son empreinte et l'effet exact avant toute écriture sur Turso staging** : tables/index créés, aucun `DROP`/`DELETE`/`TRUNCATE`, journal de version atomique ou protocole de reprise explicite, arrêt à la première anomalie. Demander un accord distinct adapté à **Turso seul** ; l'ancien accord de principe pour les trois bases ne vaut pas validation de ce nouveau SQL.
+4. **Construire ensuite l'API et l'auth côté serveur**, puis des tests end-to-end sur données fictives staging : permissions entre utilisateurs, sessions, contraintes, double soumission, redémarrage, erreurs de transaction, limites de quota et sauvegardes. Une simulation SQLite n'est pas une preuve du fournisseur hébergé. Ne relier aucun utilisateur réel, paiement ou certificat à ce stade.
+5. **Connexion progressive du campus public seulement après validation distincte** : plan de migration des vraies données, sécurité, restauration et mesures. Aucun effacement ni importation de données réelles n'est implicite. L'interface existante reste inchangée jusque-là.
+
+## Documentation historique conservée, non active
+
+`ARCHITECTURE-BASES-FAILOVER.md`, `ANALYSE-CAPACITE-ARCHITECTURES.md` et `backend/MIGRATIONS-STAGING-PREPARATION.md` décrivent l'option multi-base **en pause**. Les simulations `backend/sandbox_replication.py` et leurs tests restent disponibles, sans service distant ni déploiement. `ROADMAP-PRODUCTION.md` contient également des choix métier anciens (notamment une passerelle de paiement abandonnée et des formulations sur la purge) : **ne pas l'utiliser comme instruction de déploiement** sans révision. Ne supprimer aucun fichier existant pour matérialiser la pause.
