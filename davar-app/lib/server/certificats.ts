@@ -11,6 +11,7 @@
  */
 import type { Db } from './auth-core';
 import { envoyerScenario } from './courriels.ts';
+import { formationTerminee } from './campus.ts';
 
 function texte(valeur: unknown, defaut = ''): string {
   return typeof valeur === 'string' ? valeur : defaut;
@@ -46,6 +47,13 @@ export async function demanderCertificat(
     args: [options.userId, options.formationId],
   });
   if (droit.rows.length === 0) return { ok: false, erreur: 'non_inscrit' };
+
+  // Le certificat ne se demande qu'a 100 % : toutes les lecons vues et toutes
+  // les evaluations reussies. C'est la regle du proprietaire, et elle est
+  // verifiee ici, cote serveur : l'ecran ne suffit jamais.
+  if (!(await formationTerminee(db, options.userId, options.formationId))) {
+    return { ok: false, erreur: 'formation_non_terminee' };
+  }
 
   const deja = await db.execute({
     sql: "SELECT status FROM certificate_requests WHERE user_id = ? AND training_id = ? AND status IN ('pending','approved')",

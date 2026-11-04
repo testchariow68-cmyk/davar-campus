@@ -29,6 +29,8 @@ export async function POST(request: Request) {
       const messages: Record<string, string> = {
         nom_invalide: 'Le nom de votre profil est incomplet : demandez sa correction à la direction.',
         non_inscrit: 'Vous n’êtes pas inscrit à cette formation.',
+        formation_non_terminee:
+          'Votre formation n’est pas terminée : voyez toutes les leçons et réussissez toutes les évaluations.',
         demande_deja_en_cours: 'Votre demande est déjà enregistrée : la direction la traite.',
       };
       return jsonNoStore({ error: resultat.erreur, message: messages[resultat.erreur ?? ''] ?? 'La demande n’a pas abouti.' }, 400);

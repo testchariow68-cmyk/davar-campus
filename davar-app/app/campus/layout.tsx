@@ -9,7 +9,7 @@ import { BandeauDefilant } from '@/components/campus/BandeauDefilant';
 import { BellMenu } from '@/components/campus/BellMenu';
 import { VueTestBar } from '@/components/campus/VueTestBar';
 import { currentSession } from '@/lib/server/auth';
-import { listTrainingsApercu, listUserTrainings } from '@/lib/server/campus';
+import { listTrainingsApercu, listUserTrainings, progressionFormation } from '@/lib/server/campus';
 import { passageEtudiant } from '@/lib/server/assiduite';
 import { compterNonLues, listerNotifications } from '@/lib/server/notifications';
 import { lirePreferences } from '@/lib/server/profil';
@@ -58,10 +58,7 @@ export default async function CampusLayout({ children }: { children: React.React
     ? await listTrainingsApercu(session.db)
     : await listUserTrainings(session.db, user.id);
   const active = formations[0] ?? null;
-  const pourcentActive =
-    active && active.lessonCount > 0
-      ? Math.round((active.completedCount / active.lessonCount) * 100)
-      : 0;
+  const pourcentActive = active ? progressionFormation(active).pct : 0;
 
   const annonceBrute = annonceDepuisReglages(reglages);
   const annonce = annonceViseLUtilisateur(annonceBrute, reel.role) ? annonceBrute : null;

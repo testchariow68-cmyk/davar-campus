@@ -12,6 +12,8 @@ export type EnrolledTraining = {
   description: string | null;
   lessonCount: number;
   completedCount: number;
+  evaluationCount: number;
+  evaluationsReussies: number;
 };
 
 export type Lesson = {
@@ -33,7 +35,61 @@ export type TrainingDetail = {
   modules: Module[];
   lessonCount: number;
   completedCount: number;
+  evaluationCount: number;
+  evaluationsReussies: number;
 };
+
+/**
+ * LA PROGRESSION, TELLE QUE LE PROPRIÉTAIRE LA VEUT — « 100 % doit vraiment
+ * dire formation terminée ». On compte donc les leçons vues ET les évaluations
+ * réussies, parce qu'une formation dont l'évaluation reste en échec n'est pas
+ * terminée, même avec toutes ses leçons cochées.
+ *
+ * L'exercice n'entre dans aucun des deux comptes : il ne bloque jamais la
+ * progression, et il n'est jamais compté réussi gratuitement (décision du
+ * propriétaire contre le raccourci du prototype).
+ *
+ * `terminee` se lit sur les nombres, jamais sur l'arrondi : 99,5 % affiché
+ * 100 % ne doit pas ouvrir la demande de certificat.
+ */
+export function progressionFormation(formation: {
+  lessonCount: number;
+  completedCount: number;
+  evaluationCount: number;
+  evaluationsReussies: number;
+}): { pct: number; terminee: boolean; faits: number; total: number } {
+  const total = formation.lessonCount + formation.evaluationCount;
+  const faits = formation.completedCount + formation.evaluationsReussies;
+  const pct = total === 0 ? 0 : Math.round((faits / total) * 100);
+  return { pct, terminee: total > 0 && faits >= total, faits, total };
+}
+
+/**
+ * Les évaluations d'une formation : combien, et combien l'étudiant en a
+ * réussies. Une évaluation est réussie quand une tentative est passée (le score
+ * minimum est celui de l'évaluation, 80 % par défaut) ET, quand elle exige une
+ * validation humaine, qu'un devoir a été accepté par le coach principal.
+ */
+async function compterEvaluations(db: Db, trainingId: string, userId: string | null) {
+  const lignes = await db.execute({
+    sql: `SELECT COUNT(*) AS total,
+                 SUM(CASE WHEN EXISTS (SELECT 1 FROM assessment_attempts att
+                                       WHERE att.assessment_id = a.id AND att.user_id = ? AND att.passed = 1)
+                           AND (a.requires_review = 0
+                                OR EXISTS (SELECT 1 FROM submissions s
+                                           WHERE s.assessment_id = a.id AND s.user_id = ? AND s.status = 'approved'))
+                          THEN 1 ELSE 0 END) AS reussies
+          FROM lesson_assessments a
+          JOIN course_lessons l ON l.id = a.lesson_id
+          JOIN course_modules m ON m.id = l.module_id
+          WHERE m.training_id = ?`,
+    args: [userId ?? '', userId ?? '', trainingId],
+  });
+  return {
+    evaluationCount: num(lignes.rows[0]?.total),
+    evaluationsReussies: num(lignes.rows[0]?.reussies),
+  };
+}
 
 function text(value: unknown): string | null {
   return typeof value === 'string' && value.length > 0 ? value : null;
@@ -51,7 +107,21 @@ export async function listUserTrainings(db: Db, userId: string): Promise<Enrolle
                  (SELECT COUNT(*) FROM lesson_completions c
                    JOIN course_lessons l ON l.id = c.lesson_id
                    JOIN course_modules m ON m.id = l.module_id
-                   WHERE m.training_id = t.id AND c.user_id = e.user_id) AS completed_count
+                   WHERE m.training_id = t.id AND c.user_id = e.user_id) AS completed_count,
+                 (SELECT COUNT(*) FROM lesson_assessments a
+                   JOIN course_lessons l ON l.id = a.lesson_id
+                   JOIN course_modules m ON m.id = l.module_id
+                   WHERE m.training_id = t.id) AS evaluation_count,
+                 (SELECT COUNT(*) FROM lesson_assessments a
+                   JOIN course_lessons l ON l.id = a.lesson_id
+                   JOIN course_modules m ON m.id = l.module_id
+                   WHERE m.training_id = t.id
+                     AND EXISTS (SELECT 1 FROM assessment_attempts att
+                                 WHERE att.assessment_id = a.id AND att.user_id = e.user_id AND att.passed = 1)
+                     AND (a.requires_review = 0
+                          OR EXISTS (SELECT 1 FROM submissions s
+                                     WHERE s.assessment_id = a.id AND s.user_id = e.user_id AND s.status = 'approved'))
+                 ) AS evaluations_reussies
           FROM enrollments e JOIN trainings t ON t.id = e.training_id
           WHERE e.user_id = ?
           ORDER BY e.acquired_at_ms DESC`,
@@ -67,6 +137,8 @@ export async function listUserTrainings(db: Db, userId: string): Promise<Enrolle
       description: text(row.description),
       lessonCount: num(row.lesson_count),
       completedCount: num(row.completed_count),
+      evaluationCount: num(row.evaluation_count),
+      evaluationsReussies: num(row.evaluations_reussies),
     };
   });
 }
@@ -149,7 +221,16 @@ async function lireContenuFormation(
     if (lesson.completed) completedCount += 1;
   }
 
-  return { id: trainingId, title, description: text(training?.description), modules, lessonCount, completedCount };
+  const evaluations = await compterEvaluations(db, trainingId, userId);
+  return {
+    id: trainingId,
+    title,
+    description: text(training?.description),
+    modules,
+    lessonCount,
+    completedCount,
+    ...evaluations,
+  };
 }
 
 /**
@@ -214,6 +295,8 @@ export async function listTrainingsApercu(db: Db): Promise<EnrolledTraining[]> {
       description: text(row.description),
       lessonCount: num(row.lesson_count),
       completedCount: 0,
+      evaluationCount: 0,
+      evaluationsReussies: 0,
     });
   }
   return liste;
@@ -353,4 +436,27 @@ export async function lireFormationPubliee(
     rating:
       typeof row?.rating === 'number' || typeof row?.rating === 'bigint' ? Number(row?.rating) : null,
   };
+}
+
+/**
+ * Vrai quand l'étudiant a vu toutes les leçons ET réussi toutes les évaluations.
+ * C'est la condition d'une demande de certificat : à 99 %, la demande est
+ * refusée, et le refus dit pourquoi.
+ */
+export async function formationTerminee(db: Db, userId: string, trainingId: string): Promise<boolean> {
+  const [lecons, evaluations] = await Promise.all([
+    db.execute({
+      sql: `SELECT (SELECT COUNT(*) FROM course_modules m JOIN course_lessons l ON l.module_id = m.id
+                     WHERE m.training_id = ?) AS total,
+                   (SELECT COUNT(*) FROM lesson_completions c
+                     JOIN course_lessons l ON l.id = c.lesson_id
+                     JOIN course_modules m ON m.id = l.module_id
+                     WHERE m.training_id = ? AND c.user_id = ?) AS faites`,
+      args: [trainingId, trainingId, userId],
+    }),
+    compterEvaluations(db, trainingId, userId),
+  ]);
+  const total = num(lecons.rows[0]?.total) + evaluations.evaluationCount;
+  const faites = num(lecons.rows[0]?.faites) + evaluations.evaluationsReussies;
+  return total > 0 && faites >= total;
 }

@@ -3,7 +3,14 @@
 import { useState } from 'react';
 import { Icon } from './Icon';
 
-type Formation = { id: string; titre: string; dejaCertifiee: boolean; dejaDemande: boolean; progression: number };
+type Formation = {
+  id: string;
+  titre: string;
+  dejaCertifiee: boolean;
+  dejaDemande: boolean;
+  progression: number;
+  terminee: boolean;
+};
 
 /** Demander son certificat : un geste explicite, jamais automatique. */
 export function DemandeCertificat({ formations }: { formations: Formation[] }) {
@@ -41,7 +48,10 @@ export function DemandeCertificat({ formations }: { formations: Formation[] }) {
         <div key={formation.id} className="row between" style={{ gap: 10, padding: '10px 0', borderBottom: '1px solid var(--line)', flexWrap: 'wrap' }}>
           <span className="small">
             <b>{formation.titre}</b>
-            <div className="xs faint">Progression : {formation.progression} %</div>
+            <div className="xs faint">
+              Progression : {formation.progression} %
+              {!formation.terminee ? ' — voyez toutes les leçons et réussissez toutes les évaluations' : ''}
+            </div>
           </span>
           {formation.dejaCertifiee ? (
             <span className="badge b-green">
@@ -51,10 +61,14 @@ export function DemandeCertificat({ formations }: { formations: Formation[] }) {
             <span className="badge b-gold">
               <Icon nom="clock" taille={12} /> en attente de validation
             </span>
-          ) : (
+          ) : formation.terminee ? (
             <button className="btn btn-primary btn-sm" disabled={enCours === formation.id} onClick={() => void demander(formation)}>
               <Icon nom="award" taille={14} /> Demander
             </button>
+          ) : (
+            <span className="badge b-grey">
+              <Icon nom="clock" taille={12} /> formation à terminer
+            </span>
           )}
           {messages[formation.id] && <div className="xs muted" style={{ flexBasis: '100%' }}>{messages[formation.id]}</div>}
         </div>

@@ -2,7 +2,7 @@ import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { Icon } from '@/components/campus/Icon';
 import { currentSession } from '@/lib/server/auth';
-import { getTrainingForUser, listTrainingsApercu, listUserTrainings } from '@/lib/server/campus';
+import { getTrainingForUser, listTrainingsApercu, listUserTrainings, progressionFormation } from '@/lib/server/campus';
 import { certificatsDeEtudiant } from '@/lib/server/certificats';
 import { listerNotifications } from '@/lib/server/notifications';
 import { ressourcesDeEtudiant } from '@/lib/server/ressources';
@@ -38,11 +38,11 @@ export default async function CampusDashboard() {
 
   const avecProgression = formations.map((formation) => ({
     formation,
-    pourcent:
-      formation.lessonCount === 0 ? 0 : Math.round((formation.completedCount / formation.lessonCount) * 100),
+    ...progressionFormation(formation),
   }));
   // Formation active : la première commencée mais pas terminée, sinon la première.
-  const active = avecProgression.find(({ pourcent }) => pourcent > 0 && pourcent < 100) ?? avecProgression[0] ?? null;
+  const active =
+    avecProgression.find(({ pct, terminee }) => pct > 0 && !terminee) ?? avecProgression[0] ?? null;
 
   const [notifications, ressources, certificats] = await Promise.all([
     session.vueTest ? Promise.resolve([]) : listerNotifications(db, user.id, maintenant, 3),
@@ -59,9 +59,9 @@ export default async function CampusDashboard() {
   const heure = new Date().toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
 
   const phrase = active
-    ? active.pourcent >= 100
+    ? active.terminee
       ? 'Parcours terminé — demandez votre certificat !'
-      : `Vous en êtes à ${active.pourcent} % de « ${active.formation.title} ». ${
+      : `Vous en êtes à ${active.pct} % de « ${active.formation.title} ». ${
           prochaine ? 'Votre prochaine étape est prête.' : 'Parcours terminé — demandez votre certificat !'
         }`
     : 'Bienvenue sur votre campus. Choisissez une formation pour commencer.';
@@ -80,7 +80,7 @@ export default async function CampusDashboard() {
           {active ? (
             <Link className="btn btn-primary" href={`/campus/formation/${active.formation.id}`}>
               <Icon nom="play" taille={15} />{' '}
-              {active.pourcent >= 100 ? 'Voir ma formation' : 'Continuer ma formation'}
+              {active.terminee ? 'Voir ma formation' : 'Continuer ma formation'}
             </Link>
           ) : (
             <Link className="btn btn-primary" href="/campus/catalogue">
@@ -93,10 +93,10 @@ export default async function CampusDashboard() {
             <div className="eyebrow">Formation active</div>
             <b style={{ fontSize: 14.5 }}>{active.formation.title}</b>
             <div className="mt8">
-              <Progression pourcent={active.pourcent} />
+              <Progression pourcent={active.pct} />
             </div>
             <div className="row between mt8">
-              <span className="xs muted">{active.pourcent} % accompli</span>
+              <span className="xs muted">{active.pct} % accompli</span>
               <Link href="/campus/formations" className="xs link">
                 Toutes mes formations →
               </Link>

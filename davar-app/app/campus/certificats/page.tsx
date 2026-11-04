@@ -3,7 +3,7 @@ import { Icon } from '@/components/campus/Icon';
 import { DemandeCertificat } from '@/components/campus/DemandeCertificat';
 import { currentSession } from '@/lib/server/auth';
 import { certificatsDeEtudiant, demandesDeEtudiant } from '@/lib/server/certificats';
-import { listUserTrainings } from '@/lib/server/campus';
+import { listUserTrainings, progressionFormation } from '@/lib/server/campus';
 
 export const dynamic = 'force-dynamic';
 export const metadata = { title: 'Mes certificats — Davar Académie Campus' };
@@ -100,7 +100,8 @@ export default async function CertificatsPage() {
           titre: formation.title,
           dejaCertifiee: certificats.some((certificat) => certificat.formationTitle === formation.title),
           dejaDemande: demandes.some((demande) => demande.formation === formation.title && demande.statut === 'pending'),
-          progression: formation.lessonCount === 0 ? 0 : Math.round((formation.completedCount / formation.lessonCount) * 100),
+          progression: progressionFormation(formation).pct,
+          terminee: progressionFormation(formation).terminee,
         }))}
       />
     </>

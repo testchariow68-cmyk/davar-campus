@@ -29,6 +29,7 @@ import {
 import { deciderCertificat, demanderCertificat, verifierCertificat, codeCertificat } from '../lib/server/certificats.ts';
 import { attribuerBadge, badgesDeEtudiant, BADGES_PARCOURS, installerCatalogue, verifierReglesBadges } from '../lib/server/recompenses.ts';
 import { avisAttendus, compterMots, deposerAvis, MOTS_MAXIMUM } from '../lib/server/avis.ts';
+import { formationTerminee, progressionFormation } from '../lib/server/campus.ts';
 import { pathToFileURL } from 'node:url';
 
 process.env.APP_ENV = 'development';
@@ -182,6 +183,19 @@ test('le certificat se demande, se valide à la main, et son code le rend vérif
   const db = await basePrete();
   assert.equal(codeCertificat(2026, 147), 'CERT-2026-0147');
 
+  // Le certificat ne se demande qu'à 100 % : on mène donc la formation au bout
+  // (leçon vue, évaluation réussie) avant de formuler la demande.
+  await db.execute("UPDATE lesson_assessments SET requires_review = 0 WHERE id = 'ev-1'");
+  await db.execute({
+    sql: 'INSERT INTO lesson_completions(user_id, lesson_id, completed_at_ms) VALUES (?,?,?)',
+    args: ['u-eleve', 'l-1', Date.now()],
+  });
+  await repondreEvaluation(db, 'u-eleve', 'ev-1', [
+    { questionId: 'evq-1', choiceIndex: 1 },
+    { questionId: 'evq-2', choiceIndex: 1 },
+    { questionId: 'evq-3', choiceIndex: 1 },
+  ]);
+
   const demande = await demanderCertificat(db, { userId: 'u-eleve', formationId: 't-orateur', holderName: 'Awa Koné' });
   assert.equal(demande.ok, true);
   const encore = await demanderCertificat(db, { userId: 'u-eleve', formationId: 't-orateur', holderName: 'Awa Koné' });
@@ -289,4 +303,101 @@ test('la lecture groupée d’une formation rassemble exercice et évaluation pa
   assert.equal(pedagogie[0].exercices[0].exercice.questions[0].id, 'q-1');
   assert.equal(pedagogie[0].evaluations[0].evaluation.minScore, 80);
   assert.equal(pedagogie[0].evaluations[0].evaluation.reussie, false);
+});
+
+test('la progression compte les leçons et les évaluations — et jamais l’exercice', () => {
+  const presque = progressionFormation({ lessonCount: 4, completedCount: 4, evaluationCount: 1, evaluationsReussies: 0 });
+  assert.equal(presque.pct, 80, 'quatre leçons sur cinq étapes : 80 %');
+  assert.equal(presque.terminee, false, 'une évaluation en suspens n’est pas une formation terminée');
+
+  const finie = progressionFormation({ lessonCount: 4, completedCount: 4, evaluationCount: 1, evaluationsReussies: 1 });
+  assert.equal(finie.pct, 100);
+  assert.equal(finie.terminee, true);
+
+  const vide = progressionFormation({ lessonCount: 0, completedCount: 0, evaluationCount: 0, evaluationsReussies: 0 });
+  assert.equal(vide.pct, 0);
+  assert.equal(vide.terminee, false, 'une formation vide ne se dit pas terminée');
+});
+
+test('100 % veut dire formation terminée : leçons vues, évaluation réussie, coach passé', async () => {
+  const db = await basePrete();
+  const maintenant = Date.now();
+  const bonnesReponses = [
+    { questionId: 'evq-1', choiceIndex: 1 },
+    { questionId: 'evq-2', choiceIndex: 1 },
+    { questionId: 'evq-3', choiceIndex: 1 },
+  ];
+
+  // 1. Rien n'est fait.
+  assert.equal(await formationTerminee(db, 'u-eleve', 't-orateur'), false);
+
+  // 2. La leçon est vue : ce n'est pas suffisant, l'évaluation reste en suspens.
+  await db.execute({
+    sql: 'INSERT INTO lesson_completions(user_id, lesson_id, completed_at_ms) VALUES (?,?,?)',
+    args: ['u-eleve', 'l-1', maintenant],
+  });
+  assert.equal(await formationTerminee(db, 'u-eleve', 't-orateur'), false);
+
+  // 3. L'évaluation est réussie au score, mais elle exige une validation
+  //    humaine : tant que le coach n'a pas validé, ce n'est pas terminé.
+  const reussite = await repondreEvaluation(db, 'u-eleve', 'ev-1', bonnesReponses, maintenant);
+  assert.equal(reussite.ok, true);
+  assert.equal(reussite.pct, 100);
+  assert.equal(await formationTerminee(db, 'u-eleve', 't-orateur'), false);
+
+  // 4. Le devoir est rendu, puis validé par le coach : la formation l'est.
+  const rendu = await rendreDevoir(
+    db,
+    { userId: 'u-eleve', assessmentId: 'ev-1', note: 'Mon discours de trois minutes.', fileKey: null },
+    maintenant
+  );
+  assert.equal(rendu.ok, true);
+  const soumission = await db.execute("SELECT id FROM submissions WHERE user_id = 'u-eleve'");
+  const decision = await deciderDevoir(
+    db,
+    { submissionId: String(soumission.rows[0].id), decision: 'approved', feedback: 'Très bien.', decideur: 'u-coach' },
+    maintenant
+  );
+  assert.equal(decision.ok, true);
+  assert.equal(await formationTerminee(db, 'u-eleve', 't-orateur'), true);
+});
+
+test('le certificat se demande à 100 % — et pas une leçon avant', async () => {
+  const db = await basePrete();
+  const maintenant = Date.now();
+
+  const refus = await demanderCertificat(
+    db,
+    { userId: 'u-eleve', formationId: 't-orateur', holderName: 'Awa Koné' },
+    maintenant
+  );
+  assert.equal(refus.ok, false);
+  assert.equal(refus.erreur, 'formation_non_terminee');
+
+  // Une évaluation sans validation humaine, pour aller au bout sans le coach.
+  await db.execute("UPDATE lesson_assessments SET requires_review = 0 WHERE id = 'ev-1'");
+  await db.execute({
+    sql: 'INSERT INTO lesson_completions(user_id, lesson_id, completed_at_ms) VALUES (?,?,?)',
+    args: ['u-eleve', 'l-1', maintenant],
+  });
+  const reussite = await repondreEvaluation(
+    db,
+    'u-eleve',
+    'ev-1',
+    [
+      { questionId: 'evq-1', choiceIndex: 1 },
+      { questionId: 'evq-2', choiceIndex: 1 },
+      { questionId: 'evq-3', choiceIndex: 1 },
+    ],
+    maintenant
+  );
+  assert.equal(reussite.pct, 100);
+  assert.equal(await formationTerminee(db, 'u-eleve', 't-orateur'), true);
+
+  const accord = await demanderCertificat(
+    db,
+    { userId: 'u-eleve', formationId: 't-orateur', holderName: 'Awa Koné' },
+    maintenant
+  );
+  assert.equal(accord.ok, true, 'à 100 %, la demande passe');
 });

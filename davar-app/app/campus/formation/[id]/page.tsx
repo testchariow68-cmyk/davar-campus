@@ -6,7 +6,7 @@ import { Icon } from '@/components/campus/Icon';
 import { SupportFab } from '@/components/campus/SupportFab';
 import { LessonList } from '@/components/LessonList';
 import { currentSession } from '@/lib/server/auth';
-import { getTrainingApercu, getTrainingForUser } from '@/lib/server/campus';
+import { getTrainingApercu, getTrainingForUser, progressionFormation } from '@/lib/server/campus';
 import { lireConfig, nomAssistant } from '@/lib/server/assistant';
 import { pedagogieDeFormation } from '@/lib/server/pedagogie';
 import { lireReglages } from '@/lib/server/settings';
@@ -37,7 +37,7 @@ export default async function FormationPage({ params }: { params: Promise<{ id: 
   }
   if (!training) notFound();
 
-  const percent = training.lessonCount === 0 ? 0 : Math.round((training.completedCount / training.lessonCount) * 100);
+  const { pct: percent } = progressionFormation(training);
   const [config, reglages, pedagogie] = await Promise.all([
     lireConfig(session.db),
     lireReglages(session.db),
@@ -59,7 +59,11 @@ export default async function FormationPage({ params }: { params: Promise<{ id: 
       {training.lessonCount > 0 && (
         <>
           <p className="small muted mt16">
-            Progression : {training.completedCount} / {training.lessonCount} leçons ({percent} %)
+            Progression : {training.completedCount} / {training.lessonCount} leçons
+            {training.evaluationCount > 0
+              ? ` · ${training.evaluationsReussies} / ${training.evaluationCount} évaluations`
+              : ''}{' '}
+            ({percent} %)
           </p>
           <div className="pbar" style={{ height: 8 }}>
             <i style={{ width: `${percent}%` }} />

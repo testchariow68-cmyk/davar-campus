@@ -2,7 +2,7 @@ import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { Icon } from '@/components/campus/Icon';
 import { currentSession } from '@/lib/server/auth';
-import { listTrainingsApercu, listUserTrainings } from '@/lib/server/campus';
+import { listTrainingsApercu, listUserTrainings, progressionFormation } from '@/lib/server/campus';
 
 export const dynamic = 'force-dynamic';
 export const metadata = { title: 'Mes formations — Davar Académie Campus' };
@@ -39,15 +39,12 @@ export default async function MesFormationsPage() {
       ) : (
         <div className="grid g2">
           {formations.map((formation) => {
-            const pourcent =
-              formation.lessonCount === 0
-                ? 0
-                : Math.round((formation.completedCount / formation.lessonCount) * 100);
+            const { pct: pourcent, terminee } = progressionFormation(formation);
             return (
               <Link key={formation.id} href={`/campus/formation/${formation.id}`} className="card card-pad">
                 <div className="row between" style={{ gap: 8 }}>
                   <h3 style={{ fontSize: 16 }}>{formation.title}</h3>
-                  {pourcent >= 100 ? (
+                  {terminee ? (
                     <span className="badge b-green">terminée</span>
                   ) : pourcent > 0 ? (
                     <span className="badge b-violet">en cours</span>
@@ -61,7 +58,11 @@ export default async function MesFormationsPage() {
                 </div>
                 <div className="xs faint mt4">
                   {formation.completedCount} sur {formation.lessonCount} leçon
-                  {formation.lessonCount > 1 ? 's' : ''} · {pourcent} %
+                  {formation.lessonCount > 1 ? 's' : ''}
+                  {formation.evaluationCount > 0
+                    ? ` · ${formation.evaluationsReussies} sur ${formation.evaluationCount} évaluation${formation.evaluationCount > 1 ? 's' : ''}`
+                    : ''}{' '}
+                  · {pourcent} %
                 </div>
               </Link>
             );
