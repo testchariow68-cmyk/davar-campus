@@ -28,7 +28,7 @@ import {
 } from '../lib/server/pedagogie.ts';
 import { deciderCertificat, demanderCertificat, verifierCertificat, codeCertificat } from '../lib/server/certificats.ts';
 import { attribuerBadge, badgesDeEtudiant, BADGES_PARCOURS, installerCatalogue, verifierReglesBadges } from '../lib/server/recompenses.ts';
-import { avisAttendus, compterMots, deposerAvis, MOTS_MAXIMUM } from '../lib/server/avis.ts';
+import { avisAttendus, compterMots, demandeEnCours, deposerAvis, deposerAttentes, MOTS_MAXIMUM } from '../lib/server/avis.ts';
 import { formationTerminee, progressionFormation } from '../lib/server/campus.ts';
 import { pathToFileURL } from 'node:url';
 
@@ -400,4 +400,93 @@ test('le certificat se demande à 100 % — et pas une leçon avant', async () =
     maintenant
   );
   assert.equal(accord.ok, true, 'à 100 %, la demande passe');
+});
+
+const JOUR = 24 * 60 * 60 * 1000;
+
+test('les trois temps : attentes à l’arrivée, avis à quinze jours, avis à un mois', async () => {
+  const db = await basePrete();
+  const debut = Date.now();
+
+  // 1. Dès l'arrivée, ce sont les ATTENTES — et rien d'autre.
+  const arrivee = await demandeEnCours(db, 'u-eleve', debut);
+  assert.equal(arrivee?.genre, 'attentes');
+  assert.equal(arrivee?.step, 0);
+  assert.equal(arrivee?.formationTitre, 'Devenir un excellent orateur');
+
+  // 2. Les attentes données, plus rien n'est demandé avant quinze jours.
+  const posees = await deposerAttentes(
+    db,
+    { userId: 'u-eleve', formationId: 't-orateur', body: 'Je veux parler en public sans trembler.', kind: 'ecrit' },
+    debut
+  );
+  assert.equal(posees.ok, true);
+  assert.equal(await demandeEnCours(db, 'u-eleve', debut), null);
+  assert.equal(await demandeEnCours(db, 'u-eleve', debut + 13 * JOUR), null, 'à treize jours, rien encore');
+
+  // 3. Quinze jours : le premier avis.
+  const quinze = await demandeEnCours(db, 'u-eleve', debut + 15 * JOUR);
+  assert.equal(quinze?.genre, 'avis');
+  assert.equal(quinze?.step, 1);
+  await deposerAvis(
+    db,
+    { userId: 'u-eleve', formationId: 't-orateur', step: 1, body: 'Quinze jours : les cours sont clairs et la plateforme agréable.', kind: 'ecrit' },
+    debut + 15 * JOUR
+  );
+
+  // 4. Un mois : le second avis.
+  const trente = await demandeEnCours(db, 'u-eleve', debut + 30 * JOUR);
+  assert.equal(trente?.genre, 'avis');
+  assert.equal(trente?.step, 2);
+
+  // 5. Les trois donnés : le campus ne demande plus jamais rien.
+  await deposerAvis(
+    db,
+    { userId: 'u-eleve', formationId: 't-orateur', step: 2, body: 'Un mois : j’ai pris confiance et je termine.', kind: 'ecrit' },
+    debut + 30 * JOUR
+  );
+  assert.equal(await demandeEnCours(db, 'u-eleve', debut + 400 * JOUR), null);
+});
+
+test('les trois temps ne demandent rien sans formation, et jamais deux fois', async () => {
+  const db = await basePrete();
+  const debut = Date.now();
+
+  // Sans formation : aucun avis, aucune attente.
+  await db.execute("DELETE FROM enrollments WHERE user_id = 'u-eleve'");
+  assert.equal(await demandeEnCours(db, 'u-eleve', debut + 60 * JOUR), null);
+
+  // Avec la formation : les attentes une seule fois.
+  await db.execute({
+    sql: "INSERT INTO enrollments(user_id,training_id,source,sale_id,acquired_at_ms) VALUES ('u-eleve','t-orateur','verified_purchase','sale_1',?)",
+    args: [debut],
+  });
+  const double = await deposerAttentes(
+    db,
+    { userId: 'u-eleve', formationId: 't-orateur', body: 'Mes attentes, une première fois.', kind: 'ecrit' },
+    debut
+  );
+  assert.equal(double.ok, true);
+  const encore = await deposerAttentes(
+    db,
+    { userId: 'u-eleve', formationId: 't-orateur', body: 'Mes attentes, une seconde fois.', kind: 'ecrit' },
+    debut
+  );
+  assert.equal(encore.erreur, 'attentes_deja_deposees');
+
+  // On n'écrit pas ses attentes sur une formation que l'on n'a pas.
+  const intrus = await deposerAttentes(
+    db,
+    { userId: 'u-coach', formationId: 't-orateur', body: 'Mes attentes, sans être inscrit.', kind: 'ecrit' },
+    debut
+  );
+  assert.equal(intrus.erreur, 'non_inscrit');
+
+  // Et la limite de 1 000 mots s'applique aux attentes comme aux avis.
+  const tropLong = await deposerAttentes(
+    db,
+    { userId: 'u-eleve', formationId: 't-orateur', body: 'mot '.repeat(MOTS_MAXIMUM + 10), kind: 'ecrit' },
+    debut
+  );
+  assert.equal(tropLong.erreur, 'avis_trop_long');
 });

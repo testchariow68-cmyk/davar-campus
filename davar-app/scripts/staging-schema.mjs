@@ -173,8 +173,15 @@ const MIGRATIONS = [
     ddl: 3, // une table + un index + une colonne additive : les appareils abonnés aux notifications poussées
     creates: ['push_subscriptions'],
   },
+  {
+    version: 22,
+    file: '022_attentes_etudiant.sqlite.sql',
+    sha256: 'd8f1ecfa64f3df512100e20b88ed794df6f750b74fc176d267ea1ffb9344a309',
+    ddl: 2, // une table + un index : les attentes de l'étudiant, demandées dès son arrivée
+    creates: ['attentes_etudiants'],
+  },
 ];
-const EXPECTED_TABLE_COUNT = 52; // 48 après 013 — 014, 015 et 019 ajoutent des colonnes, 016 le journal, 020 les clés d'appareil, 021 les appareils abonnés
+const EXPECTED_TABLE_COUNT = 53; // 48 après 013 — 014, 015 et 019 ajoutent des colonnes, 016 le journal, 020 les clés d'appareil, 021 les appareils abonnés, 022 les attentes
 const FORBIDDEN = /\b(drop|truncate|delete\s+from)\b/i;
 
 const mode = process.argv[2];

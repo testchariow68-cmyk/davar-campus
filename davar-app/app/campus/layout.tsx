@@ -17,6 +17,10 @@ import { EchelleAffichage } from '@/components/campus/EchelleAffichage';
 import { SupportFab } from '@/components/campus/SupportFab';
 import { lireReglages } from '@/lib/server/settings';
 import { annonceDepuisReglages, annonceViseLUtilisateur, plateformesNonSuivies } from '@/lib/server/social';
+import { demandeEnCours } from '@/lib/server/avis';
+import { lireConfig as lireConfigAssistant } from '@/lib/server/assistant';
+import { moteurTranscription } from '@/lib/server/transcription';
+import { PortailAvis } from '@/components/campus/PortailAvis';
 
 export const dynamic = 'force-dynamic';
 
@@ -46,6 +50,33 @@ export default async function CampusLayout({ children }: { children: React.React
   // Il ne concerne QUE les étudiants réels — jamais le staff, jamais une vue test,
   // jamais un compte de test. Il regarde une personne, pas tout le monde.
   if (reel.role === 'student' && !vueTest) await passageEtudiant(session.db, user.id).catch(() => null);
+
+  /**
+   * LES TROIS TEMPS — attentes à l'arrivée, avis à quinze jours, avis à un mois.
+   * Tant que la parole n'est pas donnée, le campus s'efface derrière le portail :
+   * on ne rend même pas la coquille, pour qu'aucun menu ne reste atteignable.
+   * Le staff, une vue test et un compte d'essai ne sont jamais bloqués.
+   */
+  const maintenant = Date.now();
+  const demande =
+    reel.role === 'student' && !vueTest
+      ? await demandeEnCours(session.db, user.id, maintenant).catch(() => null)
+      : null;
+  if (demande) {
+    const config = await lireConfigAssistant(session.db).catch(() => null);
+    const moteur = moteurTranscription(config?.transcription);
+    return (
+      <PortailAvis
+        genre={demande.genre}
+        step={demande.step}
+        formationId={demande.formationId}
+        formationTitre={demande.formationTitre}
+        titre={demande.titre}
+        consigne={demande.consigne}
+        moteurTranscription={moteur}
+      />
+    );
+  }
 
   const [notifications, nonLues, reglages, preferences] = await Promise.all([
     listerNotifications(session.db, user.id, Date.now(), 20),

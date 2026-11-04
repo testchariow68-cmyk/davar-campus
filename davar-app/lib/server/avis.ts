@@ -113,6 +113,141 @@ export async function deposerAvis(
   return { ok: true, mots };
 }
 
+/* -------------------------------------------------------------------------- */
+/*  LES TROIS TEMPS — attentes à l'arrivée, avis à quinze jours, avis à un mois */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * Ce que le campus doit demander À CET INSTANT, ou null s'il n'y a rien à
+ * demander. Le propriétaire a fixé trois temps, et ils sont BLOQUANTS :
+ *
+ *   1. dès l'arrivée, ses ATTENTES — « à quoi vous attendez-vous ? » ;
+ *   2. quinze jours après l'achat, son AVIS — il a déjà une expérience ;
+ *   3. un mois après l'achat, son AVIS de nouveau — il touche à la fin.
+ *
+ * Sans formation, rien n'est demandé : le staff ne passe pas par là. La demande
+ * la plus ancienne passe la première, et une fois répondue, elle ne revient
+ * jamais.
+ */
+export type DemandeEnCours = {
+  genre: 'attentes' | 'avis';
+  step: number;
+  formationId: string;
+  formationTitre: string;
+  duAtMs: number;
+  titre: string;
+  consigne: string;
+};
+
+export async function demandeEnCours(
+  db: Db,
+  userId: string,
+  maintenant = Date.now()
+): Promise<DemandeEnCours | null> {
+  const inscriptions = await db.execute({
+    sql: `SELECT e.training_id AS formation, t.title AS titre, e.acquired_at_ms AS acquis,
+                 (SELECT COUNT(*) FROM attentes_etudiants a
+                   WHERE a.user_id = e.user_id AND a.training_id = e.training_id) AS attentes,
+                 (SELECT COUNT(*) FROM reviews r
+                   WHERE r.user_id = e.user_id AND r.training_id = e.training_id AND r.step = 1) AS avis1,
+                 (SELECT COUNT(*) FROM reviews r
+                   WHERE r.user_id = e.user_id AND r.training_id = e.training_id AND r.step = 2) AS avis2
+          FROM enrollments e JOIN trainings t ON t.id = e.training_id
+          JOIN users u ON u.id = e.user_id
+          WHERE e.user_id = ? AND u.is_test = 0
+          ORDER BY e.acquired_at_ms ASC`,
+    args: [userId],
+  });
+
+  let plusAncienne: DemandeEnCours | null = null;
+  for (const row of inscriptions.rows) {
+    const formationId = texte(row.formation);
+    const formationTitre = texte(row.titre, 'Formation');
+    const acquis = entier(row.acquis);
+    const candidates: DemandeEnCours[] = [];
+
+    if (entier(row.attentes) === 0) {
+      candidates.push({
+        genre: 'attentes',
+        step: 0,
+        formationId,
+        formationTitre,
+        duAtMs: acquis,
+        titre: 'Vos attentes',
+        consigne:
+          'Bienvenue. Avant de commencer, dites-nous ce que vous attendez de cette formation : vos objectifs, ce que vous voulez savoir faire à la fin.',
+      });
+    }
+    if (entier(row.avis1) === 0 && maintenant - acquis >= DELAI_PREMIER_AVIS_MS) {
+      candidates.push({
+        genre: 'avis',
+        step: 1,
+        formationId,
+        formationTitre,
+        duAtMs: acquis + DELAI_PREMIER_AVIS_MS,
+        titre: 'Votre avis',
+        consigne: `Quinze jours se sont écoulés depuis votre arrivée. Comment trouvez-vous les cours, la plateforme, votre expérience ?`,
+      });
+    }
+    if (entier(row.avis2) === 0 && maintenant - acquis >= DELAI_SECOND_AVIS_MS) {
+      candidates.push({
+        genre: 'avis',
+        step: 2,
+        formationId,
+        formationTitre,
+        duAtMs: acquis + DELAI_SECOND_AVIS_MS,
+        titre: 'Votre avis',
+        consigne: `Un mois déjà. Vous touchez peut-être à la fin : votre avis compte pour la suite.`,
+      });
+    }
+
+    for (const candidate of candidates) {
+      if (!plusAncienne || candidate.duAtMs < plusAncienne.duAtMs) plusAncienne = candidate;
+    }
+  }
+  return plusAncienne;
+}
+
+/** Déposer ses attentes, une seule fois par étudiant et par formation. */
+export async function deposerAttentes(
+  db: Db,
+  options: { userId: string; formationId: string; body: string; kind: 'ecrit' | 'audio'; transcribedBy?: string | null },
+  maintenant = Date.now()
+): Promise<{ ok: boolean; erreur?: string; mots?: number }> {
+  const corps = options.body.trim();
+  if (corps.length < 20) return { ok: false, erreur: 'avis_trop_court' };
+  const mots = compterMots(corps);
+  if (mots > MOTS_MAXIMUM) return { ok: false, erreur: 'avis_trop_long', mots };
+
+  const inscription = await db.execute({
+    sql: 'SELECT 1 AS ok FROM enrollments WHERE user_id = ? AND training_id = ?',
+    args: [options.userId, options.formationId],
+  });
+  if (inscription.rows.length === 0) return { ok: false, erreur: 'non_inscrit' };
+
+  const deja = await db.execute({
+    sql: 'SELECT 1 AS ok FROM attentes_etudiants WHERE user_id = ? AND training_id = ?',
+    args: [options.userId, options.formationId],
+  });
+  if (deja.rows.length > 0) return { ok: false, erreur: 'attentes_deja_deposees' };
+
+  await db.execute({
+    sql: `INSERT INTO attentes_etudiants(id, user_id, training_id, kind, body, words, transcribed_by, at_ms)
+          VALUES (?,?,?,?,?,?,?,?)`,
+    args: [
+      `att_${maintenant.toString(36)}${Math.random().toString(36).slice(2, 8)}`,
+      options.userId,
+      options.formationId,
+      options.kind,
+      corps,
+      mots,
+      options.kind === 'audio' ? (options.transcribedBy ?? 'navigateur') : null,
+      maintenant,
+    ],
+  });
+  return { ok: true, mots };
+}
+
 export type AvisDirection = {
   id: string;
   etudiant: string;
