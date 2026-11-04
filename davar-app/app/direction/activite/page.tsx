@@ -91,7 +91,7 @@ export default async function ActivitePage() {
         )}
         <p className="xs faint mt8">
           « Dernière activité » tient compte de tout ce que l&apos;étudiant fait : leçons terminées, livres et audios,
-          devoirs rendus, certificats, questions à l&apos;assistant — pas seulement des connexions. Le détail des
+          évaluations rendues, certificats, questions à l&apos;assistant — pas seulement des connexions. Le détail des
           questions est dans <Link href="/direction/assistants">Analyse des assistants</Link>.
         </p>
       </div>

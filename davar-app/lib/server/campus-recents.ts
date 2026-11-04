@@ -55,8 +55,13 @@ export function depuis(quandMs: number, maintenantMs = Date.now()): string {
 }
 
 /** Salutation selon l'heure — exactement les trois cas du prototype. */
+/**
+ * La salutation de l'accueil, telle que le prototype la dicte : « Bonne nuit »
+ * avant 5 h du matin, puis « Bonjour », « Bon après-midi » et « Bonsoir ».
+ */
 export function salutation(maintenantMs = Date.now()): string {
   const heure = new Date(maintenantMs).getHours();
+  if (heure < 5) return 'Bonne nuit';
   if (heure < 12) return 'Bonjour';
   if (heure < 18) return 'Bon après-midi';
   return 'Bonsoir';

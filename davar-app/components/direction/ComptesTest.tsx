@@ -77,7 +77,7 @@ export function ComptesTest({
       </p>
       <p className="small muted">
         Pendant un essai, ce que vous faites <b>au nom d’un compte de test</b> apparaît normalement dans vos files
-        (devoirs à corriger, avis, certificats) : c’est voulu, vous regardez le vrai campus. Ces comptes ne comptent
+        (évaluations à corriger, avis, certificats) : c’est voulu, vous regardez le vrai campus. Ces comptes ne comptent
         jamais dans vos chiffres, et « Les retirer » efface tout ce qu’ils ont laissé.
       </p>
 

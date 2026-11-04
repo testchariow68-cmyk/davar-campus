@@ -61,10 +61,10 @@ export async function POST(request: Request) {
       if (!resultat.ok) return jsonNoStore({ error: resultat.erreur }, 400);
       await notifierEquipe(
         session.db,
-        { titre: 'Nouveau devoir à corriger', corps: `${session.user.displayName} a rendu son évaluation.`, route: '/direction/devoirs', kind: 'devoir' },
+        { titre: 'Nouvelle évaluation à corriger', corps: `${session.user.displayName} a rendu son évaluation.`, route: '/direction/devoirs', kind: 'devoir' },
         maintenant
       );
-      return jsonNoStore({ ok: true, message: 'Devoir transmis. La direction le corrige et vous répond.' });
+      return jsonNoStore({ ok: true, message: 'Évaluation transmise. Elle est en cours de correction.' });
     }
 
     if (action === 'badges') {

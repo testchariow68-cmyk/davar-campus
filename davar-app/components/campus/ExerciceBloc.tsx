@@ -116,7 +116,7 @@ export function ExerciceBloc({
           <Icon nom={exercice ? 'clipboard' : 'target'} taille={15} /> {exercice ? exercice.title : evaluation?.title}
         </h3>
         <span className={`badge ${exercice ? 'b-grey' : 'b-gold'}`}>
-          {exercice ? 'Entraînement — ne bloque rien' : `Évaluation — minimum ${evaluation?.minScore} %`}
+          {exercice ? 'Exercice — ne bloque rien' : `Évaluation — minimum ${evaluation?.minScore} %`}
         </span>
       </div>
       {(exercice?.intro || evaluation?.intro) && <p className="small muted mt8">{exercice?.intro ?? evaluation?.intro}</p>}
@@ -201,7 +201,7 @@ export function ExerciceBloc({
             {resultat.score} / {resultat.total} — {resultat.pct} %
           </b>{' '}
           {exercice
-            ? '— entraînement terminé, rien ne bloque votre progression.'
+            ? '— exercice terminé, rien ne bloque votre progression.'
             : resultat.pct >= (evaluation?.minScore ?? 80)
               ? '— évaluation réussie.'
               : `— il faut ${evaluation?.minScore} % : reprenez quand vous voulez, sans limite.`}
@@ -211,7 +211,7 @@ export function ExerciceBloc({
       {!exercice && evaluation?.reussie && evaluation.devoir?.statut !== 'pending' && (
         <div className="mt16">
           <div className="field">
-            <label>Votre devoir — décrivez ce que vous avez réalisé</label>
+            <label>Votre évaluation — décrivez ce que vous avez réalisé</label>
             <textarea
               className="inp"
               rows={4}
@@ -221,7 +221,7 @@ export function ExerciceBloc({
             />
           </div>
           <button className="btn btn-primary" disabled={enCours === 'devoir'} onClick={() => void rendre()}>
-            <Icon nom="upload" taille={15} /> Rendre mon devoir
+            <Icon nom="upload" taille={15} /> Rendre mon évaluation
           </button>
         </div>
       )}
@@ -229,20 +229,20 @@ export function ExerciceBloc({
       {!exercice && evaluation?.devoir?.statut === 'pending' && (
         <div className="banner info mt16">
           <Icon nom="clock" taille={14} />
-          <span className="small">Votre devoir est en cours de correction par la direction.</span>
+          <span className="small">Votre évaluation est en cours de correction.</span>
         </div>
       )}
       {!exercice && evaluation?.devoir?.statut === 'approved' && (
         <div className="banner info mt16">
           <Icon nom="checkCircle" taille={14} />
-          <span className="small">Devoir validé.</span>
+          <span className="small">Évaluation validée.</span>
         </div>
       )}
       {!exercice && evaluation?.devoir?.statut === 'refused' && (
         <div className="banner err mt16">
           <Icon nom="alert" taille={14} />
           <span className="small">
-            Devoir refusé. {evaluation.devoir.motif} — corrigez et rendez de nouveau.
+            Évaluation refusée. {evaluation.devoir.motif} — corrigez et rendez de nouveau.
           </span>
         </div>
       )}

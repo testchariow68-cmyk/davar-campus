@@ -71,7 +71,7 @@ export async function POST(request: Request) {
         action: 'decision-devoir',
         detail: `devoir ${id} · ${decision === 'approved' ? 'validé' : 'refusé'}`,
       });
-      return jsonNoStore({ ok: true, message: decision === 'approved' ? 'Devoir validé : l’étudiant est prévenu.' : 'Devoir refusé, avec votre explication.' });
+      return jsonNoStore({ ok: true, message: decision === 'approved' ? 'Évaluation validée : l’étudiant est prévenu.' : 'Évaluation refusée, avec votre explication.' });
     }
 
     if (action === 'certificat') {

@@ -147,7 +147,7 @@ export function CycleDeVieAdmin({
         {ligne('Certificats hors politique', rapport.certificatsHorsPolitique, 'Au-delà de 30 ans')}
         <div className="row between" style={{ gap: 10, padding: '7px 0', borderBottom: '1px solid var(--line)' }}>
           <span className="small">
-            <b>Devoirs en attente de correction</b>
+            <b>Évaluations en attente de correction</b>
             <span className="xs faint" style={{ display: 'block' }}>Jamais purgés : un travail d’étudiant se rend, il ne s’efface pas</span>
           </span>
           <span className="badge b-grey">{rapport.devoirsEnAttente} conservé(s)</span>

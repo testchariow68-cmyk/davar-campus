@@ -20,10 +20,10 @@ const LIBELLES: Record<string, string> = { admin: 'Propriétaire', staff: 'Membr
 
 /** Les sept rôles du prototype, et ce que chacun ouvre — écrit noir sur blanc. */
 const ROLES_EQUIPE: Array<{ id: string; libelle: string; ouvre: string }> = [
-  { id: 'coach', libelle: 'Coach', ouvre: 'Étudiants, Conversations (répondre), Devoirs' },
-  { id: 'correcteur', libelle: 'Correcteur', ouvre: 'Devoirs (corriger), Conversations' },
-  { id: 'assistant', libelle: 'Assistant pédagogique', ouvre: 'Étudiants, Devoirs (corriger)' },
-  { id: 'contenu', libelle: 'Responsable de contenu', ouvre: 'Formations, Ressources, Devoirs' },
+  { id: 'coach', libelle: 'Coach', ouvre: 'Étudiants, Conversations (répondre), Évaluations' },
+  { id: 'correcteur', libelle: 'Correcteur', ouvre: 'Évaluations (corriger), Conversations' },
+  { id: 'assistant', libelle: 'Assistant pédagogique', ouvre: 'Étudiants, Évaluations (corriger)' },
+  { id: 'contenu', libelle: 'Responsable de contenu', ouvre: 'Formations, Ressources, Évaluations' },
   { id: 'support', libelle: 'Support', ouvre: 'Conversations' },
   { id: 'analyste', libelle: 'Analyste', ouvre: 'Les écrans d’analyse (Analytics, Santé, Assistants, Badges, Activité), et rien d’autre' },
   {
