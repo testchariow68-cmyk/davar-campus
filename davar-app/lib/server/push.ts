@@ -20,6 +20,7 @@
  *     cinquante connexions dans la même seconde.
  */
 import type { Db } from './auth-core.ts';
+import { adresseIcone } from './icones.ts';
 
 /** Le propriétaire est joignable à cette adresse : c'est la règle du VAPID. */
 export const SUJET_VAPID = 'mailto:support@davarcampus.co';
@@ -302,7 +303,7 @@ export async function pousserNotifications(
 ): Promise<ResultatEnvoi> {
   const cle = await cleVapid(db);
   const lignes = await db.execute({
-    sql: `SELECT n.id, n.title, n.body, n.route, s.endpoint, s.p256dh, s.auth
+    sql: `SELECT n.id, n.title, n.body, n.route, n.icon, s.endpoint, s.p256dh, s.auth
           FROM notifications n
           JOIN push_subscriptions s ON s.user_id = n.user_id
           WHERE n.pushed_at_ms IS NULL AND n.created_at_ms > ?
@@ -326,6 +327,7 @@ export async function pousserNotifications(
       titre: texte(ligne.title) ?? '',
       corps: texte(ligne.body) ?? '',
       route: texte(ligne.route) ?? '',
+      icone: adresseIcone(texte(ligne.icon)),
     });
     try {
       const { corps } = await chiffrer({ p256dh, auth }, charge);

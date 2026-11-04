@@ -167,7 +167,7 @@ export async function attribuerBadge(
   // pointerait dans le vide. Le catalogue s'installe depuis « Récompenses » et
   // depuis l'espace Distinctions de l'étudiant.
   const badge = await db.execute({
-    sql: 'SELECT name, short_text FROM badge_defs WHERE id = ?',
+    sql: 'SELECT name, short_text, icon FROM badge_defs WHERE id = ?',
     args: [options.badgeId],
   });
   if (!badge.rows.length) return false;
@@ -193,12 +193,19 @@ export async function attribuerBadge(
   // de la phrase du badge. On fait pareil — c'est la reconnaissance qui compte.
   const nom = texte(badge.rows[0]?.name);
   const phrase = texte(badge.rows[0]?.short_text);
+  const icone = texte(badge.rows[0]?.icon);
   if (nom) {
     await notifier(db, {
       userId: options.userId,
       kind: 'badge',
       titre: 'Nouvelle distinction',
       corps: phrase ? `${nom} — ${phrase}` : nom,
+      // L'icône du badge, sur fond transparent, telle qu'elle est dans la
+      // plateforme : c'est ce qu'a demandé le propriétaire. Et la notification
+      // mène à l'accueil, là où la distinction s'affiche — dans l'application
+      // comme depuis la notification, c'est le même endroit.
+      icone: icone || null,
+      route: '/campus',
     }, maintenant);
   }
   return true;

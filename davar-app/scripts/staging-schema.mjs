@@ -180,6 +180,13 @@ const MIGRATIONS = [
     ddl: 2, // une table + un index : les attentes de l'étudiant, demandées dès son arrivée
     creates: ['attentes_etudiants'],
   },
+  {
+    version: 23,
+    file: '023_icone_notification.sqlite.sql',
+    sha256: '0571a5daf85b64c0b926d5c4b467c28fb0984cd83e13129c542163f338a9308d',
+    ddl: 1, // une colonne additive : l'icône que porte une notification
+    creates: [],
+  },
 ];
 const EXPECTED_TABLE_COUNT = 53; // 48 après 013 — 014, 015 et 019 ajoutent des colonnes, 016 le journal, 020 les clés d'appareil, 021 les appareils abonnés, 022 les attentes
 const FORBIDDEN = /\b(drop|truncate|delete\s+from)\b/i;

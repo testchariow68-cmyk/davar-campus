@@ -33,6 +33,8 @@ export type Notification = {
   titre: string;
   corps: string | null;
   route: string | null;
+  /** L'icône à afficher, quand la notification en porte une (celle d'un badge). */
+  icone: string | null;
   atMs: number;
   lue: boolean;
   expiresAtMs: number;
@@ -64,15 +66,23 @@ const ROUTES: Record<string, string | null> = {
 
 export async function notifier(
   db: Db,
-  options: { userId: string; kind?: string; titre: string; corps?: string | null; route?: string | null },
+  options: {
+    userId: string;
+    kind?: string;
+    titre: string;
+    corps?: string | null;
+    route?: string | null;
+    /** L'icône à afficher — celle du badge, quand c'en est un. Fond transparent. */
+    icone?: string | null;
+  },
   maintenant = Date.now()
 ): Promise<void> {
   const kind = options.kind ?? 'system';
   if (!(await notificationsAcceptees(db, options.userId, kind))) return;
   const id = `ntf_${maintenant.toString(36)}${Math.random().toString(36).slice(2, 10)}`;
   await db.execute({
-    sql: `INSERT INTO notifications(id, user_id, kind, title, body, route, created_at_ms, read_at_ms, expires_at_ms)
-          VALUES (?, ?, ?, ?, ?, ?, ?, NULL, ?)`,
+    sql: `INSERT INTO notifications(id, user_id, kind, title, body, route, icon, created_at_ms, read_at_ms, expires_at_ms)
+          VALUES (?, ?, ?, ?, ?, ?, ?, ?, NULL, ?)`,
     args: [
       id,
       options.userId,
@@ -80,6 +90,7 @@ export async function notifier(
       options.titre,
       options.corps ?? null,
       options.route ?? ROUTES[kind] ?? null,
+      options.icone ?? null,
       maintenant,
       maintenant + DUREE_MAXIMALE_MS,
     ],
@@ -89,7 +100,7 @@ export async function notifier(
 /** Les notifications visibles : non expirées, les plus récentes d'abord. */
 export async function listerNotifications(db: Db, userId: string, maintenant = Date.now(), limite = 30): Promise<Notification[]> {
   const lignes = await db.execute({
-    sql: `SELECT id, kind, title, body, route, created_at_ms, read_at_ms, expires_at_ms
+    sql: `SELECT id, kind, title, body, route, icon, created_at_ms, read_at_ms, expires_at_ms
           FROM notifications
           WHERE user_id = ? AND expires_at_ms > ?
           ORDER BY created_at_ms DESC LIMIT ?`,
@@ -101,6 +112,7 @@ export async function listerNotifications(db: Db, userId: string, maintenant = D
     titre: texte(row.title) ?? '',
     corps: texte(row.body),
     route: texte(row.route),
+    icone: texte(row.icon),
     atMs: entier(row.created_at_ms) ?? 0,
     lue: entier(row.read_at_ms) !== null,
     expiresAtMs: entier(row.expires_at_ms) ?? 0,

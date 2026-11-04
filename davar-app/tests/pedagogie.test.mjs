@@ -30,6 +30,8 @@ import { deciderCertificat, demanderCertificat, verifierCertificat, codeCertific
 import { attribuerBadge, badgesDeEtudiant, BADGES_PARCOURS, installerCatalogue, verifierReglesBadges } from '../lib/server/recompenses.ts';
 import { avisAttendus, compterMots, demandeEnCours, deposerAvis, deposerAttentes, MOTS_MAXIMUM } from '../lib/server/avis.ts';
 import { formationTerminee, progressionFormation } from '../lib/server/campus.ts';
+import { adresseIcone, svgIcone, OR_SIGNATURE } from '../lib/server/icones.ts';
+import { listerNotifications } from '../lib/server/notifications.ts';
 import { pathToFileURL } from 'node:url';
 
 process.env.APP_ENV = 'development';
@@ -489,4 +491,33 @@ test('les trois temps ne demandent rien sans formation, et jamais deux fois', as
     debut
   );
   assert.equal(tropLong.erreur, 'avis_trop_long');
+});
+
+test('une distinction prévient l’étudiant, avec l’icône du badge et sans jamais de courriel', async () => {
+  const db = await basePrete();
+  const maintenant = Date.now();
+  await installerCatalogue(db, [{ id: 't-orateur', title: 'Devenir un excellent orateur' }]);
+
+  assert.equal(await attribuerBadge(db, { userId: 'u-eleve', badgeId: 'BADGE_PREMIER_PAS' }, maintenant), true);
+
+  const notifications = await listerNotifications(db, 'u-eleve', maintenant, 10);
+  const annonce = notifications.find((notification) => notification.kind === 'badge');
+  assert.ok(annonce, 'le badge décerné prévient l’étudiant');
+  assert.match(annonce.titre, /Nouvelle distinction/);
+  assert.equal(annonce.route, '/campus', 'la notification mène là où la distinction s’affiche');
+  assert.equal(annonce.icone, 'rw_door', 'l’icône du badge voyage avec la notification');
+});
+
+test('l’icône d’une notification est servie sans fond, et refuse ce qu’elle ne connaît pas', () => {
+  const svg = svgIcone('rw_seal');
+  assert.ok(svg);
+  assert.match(svg, /fill="none"/, 'aucun aplat : l’icône n’est pas dans une carte');
+  assert.ok(!svg.includes('currentColor'), 'la couleur est écrite, jamais laissée à deviner');
+  assert.ok(svg.includes(OR_SIGNATURE), 'l’or de la signature DAVAR');
+
+  assert.equal(svgIcone('inconnu'), null);
+  assert.equal(adresseIcone('rw_door'), '/icones/rw_door.svg');
+  assert.equal(adresseIcone('inconnu'), null);
+  assert.equal(adresseIcone(null), null);
+  assert.equal(adresseIcone('../../etc/passwd'), null, 'rien ne sort du dossier des icônes');
 });

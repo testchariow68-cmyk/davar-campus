@@ -15,7 +15,9 @@ self.addEventListener('push', (evenement) => {
   evenement.waitUntil(
     self.registration.showNotification(titre, {
       body: donnees.corps || '',
-      icon: '/campus-icon.png',
+      // L'icône de la notification, quand elle en porte une : celle du badge,
+      // sur fond transparent, telle qu'elle est dans la plateforme.
+      icon: donnees.icone || '/campus-icon.png',
       badge: '/campus-icon.png',
       tag: 'davar',
       data: { route: donnees.route || '/campus' },

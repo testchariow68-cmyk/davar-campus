@@ -1,12 +1,13 @@
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
-import { Icon } from '@/components/campus/Icon';
+import { Icon, type NomIcone } from '@/components/campus/Icon';
 import { currentSession } from '@/lib/server/auth';
 import { getTrainingForUser, listTrainingsApercu, listUserTrainings, progressionFormation } from '@/lib/server/campus';
 import { certificatsDeEtudiant } from '@/lib/server/certificats';
 import { listerNotifications } from '@/lib/server/notifications';
 import { ressourcesDeEtudiant } from '@/lib/server/ressources';
 import { salutation } from '@/lib/server/campus-recents';
+import { badgesDeEtudiant } from '@/lib/server/recompenses';
 
 export const dynamic = 'force-dynamic';
 export const metadata = { title: 'Tableau de bord — Davar Académie Campus' };
@@ -44,11 +45,16 @@ export default async function CampusDashboard() {
   const active =
     avecProgression.find(({ pct, terminee }) => pct > 0 && !terminee) ?? avecProgression[0] ?? null;
 
-  const [notifications, ressources, certificats] = await Promise.all([
+  const [notifications, ressources, certificats, distinctions] = await Promise.all([
     session.vueTest ? Promise.resolve([]) : listerNotifications(db, user.id, maintenant, 3),
     session.vueTest ? Promise.resolve([]) : ressourcesDeEtudiant(db, user.id),
     session.vueTest ? Promise.resolve([]) : certificatsDeEtudiant(db, user.id),
+    session.vueTest ? Promise.resolve([]) : badgesDeEtudiant(db, user.id),
   ]);
+  // La distinction la plus récente est celle que la notification montre : en
+  // cliquant, l'étudiant tombe sur le même endroit que depuis l'application.
+  const distinction = (distinctions as unknown[]).length > 0 ? distinctions[0] : null;
+  const estRecente = distinction ? maintenant - distinction.obtenuLeMs < 7 * 24 * 60 * 60 * 1000 : false;
 
   const detail = active && !session.vueTest ? await getTrainingForUser(db, user.id, active.formation.id) : null;
   const prochaine = detail?.modules.flatMap((module) => module.lessons).find((lecon) => !lecon.completed) ?? null;
@@ -134,6 +140,37 @@ export default async function CampusDashboard() {
             </div>
             <Link className="btn btn-primary" href={`/campus/formation/${active.formation.id}`}>
               Commencer <Icon nom="arrowR" taille={14} />
+            </Link>
+          </div>
+        </div>
+      )}
+
+      {distinction && (
+        <div className="cp-next">
+          <div className="row">
+            {/* L'icône du badge, SANS fond : telle qu'elle est dans la plateforme. */}
+            <span
+              style={{
+                width: 42,
+                height: 42,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                color: 'var(--gold)',
+                flex: 'none',
+              }}
+            >
+              <Icon nom={distinction.icon as NomIcone} taille={34} />
+            </span>
+            <div className="wrap">
+              <div className="eyebrow">Distinction{estRecente ? ' · nouvelle' : ''}</div>
+              <b style={{ fontSize: 14.5 }}>{distinction.name}</b>
+              <div className="xs muted">
+                {distinction.shortText ?? distinction.description ?? 'Une étape de votre parcours.'}
+              </div>
+            </div>
+            <Link className="btn" href="/campus/distinctions">
+              Mes distinctions <Icon nom="arrowR" taille={14} />
             </Link>
           </div>
         </div>
