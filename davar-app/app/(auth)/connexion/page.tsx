@@ -19,7 +19,7 @@ export default async function ConnexionPage() {
   return (
     <div className="login-glass">
       {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img className="lg-logo" src="/campus-icon.png" alt="DAVAR ACADÉMIE CAMPUS" />
+      <img className="lg-logo" src="/campus-icon.svg" alt="DAVAR ACADÉMIE CAMPUS" />
       <div className="gcard">
         <h1>DAVAR ACADÉMIE CAMPUS</h1>
         <p>Connectez-vous</p>

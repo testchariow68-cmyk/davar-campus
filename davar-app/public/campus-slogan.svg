@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 250" width="760" height="250" role="img" aria-label="DAVAR ACADEMIE CAMPUS - L'ecole de l'excellence oratoire">
+  <g transform="translate(15 15) scale(0.917)">
+    <circle cx="120.0" cy="120.0" r="96.0" fill="none" stroke="#D4AF37" stroke-width="5.3"/>
+  <g stroke="#D4AF37" stroke-width="6.7" stroke-linecap="round" stroke-linejoin="round" fill="none"><path d="M48.0 115.9 L120.0 92.4 L192.0 115.9 L120.0 140.7 Z" fill="#D4AF37" fill-opacity=".16"/><path d="M82.6 139.9 L82.6 161.4 Q120.0 176.6 157.4 161.4 L157.4 139.9"/><path d="M190.6 115.9 L190.6 149.0"/><circle cx="190.6" cy="155.9" r="6.7" fill="#D4AF37" stroke="none"/></g>
+  </g>
+  <g transform="translate(268 0)">
+    <text x="0" y="108" font-family="Georgia, 'Times New Roman', serif" font-size="74" font-weight="700"
+          letter-spacing="3" fill="#D4AF37">DAVAR</text>
+    <text x="0" y="176" font-family="Georgia, 'Times New Roman', serif" font-size="54" font-weight="400"
+          letter-spacing="14" fill="#F3E9D2">ACADÉMIE</text>
+    <line x1="2" y1="204" x2="470" y2="204" stroke="#D4AF37" stroke-width="2" stroke-opacity=".55"/>
+    <text x="0" y="238" font-family="Inter, system-ui, -apple-system, 'Segoe UI', sans-serif" font-size="26"
+          letter-spacing="5.5" fill="#8B5CF6">L’ÉCOLE DE L’EXCELLENCE ORATOIRE</text>
+  </g>
+</svg>

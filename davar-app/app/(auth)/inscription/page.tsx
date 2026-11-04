@@ -28,7 +28,7 @@ export default async function InscriptionPage() {
   return (
     <div className="login-glass">
       {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img className="lg-logo" src="/campus-icon.png" alt="DAVAR ACADÉMIE CAMPUS" />
+      <img className="lg-logo" src="/campus-icon.svg" alt="DAVAR ACADÉMIE CAMPUS" />
       <div className="gcard">
         {!configured ? (
           <>

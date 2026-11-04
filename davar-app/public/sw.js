@@ -17,8 +17,8 @@ self.addEventListener('push', (evenement) => {
       body: donnees.corps || '',
       // L'icône de la notification, quand elle en porte une : celle du badge,
       // sur fond transparent, telle qu'elle est dans la plateforme.
-      icon: donnees.icone || '/campus-icon.png',
-      badge: '/campus-icon.png',
+      icon: donnees.icone || '/campus-icon.svg',
+      badge: '/campus-icon.svg',
       tag: 'davar',
       data: { route: donnees.route || '/campus' },
     })

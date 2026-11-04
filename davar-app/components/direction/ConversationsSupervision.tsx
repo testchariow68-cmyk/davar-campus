@@ -80,12 +80,14 @@ export function ConversationsSupervision({ fils }: { fils: FilAffiche[] }) {
           <div className="card card-pad" key={fil.id}>
             <div className="row between" style={{ gap: 10, flexWrap: 'wrap' }}>
               <span className="row" style={{ gap: 8, flexWrap: 'wrap' }}>
-                <Icon nom={fil.mode === 'coach' ? 'message' : 'sparkles'} taille={15} />
+                <Icon nom={fil.mode === 'support' ? 'headset' : fil.mode === 'coach' ? 'message' : 'sparkles'} taille={15} />
                 <b className="small">{fil.etudiant}</b>
                 <span className="xs faint">{fil.courriel}</span>
                 <span className="badge b-grey">{fil.formation}</span>
                 {fil.module && <span className="badge b-grey">{fil.module}</span>}
-                {fil.mode === 'coach' ? (
+                {fil.mode === 'support' ? (
+                  <span className="badge b-red">support</span>
+                ) : fil.mode === 'coach' ? (
                   <span className="badge b-gold">coach humain</span>
                 ) : fil.iaValidee ? (
                   <span className="badge b-green">IA validée</span>
