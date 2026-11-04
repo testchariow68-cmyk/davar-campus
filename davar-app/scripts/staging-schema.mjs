@@ -187,6 +187,13 @@ const MIGRATIONS = [
     ddl: 1, // une colonne additive : l'icône que porte une notification
     creates: [],
   },
+  {
+    version: 24,
+    file: '024_piece_jointe_message.sqlite.sql',
+    sha256: 'e205fb21ae229f20f9516f63cd21e76f4560b9dd99520ba699f099230dbaeaa8',
+    ddl: 2, // deux colonnes additives : la clé et le nom d'une pièce jointe
+    creates: [],
+  },
 ];
 const EXPECTED_TABLE_COUNT = 53; // 48 après 013 — 014, 015 et 019 ajoutent des colonnes, 016 le journal, 020 les clés d'appareil, 021 les appareils abonnés, 022 les attentes
 const FORBIDDEN = /\b(drop|truncate|delete\s+from)\b/i;

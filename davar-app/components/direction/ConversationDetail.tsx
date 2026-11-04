@@ -11,6 +11,8 @@ export type MessageAffiche = {
   texte: string;
   atMs: number;
   valide: boolean;
+  fileKey: string | null;
+  fileName: string | null;
 };
 
 export type FilDetail = {
@@ -37,6 +39,27 @@ export default function ConversationDetail({
   const router = useRouter();
   const [texte, setTexte] = useState('');
   const [occupe, setOccupe] = useState(false);
+  const [notePiece, setNotePiece] = useState<string | null>(null);
+
+  /** Ouvrir la capture envoyée par l'étudiant : l'adresse est signée, cinq minutes. */
+  async function ouvrirPiece(cle: string) {
+    setNotePiece(null);
+    try {
+      const reponse = await fetch('/api/direction/piece', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ cle }),
+      });
+      const donnees = (await reponse.json().catch(() => ({}))) as { ok?: boolean; url?: string; error?: string };
+      if (!donnees.ok || !donnees.url) {
+        setNotePiece(donnees.error === 'stockage_non_relie' ? 'Le stockage n’est pas relié.' : 'Pièce introuvable.');
+        return;
+      }
+      window.open(donnees.url, '_blank', 'noopener');
+    } catch {
+      setNotePiece('Le réseau n’a pas répondu.');
+    }
+  }
   const [note, setNote] = useState<string | null>(null);
   const champ = useRef<HTMLInputElement>(null);
 
@@ -95,6 +118,7 @@ export default function ConversationDetail({
         <span>{fil.etudiant}</span>
       </div>
 
+      {notePiece && <p className="xs mt8" style={{ color: 'var(--red)' }}>{notePiece}</p>}
       {note && (
         <div className="banner info mb16">
           <Icon nom="checkCircle" taille={14} />
@@ -154,6 +178,19 @@ export default function ConversationDetail({
                 )}
                 <span className="bubble" style={{ whiteSpace: 'pre-wrap' }}>
                   {message.texte}
+                  {message.fileKey && (
+                    <>
+                      {'\n'}
+                      <button
+                        className="btn btn-sm"
+                        style={{ marginTop: 8 }}
+                        onClick={() => void ouvrirPiece(message.fileKey as string)}
+                      >
+                        <Icon nom="paperclip" taille={13} />{' '}
+                        {message.fileName ? `Voir ${message.fileName}` : 'Voir la pièce jointe'}
+                      </button>
+                    </>
+                  )}
                 </span>
               </div>
             ))}

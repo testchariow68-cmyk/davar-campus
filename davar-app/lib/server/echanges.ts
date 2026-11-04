@@ -43,6 +43,9 @@ export type Message = {
   provider: string | null;
   modele: string | null;
   valide: boolean;
+  /** Une capture, un document : la clé dans le stockage, jamais le fichier. */
+  fileKey: string | null;
+  fileName: string | null;
 };
 
 /** Ouvre (ou retrouve) la conversation ouverte d'un étudiant sur un module et un mode. */
@@ -80,13 +83,15 @@ export async function ajouterMessage(
     provider?: string | null;
     modele?: string | null;
     valide?: boolean;
+    fileKey?: string | null;
+    fileName?: string | null;
   },
   maintenant = Date.now()
 ): Promise<string> {
   const id = identifiant('msg', maintenant);
   await db.execute({
-    sql: `INSERT INTO conversation_messages(id, conversation_id, author, text, at_ms, provider, model, validated)
-          VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+    sql: `INSERT INTO conversation_messages(id, conversation_id, author, text, at_ms, provider, model, validated, file_key, file_name)
+          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     args: [
       id,
       options.conversationId,
@@ -96,6 +101,8 @@ export async function ajouterMessage(
       options.provider ?? null,
       options.modele ?? null,
       options.valide ? 1 : 0,
+      options.fileKey ?? null,
+      options.fileName ?? null,
     ],
   });
   await db.execute({
@@ -107,7 +114,7 @@ export async function ajouterMessage(
 
 export async function messagesDeConversation(db: Db, conversationId: string): Promise<Message[]> {
   const lignes = await db.execute({
-    sql: 'SELECT id, author, text, at_ms, provider, model, validated FROM conversation_messages WHERE conversation_id = ? ORDER BY at_ms',
+    sql: 'SELECT id, author, text, at_ms, provider, model, validated, file_key, file_name FROM conversation_messages WHERE conversation_id = ? ORDER BY at_ms',
     args: [conversationId],
   });
   return lignes.rows.map((row) => ({
@@ -118,6 +125,8 @@ export async function messagesDeConversation(db: Db, conversationId: string): Pr
     provider: texte(row.provider),
     modele: texte(row.model),
     valide: entier(row.validated) === 1,
+    fileKey: texte(row.file_key),
+    fileName: texte(row.file_name),
   }));
 }
 
@@ -308,4 +317,58 @@ export async function purgerEchanges(db: Db, maintenant = Date.now()): Promise<n
     supprimees += 1;
   }
   return supprimees;
+}
+
+/**
+ * ÉCRIRE AU SUPPORT — avec, si besoin, une capture d'écran jointe.
+ *
+ * Le prototype ne portait pas de pièce jointe : le propriétaire l'a demandée,
+ * pour qu'un étudiant puisse montrer ce qui ne va pas au lieu de le décrire.
+ * Le fichier ne vit jamais dans la base : seule sa clé de stockage est retenue.
+ */
+export async function envoyerAuSupport(
+  db: Db,
+  options: {
+    userId: string;
+    formationId?: string | null;
+    texte: string;
+    fileKey?: string | null;
+    fileName?: string | null;
+  },
+  maintenant = Date.now()
+): Promise<{ conversationId: string; messageId: string }> {
+  const existante = await db.execute({
+    sql: `SELECT id FROM conversations
+          WHERE user_id = ? AND mode = 'support' AND resolved = 0
+          ORDER BY updated_at_ms DESC LIMIT 1`,
+    args: [options.userId],
+  });
+  let conversationId = texte(existante.rows[0]?.id);
+  if (!conversationId) {
+    conversationId = identifiant('cnv', maintenant);
+    await db.execute({
+      sql: `INSERT INTO conversations(id, user_id, training_id, module_id, mode, resolved, ai_validated, created_at_ms, updated_at_ms, purge_after_ms)
+            VALUES (?, ?, ?, NULL, 'support', 0, 0, ?, ?, ?)`,
+      args: [
+        conversationId,
+        options.userId,
+        options.formationId ?? null,
+        maintenant,
+        maintenant,
+        maintenant + PURGE_COACH_MS,
+      ],
+    });
+  }
+  const messageId = await ajouterMessage(
+    db,
+    {
+      conversationId,
+      auteur: 'student',
+      texte: options.texte,
+      fileKey: options.fileKey ?? null,
+      fileName: options.fileName ?? null,
+    },
+    maintenant
+  );
+  return { conversationId, messageId };
 }

@@ -38,6 +38,8 @@ export default async function ConversationPage({ params }: { params: Promise<{ i
         texte: message.texte,
         atMs: message.atMs,
         valide: message.valide,
+        fileKey: message.fileKey,
+        fileName: message.fileName,
       }))}
       nomAssistant={nomAssistant(config)}
     />

@@ -32,6 +32,7 @@ import { avisAttendus, compterMots, demandeEnCours, deposerAvis, deposerAttentes
 import { formationTerminee, progressionFormation } from '../lib/server/campus.ts';
 import { adresseIcone, svgIcone, OR_SIGNATURE } from '../lib/server/icones.ts';
 import { listerNotifications } from '../lib/server/notifications.ts';
+import { envoyerAuSupport, messagesDeConversation } from '../lib/server/echanges.ts';
 import { pathToFileURL } from 'node:url';
 
 process.env.APP_ENV = 'development';
@@ -520,4 +521,36 @@ test('l’icône d’une notification est servie sans fond, et refuse ce qu’el
   assert.equal(adresseIcone('inconnu'), null);
   assert.equal(adresseIcone(null), null);
   assert.equal(adresseIcone('../../etc/passwd'), null, 'rien ne sort du dossier des icônes');
+});
+
+test('un message au support porte sa pièce jointe, et reste dans le même fil', async () => {
+  const db = await basePrete();
+  const maintenant = Date.now();
+
+  const premier = await envoyerAuSupport(
+    db,
+    { userId: 'u-eleve', formationId: 't-orateur', texte: 'Mon certificat ne s’affiche pas.', fileKey: 'support/u-eleve/capture.png', fileName: 'capture.png' },
+    maintenant
+  );
+
+  const messages = await messagesDeConversation(db, premier.conversationId);
+  assert.equal(messages.length, 1);
+  assert.equal(messages[0].fileKey, 'support/u-eleve/capture.png');
+  assert.equal(messages[0].fileName, 'capture.png');
+  assert.equal(messages[0].texte, 'Mon certificat ne s’affiche pas.');
+
+  // Un second message ne crée pas un second fil : le support suit une personne.
+  await envoyerAuSupport(
+    db,
+    { userId: 'u-eleve', texte: 'Voici une autre capture.', fileKey: 'support/u-eleve/autre.png', fileName: 'autre.png' },
+    maintenant + 1000
+  );
+  const suite = await messagesDeConversation(db, premier.conversationId);
+  assert.equal(suite.length, 2, 'le fil se suit, sans doublon');
+
+  // Un message sans piècejointe ne prétend pas en avoir une.
+  await envoyerAuSupport(db, { userId: 'u-eleve', texte: 'Et un message tout simple.' }, maintenant + 2000);
+  const fin = await messagesDeConversation(db, premier.conversationId);
+  assert.equal(fin[2].fileKey, null);
+  assert.equal(fin[2].fileName, null);
 });
