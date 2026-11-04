@@ -250,11 +250,214 @@ function BlocModule({ module, disabled, agir }: { module: ModuleVue; disabled: b
 }
 
 /** Construire la structure d'une formation : modules, leçons, ordre. */
-export function StructureEditeur({ formationId, modules }: { formationId: string; modules: ModuleVue[] }) {
+type ChapitreVue = { id: string; position: number; title: string; summary: string; modules: ModuleVue[] };
+
+/**
+ * UN CHAPITRE — son titre, ses modules, et de quoi le tenir à jour.
+ * Le niveau module reste inchangé : `BlocModule` continue d'y ajouter les cours.
+ */
+function BlocChapitre({
+  chapitre,
+  formationId,
+  disabled,
+  agir,
+}: {
+  chapitre: ChapitreVue;
+  formationId: string;
+  disabled: boolean;
+  agir: Agir;
+}) {
+  const [edition, setEdition] = useState(false);
+  const [titre, setTitre] = useState(chapitre.title);
+  const [resume, setResume] = useState(chapitre.summary);
+  const [ajout, setAjout] = useState(false);
+  const [confirmer, setConfirmer] = useState(false);
+  const [nouveau, setNouveau] = useState({ titre: '', resume: '' });
+
+  return (
+    <div className="dv-mod">
+      <header>
+        <span className="dv-num">Chapitre {chapitre.position}</span>
+        {edition ? (
+          <input className="inp" style={{ maxWidth: 300 }} value={titre} onChange={(e) => setTitre(e.target.value)} />
+        ) : (
+          <strong>{chapitre.title}</strong>
+        )}
+        <span className="small muted">
+          {chapitre.modules.length} module{chapitre.modules.length > 1 ? 's' : ''}
+        </span>
+        <span className="dv-actions">
+          <button
+            className="dv-mini"
+            disabled={disabled}
+            onClick={() => agir({ action: 'move-chapter', id: chapitre.id, sens: 'haut' })}
+            title="Monter le chapitre"
+          >
+            {'↑'}
+          </button>
+          <button
+            className="dv-mini"
+            disabled={disabled}
+            onClick={() => agir({ action: 'move-chapter', id: chapitre.id, sens: 'bas' })}
+            title="Descendre le chapitre"
+          >
+            {'↓'}
+          </button>
+          {edition ? (
+            <>
+              <button
+                className="dv-mini"
+                disabled={disabled || titre.trim().length < 2}
+                onClick={async () => {
+                  await agir({ action: 'update-chapter', id: chapitre.id, titre, resume });
+                  setEdition(false);
+                }}
+                title="Enregistrer"
+              >
+                {'✓'}
+              </button>
+              <button
+                className="dv-mini"
+                disabled={disabled}
+                onClick={() => {
+                  setTitre(chapitre.title);
+                  setResume(chapitre.summary);
+                  setEdition(false);
+                }}
+                title="Annuler"
+              >
+                {'✕'}
+              </button>
+            </>
+          ) : (
+            <button className="dv-mini" disabled={disabled} onClick={() => setEdition(true)} title="Renommer">
+              {'✎'}
+            </button>
+          )}
+          {confirmer ? (
+            <>
+              <button
+                className="dv-mini"
+                disabled={disabled}
+                onClick={async () => {
+                  await agir({ action: 'delete-chapter', id: chapitre.id });
+                  setConfirmer(false);
+                }}
+                title="Confirmer la suppression"
+              >
+                {'oui'}
+              </button>
+              <button className="dv-mini" disabled={disabled} onClick={() => setConfirmer(false)} title="Annuler">
+                {'non'}
+              </button>
+            </>
+          ) : (
+            <button
+              className="dv-mini"
+              disabled={disabled}
+              onClick={() => setConfirmer(true)}
+              title="Supprimer le chapitre et son contenu"
+            >
+              {'🗑'}
+            </button>
+          )}
+        </span>
+      </header>
+
+      {edition && (
+        <div className="field mt8" style={{ marginBottom: 8 }}>
+          <label>Résumé du chapitre (facultatif)</label>
+          <input className="inp" value={resume} onChange={(e) => setResume(e.target.value)} />
+        </div>
+      )}
+      {!edition && chapitre.summary && <p className="small muted">{chapitre.summary}</p>}
+
+      {confirmer && (
+        <p className="xs" style={{ color: 'var(--red)' }}>
+          Supprimer ce chapitre supprime aussi ses modules et leurs cours. La progression déjà acquise par les étudiants
+          empêche la suppression.
+        </p>
+      )}
+
+      {chapitre.modules.length > 0 && (
+        <div className="dv-list mt8">
+          {chapitre.modules.map((module) => (
+            <BlocModule key={module.id} module={module} disabled={disabled} agir={agir} />
+          ))}
+        </div>
+      )}
+
+      {ajout ? (
+        <div className="card card-pad mt8">
+          <h4 className="mb8">Nouveau module dans ce chapitre</h4>
+          <div className="grid g2" style={{ gap: 12 }}>
+            <div className="field" style={{ marginBottom: 8 }}>
+              <label>Titre du module</label>
+              <input
+                className="inp"
+                value={nouveau.titre}
+                onChange={(e) => setNouveau({ ...nouveau, titre: e.target.value })}
+                placeholder="Les fondations de la voix"
+              />
+            </div>
+            <div className="field" style={{ marginBottom: 8 }}>
+              <label>Résumé (facultatif)</label>
+              <input
+                className="inp"
+                value={nouveau.resume}
+                onChange={(e) => setNouveau({ ...nouveau, resume: e.target.value })}
+              />
+            </div>
+          </div>
+          <div className="row" style={{ gap: 8 }}>
+            <button
+              className="btn btn-primary"
+              disabled={disabled || nouveau.titre.trim().length < 2}
+              onClick={async () => {
+                await agir({
+                  action: 'add-module',
+                  id: formationId,
+                  chapitre: chapitre.id,
+                  titre: nouveau.titre,
+                  resume: nouveau.resume,
+                });
+                setNouveau({ titre: '', resume: '' });
+                setAjout(false);
+              }}
+            >
+              Ajouter le module
+            </button>
+            <button className="btn btn-ghost" disabled={disabled} onClick={() => setAjout(false)}>
+              Annuler
+            </button>
+          </div>
+        </div>
+      ) : (
+        <button className="btn btn-ghost btn-sm mt8" disabled={disabled} onClick={() => setAjout(true)}>
+          + Ajouter un module dans ce chapitre
+        </button>
+      )}
+    </div>
+  );
+}
+
+/**
+ * LA STRUCTURE — trois niveaux, dans l'ordre que le propriétaire a fixé :
+ * la formation contient des chapitres, un chapitre contient des modules, un
+ * module contient les cours. C'est cette profondeur qui gouverne le déblocage
+ * côté élève : un chapitre ne s'ouvre que lorsque le précédent est terminé.
+ */
+export function StructureEditeur({
+  formationId,
+  chapitres,
+}: {
+  formationId: string;
+  chapitres: ChapitreVue[];
+}) {
   const router = useRouter();
   const [bilan, setBilan] = useState<{ ok: boolean; texte: string } | null>(null);
   const [enCours, setEnCours] = useState(false);
-  const [nouveau, setNouveau] = useState({ titre: '', resume: '' });
+  const [nouveauChapitre, setNouveauChapitre] = useState({ titre: '', resume: '' });
 
   async function agir(corps: Record<string, unknown>) {
     setEnCours(true);
@@ -272,42 +475,64 @@ export function StructureEditeur({ formationId, modules }: { formationId: string
         </div>
       )}
 
-      {modules.length === 0 ? (
+      {chapitres.length === 0 ? (
         <div className="banner info mb16">
           <span>
-            Cette formation n&apos;a encore aucun module. Tant qu&apos;elle n&apos;a pas de leçon, elle ne peut pas être ouverte : le
-            bouton d&apos;ouverture refusera, avec le compte exact.
+            Cette formation n&apos;a encore aucun chapitre. Le campus se parcourt chapitre par chapitre : créez le
+            premier, puis ses modules, puis les cours de chaque module.
           </span>
         </div>
       ) : (
         <div className="dv-list mb16">
-          {modules.map((module) => (
-            <BlocModule key={module.id} module={module} disabled={enCours} agir={agir} />
+          {chapitres.map((chapitre) => (
+            <BlocChapitre
+              key={chapitre.id}
+              chapitre={chapitre}
+              formationId={formationId}
+              disabled={enCours}
+              agir={agir}
+            />
           ))}
         </div>
       )}
 
       <div className="card card-pad">
-        <h4 className="mb8">Ajouter un module</h4>
+        <h4 className="mb8">Ajouter un chapitre</h4>
         <div className="grid g2" style={{ gap: 12 }}>
           <div className="field" style={{ marginBottom: 8 }}>
-            <label htmlFor="nm-titre">Titre du module</label>
-            <input id="nm-titre" className="inp" value={nouveau.titre} onChange={(e) => setNouveau({ ...nouveau, titre: e.target.value })} placeholder="Vaincre le trac" />
+            <label htmlFor="nc-titre">Titre du chapitre</label>
+            <input
+              id="nc-titre"
+              className="inp"
+              value={nouveauChapitre.titre}
+              onChange={(e) => setNouveauChapitre({ ...nouveauChapitre, titre: e.target.value })}
+              placeholder="Chapitre 1 — Les fondations"
+            />
           </div>
           <div className="field" style={{ marginBottom: 8 }}>
-            <label htmlFor="nm-resume">Résumé (facultatif)</label>
-            <input id="nm-resume" className="inp" value={nouveau.resume} onChange={(e) => setNouveau({ ...nouveau, resume: e.target.value })} />
+            <label htmlFor="nc-resume">Résumé (facultatif)</label>
+            <input
+              id="nc-resume"
+              className="inp"
+              value={nouveauChapitre.resume}
+              onChange={(e) => setNouveauChapitre({ ...nouveauChapitre, resume: e.target.value })}
+            />
           </div>
         </div>
         <button
           className="btn btn-primary"
-          disabled={enCours || nouveau.titre.trim().length < 2}
+          disabled={enCours || nouveauChapitre.titre.trim().length < 2}
           onClick={async () => {
-            await agir({ action: 'add-module', id: formationId, titre: nouveau.titre, resume: nouveau.resume });
-            setNouveau({ titre: '', resume: '' });
+            await agir({
+              action: 'add-chapter',
+              id: formationId,
+              titre: nouveauChapitre.titre,
+              resume: nouveauChapitre.resume,
+            });
+            setNouveauChapitre({ titre: '', resume: '' });
           }}
         >
-          Ajouter le module
+          Ajouter le chapitre
         </button>
       </div>
     </div>

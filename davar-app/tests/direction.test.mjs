@@ -67,6 +67,13 @@ async function creerEtudiant(db, email = 'etudiant@davar.test', confirme = true,
   return id;
 }
 
+/**
+ * `lireStructure` renvoie désormais des CHAPITRES (migration 025) : un chapitre
+ * contient des modules, un module contient des leçons. Ces tests parlent de
+ * modules — ce raccourci les aplatit, sans rien changer à leurs intentions.
+ */
+const modulesDe = (structure) => structure.flatMap((chapitre) => chapitre.modules);
+
 test('la plateforme démarre vide : la vue d’ensemble ne montre aucun contenu', async () => {
   const db = await baseVide();
   const vue = await vueEnsemble(db);
@@ -94,7 +101,7 @@ test('une formation naît FERMÉE et ne s’ouvre jamais sans leçon', async () 
   const module = await ajouterModule(db, formation.id, 'Vaincre le trac');
   assert.equal(module.ok, true);
   const structure = await lireStructure(db, formation.id);
-  const lecon = await ajouterLecon(db, structure[0].id, 'D’où vient le trac ?', 'video', 12, '');
+  const lecon = await ajouterLecon(db, modulesDe(structure)[0].id, 'D’où vient le trac ?', 'video', 12, '');
   assert.equal(lecon.ok, true);
   assert.match(lecon.message, /Ressource pas encore publiée/, 'une leçon sans ressource doit le dire');
 
@@ -110,20 +117,20 @@ test('l’ordre des modules et des leçons se réorganise sans collision d’uni
   await ajouterModule(db, formation.id, 'Premier');
   await ajouterModule(db, formation.id, 'Deuxième');
   let structure = await lireStructure(db, formation.id);
-  assert.deepEqual(structure.map((module) => module.title), ['Premier', 'Deuxième']);
+  assert.deepEqual(modulesDe(structure).map((module) => module.title), ['Premier', 'Deuxième']);
 
   const { deplacerModule } = await import('../lib/server/direction.ts');
-  await deplacerModule(db, structure[1].id, 'haut');
+  await deplacerModule(db, modulesDe(structure)[1].id, 'haut');
   structure = await lireStructure(db, formation.id);
-  assert.deepEqual(structure.map((module) => module.title), ['Deuxième', 'Premier']);
-  assert.deepEqual(structure.map((module) => module.position), [1, 2], 'les positions restent 1..n');
+  assert.deepEqual(modulesDe(structure).map((module) => module.title), ['Deuxième', 'Premier']);
+  assert.deepEqual(modulesDe(structure).map((module) => module.position), [1, 2], 'les positions restent 1..n');
 
-  await ajouterLecon(db, structure[0].id, 'Leçon A', 'video', 5, '');
-  await ajouterLecon(db, structure[0].id, 'Leçon B', 'text', 3, '');
-  let lecons = (await lireStructure(db, formation.id))[0].lecons;
+  await ajouterLecon(db, modulesDe(structure)[0].id, 'Leçon A', 'video', 5, '');
+  await ajouterLecon(db, modulesDe(structure)[0].id, 'Leçon B', 'text', 3, '');
+  let lecons = modulesDe(await lireStructure(db, formation.id))[0].lecons;
   assert.deepEqual(lecons.map((lecon) => lecon.title), ['Leçon A', 'Leçon B']);
   await deplacerLecon(db, lecons[1].id, 'haut');
-  lecons = (await lireStructure(db, formation.id))[0].lecons;
+  lecons = modulesDe(await lireStructure(db, formation.id))[0].lecons;
   assert.deepEqual(lecons.map((lecon) => lecon.title), ['Leçon B', 'Leçon A']);
   await db.close();
 });
@@ -135,7 +142,7 @@ test('seules les adresses https sont acceptées pour une ressource ou un lien', 
   await ajouterModule(db, formation.id, 'Module');
   const structure = await lireStructure(db, formation.id);
 
-  const insecurise = await ajouterLecon(db, structure[0].id, 'Vidéo', 'video', 5, 'http://exemple.test/video.mp4');
+  const insecurise = await ajouterLecon(db, modulesDe(structure)[0].id, 'Vidéo', 'video', 5, 'http://exemple.test/video.mp4');
   assert.equal(insecurise.ok, false);
   assert.equal(insecurise.erreur, 'ressource_non_https');
 
@@ -152,8 +159,8 @@ test('la progression d’un étudiant protège sa leçon et son module', async (
   const [formation] = await listerFormations(db);
   await ajouterModule(db, formation.id, 'Module protégé');
   const structure = await lireStructure(db, formation.id);
-  await ajouterLecon(db, structure[0].id, 'Leçon terminée', 'video', 10, '');
-  const lecon = (await lireStructure(db, formation.id))[0].lecons[0];
+  await ajouterLecon(db, modulesDe(structure)[0].id, 'Leçon terminée', 'video', 10, '');
+  const lecon = modulesDe(await lireStructure(db, formation.id))[0].lecons[0];
   await db.execute({
     sql: 'INSERT INTO lesson_completions(user_id,lesson_id,completed_at_ms) VALUES (?,?,?)',
     args: ['usr_etudiant', lecon.id, Date.now()],
@@ -163,14 +170,14 @@ test('la progression d’un étudiant protège sa leçon et son module', async (
   assert.equal(suppressionLecon.ok, false);
   assert.match(suppressionLecon.erreur, /progression_protegee/);
 
-  const suppressionModule = await supprimerModule(db, structure[0].id);
+  const suppressionModule = await supprimerModule(db, modulesDe(structure)[0].id);
   assert.equal(suppressionModule.ok, false);
   assert.match(suppressionModule.erreur, /progression_protegee/);
 
   // Enrichir reste toujours permis : c'est la règle de l'enrichissement silencieux.
   const renommage = await modifierLecon(db, lecon.id, 'Leçon enrichie', 'video', 12, 'https://exemple.test/video.mp4');
   assert.equal(renommage.ok, true);
-  assert.equal((await lireStructure(db, formation.id))[0].lecons[0].terminees, 1);
+  assert.equal(modulesDe(await lireStructure(db, formation.id))[0].lecons[0].terminees, 1);
   await db.close();
 });
 
@@ -348,5 +355,83 @@ test('la carte du catalogue : une durée ou une note absurde est refusée', asyn
   const apres = (await listerFormations(db))[0];
   assert.equal(apres.hours, 0);
   assert.equal(apres.rating, null);
+  await db.close();
+});
+
+/**
+ * LE PARCOURS — le propriétaire l'a redit : une formation contient des
+ * chapitres, un chapitre contient des modules, et rien ne s'ouvre deux crans
+ * à la fois. Ces tests protègent exactement cette règle.
+ */
+test('le parcours se débloque chapitre par chapitre, puis module par module', async () => {
+  const { calculerDeblocage } = await import('../lib/server/campus.ts');
+  const parcours = (fait) => [
+    {
+      id: 'ch1',
+      position: 1,
+      title: 'Chapitre 1',
+      summary: null,
+      modules: [
+        { id: 'm1', lessons: [{ completed: fait.m1 }] },
+        { id: 'm2', lessons: [{ completed: fait.m2 }] },
+      ],
+    },
+    {
+      id: 'ch2',
+      position: 2,
+      title: 'Chapitre 2',
+      summary: null,
+      modules: [{ id: 'm3', lessons: [{ completed: fait.m3 }] }],
+    },
+  ];
+
+  // Au départ : seul le chapitre 1 paraît, et seul son premier module s'ouvre.
+  let etat = calculerDeblocage(parcours({ m1: false, m2: false, m3: false }));
+  assert.deepEqual(etat.map((c) => c.visible), [true, false], 'le chapitre 2 ne paraît pas encore');
+  assert.deepEqual(etat[0].modules.map((m) => m.ouvrable), [true, false], 'le module 2 reste verrouillé');
+  assert.equal(etat[0].termine, false);
+
+  // Module 1 fini : le module 2 s'ouvre, mais le chapitre 2 ne paraît toujours pas.
+  etat = calculerDeblocage(parcours({ m1: true, m2: false, m3: false }));
+  assert.deepEqual(etat[0].modules.map((m) => m.ouvrable), [true, true]);
+  assert.deepEqual(etat.map((c) => c.visible), [true, false], 'le chapitre 2 attend la fin du chapitre 1');
+
+  // Tous les modules du chapitre 1 finis : le chapitre 2 entre dans la liste.
+  etat = calculerDeblocage(parcours({ m1: true, m2: true, m3: false }));
+  assert.equal(etat[0].termine, true, 'le chapitre 1 est terminé');
+  assert.deepEqual(etat.map((c) => c.visible), [true, true], 'le chapitre 2 apparaît');
+  assert.deepEqual(etat[1].modules.map((m) => m.ouvrable), [true], 'son premier module est ouvert');
+});
+
+test('une formation se construit en chapitres, et chaque module reste dans le sien', async () => {
+  const db = await baseVide();
+  const { ajouterChapitre, ajouterModule } = await import('../lib/server/direction.ts');
+  await creerFormation(db, { titre: 'Parcours', prixCfa: 0 });
+  const [formation] = await listerFormations(db);
+
+  const un = await ajouterChapitre(db, formation.id, 'Chapitre 1');
+  assert.equal(un.ok, true);
+  assert.equal((await ajouterChapitre(db, formation.id, 'Chapitre 2')).ok, true);
+
+  let structure = await lireStructure(db, formation.id);
+  assert.deepEqual(structure.map((c) => c.title), ['Chapitre 1', 'Chapitre 2']);
+
+  await ajouterModule(db, formation.id, 'Module 1.1', '', structure[0].id);
+  await ajouterModule(db, formation.id, 'Module 1.2', '', structure[0].id);
+  await ajouterModule(db, formation.id, 'Module 2.1', '', structure[1].id);
+
+  structure = await lireStructure(db, formation.id);
+  assert.deepEqual(structure[0].modules.map((m) => m.title), ['Module 1.1', 'Module 1.2']);
+  assert.deepEqual(
+    structure[1].modules.map((m) => m.title),
+    ['Module 2.1'],
+    'un module ne fuit jamais dans un autre chapitre'
+  );
+  assert.deepEqual(structure[0].modules.map((m) => m.position), [1, 2]);
+  assert.deepEqual(
+    structure[1].modules.map((m) => m.position),
+    [1],
+    'les positions repartent de 1 dans chaque chapitre'
+  );
   await db.close();
 });

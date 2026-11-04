@@ -7,7 +7,7 @@ import { lireStructure, lireUneFormation } from '@/lib/server/direction';
 
 export const dynamic = 'force-dynamic';
 
-/** Éditeur d'une formation : ses informations, puis sa structure (modules et leçons). */
+/** Éditeur d'une formation : ses informations, puis sa structure (chapitres, modules et leçons). */
 export default async function FormationDirectionPage({ params }: { params: Promise<{ id: string }> }) {
   const session = await sessionSection('formations');
   if (!session) redirect('/connexion');
@@ -15,7 +15,12 @@ export default async function FormationDirectionPage({ params }: { params: Promi
 
   const formation = await lireUneFormation(session.db, id);
   if (!formation) notFound();
-  const modules = await lireStructure(session.db, id);
+  const chapitres = await lireStructure(session.db, id);
+  const totalModules = chapitres.reduce((total, chapitre) => total + chapitre.modules.length, 0);
+  const totalLecons = chapitres.reduce(
+    (total, chapitre) => total + chapitre.modules.reduce((sous, module) => sous + module.lecons.length, 0),
+    0
+  );
 
   return (
     <div>
@@ -34,9 +39,8 @@ export default async function FormationDirectionPage({ params }: { params: Promi
           <div className="card card-pad mb16">
             <h3 className="mb8">État du contenu</h3>
             <div className="small muted" style={{ lineHeight: 1.9 }}>
-              {modules.length} module{modules.length > 1 ? 's' : ''} ·{' '}
-              {modules.reduce((total, module) => total + module.lecons.length, 0)} leçon
-              {modules.reduce((total, module) => total + module.lecons.length, 0) > 1 ? 's' : ''} ·{' '}
+              {chapitres.length} chapitre{chapitres.length > 1 ? 's' : ''} · {totalModules} module
+              {totalModules > 1 ? 's' : ''} · {totalLecons} leçon{totalLecons > 1 ? 's' : ''} ·{' '}
               {formation.inscrits} étudiant{formation.inscrits > 1 ? 's' : ''} avec accès
             </div>
             {formation.published && (
@@ -50,7 +54,7 @@ export default async function FormationDirectionPage({ params }: { params: Promi
       </div>
 
       <h2 className="mb16">Structure de la formation</h2>
-      <StructureEditeur formationId={formation.id} modules={modules} />
+      <StructureEditeur formationId={formation.id} chapitres={chapitres} />
     </div>
   );
 }

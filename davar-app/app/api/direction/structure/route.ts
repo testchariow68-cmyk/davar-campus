@@ -3,12 +3,16 @@ import { jsonNoStore, readJsonBody } from '@/lib/server/http';
 import { trackApiRequest } from '@/lib/server/quota';
 import { enregistrerEvenement } from '@/lib/server/journal';
 import {
+  ajouterChapitre,
   ajouterLecon,
   ajouterModule,
+  deplacerChapitre,
   deplacerLecon,
   deplacerModule,
+  modifierChapitre,
   modifierLecon,
   modifierModule,
+  supprimerChapitre,
   supprimerLecon,
   supprimerModule,
   type Resultat,
@@ -16,7 +20,7 @@ import {
 
 export const dynamic = 'force-dynamic';
 
-/** Construire la structure d'une formation : modules et leçons. Propriétaire uniquement. */
+/** Construire la structure d'une formation : chapitres, modules et leçons. Propriétaire uniquement. */
 export async function POST(request: Request) {
   await trackApiRequest();
   const verrou = await verrouProprietaire(request);
@@ -31,8 +35,27 @@ export async function POST(request: Request) {
   try {
     let resultat: Resultat;
     switch (action) {
+      case 'add-chapter':
+        resultat = await ajouterChapitre(db, id, String(body?.titre ?? ''), String(body?.resume ?? ''));
+        break;
+      case 'update-chapter':
+        resultat = await modifierChapitre(db, id, String(body?.titre ?? ''), String(body?.resume ?? ''));
+        break;
+      case 'delete-chapter':
+        resultat = await supprimerChapitre(db, id);
+        break;
+      case 'move-chapter':
+        resultat = await deplacerChapitre(db, id, body?.sens === 'bas' ? 'bas' : 'haut');
+        break;
       case 'add-module':
-        resultat = await ajouterModule(db, id, String(body?.titre ?? ''), String(body?.resume ?? ''));
+        // `id` est la formation ; `chapitre` désigne le chapitre qui reçoit le module.
+        resultat = await ajouterModule(
+          db,
+          id,
+          String(body?.titre ?? ''),
+          String(body?.resume ?? ''),
+          typeof body?.chapitre === 'string' ? body.chapitre : null
+        );
         break;
       case 'update-module':
         resultat = await modifierModule(db, id, String(body?.titre ?? ''), String(body?.resume ?? ''));

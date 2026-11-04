@@ -572,11 +572,35 @@ export type Lecon = {
   content: string;
   terminees: number;
 };
-export type Module = { id: string; position: number; title: string; summary: string; lecons: Lecon[] };
+export type Module = {
+  id: string;
+  chapitreId: string | null;
+  position: number;
+  title: string;
+  summary: string;
+  lecons: Lecon[];
+};
 
-export async function lireStructure(db: Db, formationId: string): Promise<Module[]> {
+/**
+ * LE CHAPITRE — le niveau que le propriétaire a rappelé : une formation
+ * contient des CHAPITRES, un chapitre contient des MODULES, un module
+ * contient les cours, les illustrations et les fichiers.
+ */
+export type ChapitreStructure = {
+  id: string;
+  position: number;
+  title: string;
+  summary: string;
+  modules: Module[];
+};
+
+export async function lireStructure(db: Db, formationId: string): Promise<ChapitreStructure[]> {
+  const chapitres = await db.execute({
+    sql: 'SELECT id,position,title,summary FROM course_chapters WHERE training_id=? ORDER BY position',
+    args: [formationId],
+  });
   const modules = await db.execute({
-    sql: 'SELECT id,position,title,summary FROM course_modules WHERE training_id=? ORDER BY position',
+    sql: 'SELECT id,chapter_id,position,title,summary FROM course_modules WHERE training_id=? ORDER BY position',
     args: [formationId],
   });
   const lecons = await db.execute({
@@ -586,8 +610,10 @@ export async function lireStructure(db: Db, formationId: string): Promise<Module
           WHERE m.training_id=? ORDER BY l.position`,
     args: [formationId],
   });
-  return modules.rows.map((module) => ({
+
+  const construits: Module[] = modules.rows.map((module) => ({
     id: texte(module.id),
+    chapitreId: texte(module.chapter_id),
     position: nombre(module.position),
     title: texte(module.title),
     summary: texte(module.summary),
@@ -604,13 +630,40 @@ export async function lireStructure(db: Db, formationId: string): Promise<Module
         terminees: nombre(lecon.terminees),
       })),
   }));
+
+  const liste: ChapitreStructure[] = chapitres.rows.map((chapitre) => ({
+    id: texte(chapitre.id),
+    position: nombre(chapitre.position),
+    title: texte(chapitre.title),
+    summary: texte(chapitre.summary),
+    modules: construits
+      .filter((module) => module.chapitreId === texte(chapitre.id))
+      // Le rang que voit l'élève : 1, 2, 3… à l'intérieur du chapitre.
+      .map((module, rang) => ({ ...module, position: rang + 1 })),
+  }));
+
+  // Aucun module ne doit rester orphelin : ceux d'avant la migration 025
+  // rejoignent le premier chapitre, ou un chapitre de repli s'il n'y en a pas.
+  const orphelins = construits.filter((module) => !module.chapitreId);
+  if (orphelins.length) {
+    if (liste.length) liste[0].modules = [...orphelins, ...liste[0].modules];
+    else
+      liste.push({
+        id: `chapitre-libre-${formationId}`,
+        position: 1,
+        title: 'Chapitre 1',
+        summary: '',
+        modules: orphelins,
+      });
+  }
+  return liste;
 }
 
 /** Réordonnancement sûr malgré la contrainte d'unicité : décalage puis placement final. */
 async function reordonner(
   db: Db,
-  table: 'course_modules' | 'course_lessons',
-  colonne: 'training_id' | 'module_id',
+  table: 'course_chapters' | 'course_modules' | 'course_lessons',
+  colonne: 'training_id' | 'module_id' | 'chapter_id',
   parentId: string,
   ordre: string[],
   decalage: number
@@ -624,7 +677,12 @@ async function reordonner(
   );
 }
 
-async function ordreActuel(db: Db, table: 'course_modules' | 'course_lessons', colonne: string, parentId: string): Promise<string[]> {
+async function ordreActuel(
+  db: Db,
+  table: 'course_chapters' | 'course_modules' | 'course_lessons',
+  colonne: string,
+  parentId: string
+): Promise<string[]> {
   const resultat = await db.execute({
     sql: `SELECT id FROM ${table} WHERE ${colonne}=? ORDER BY position`,
     args: [parentId],
@@ -632,21 +690,126 @@ async function ordreActuel(db: Db, table: 'course_modules' | 'course_lessons', c
   return resultat.rows.map((ligne) => texte(ligne.id));
 }
 
-export async function ajouterModule(db: Db, formationId: string, titre: string, resume = ''): Promise<Resultat> {
+/** Le chapitre qui reçoit un module quand l'appelant n'en désigne aucun. */
+async function chapitreParDefaut(db: Db, formationId: string): Promise<string | null> {
+  const premier = await db.execute({
+    sql: 'SELECT id FROM course_chapters WHERE training_id=? ORDER BY position LIMIT 1',
+    args: [formationId],
+  });
+  return premier.rows.length ? texte(premier.rows[0].id) : null;
+}
+
+export async function ajouterChapitre(db: Db, formationId: string, titre: string, resume = ''): Promise<Resultat> {
   const propre = titre.trim();
   if (propre.length < 2 || propre.length > 120) return echec('titre_invalide');
   const existe = await db.execute({ sql: 'SELECT 1 FROM trainings WHERE id=?', args: [formationId] });
   if (!existe.rows.length) return echec('formation_introuvable');
+  const suivant = await db.execute({
+    sql: 'SELECT COALESCE(MAX(position),0)+1 AS p FROM course_chapters WHERE training_id=?',
+    args: [formationId],
+  });
+  const id = newId('chap');
+  await db.execute({
+    sql: 'INSERT INTO course_chapters(id,training_id,position,title,summary) VALUES (?,?,?,?,?)',
+    args: [id, formationId, nombre(suivant.rows[0]?.p), propre, resume.trim().slice(0, 300) || null],
+  });
+  return { ok: true, message: `Chapitre ajouté : \u00ab ${propre} \u00bb.` };
+}
+
+export async function modifierChapitre(db: Db, chapitreId: string, titre: string, resume = ''): Promise<Resultat> {
+  const propre = titre.trim();
+  if (propre.length < 2 || propre.length > 120) return echec('titre_invalide');
+  const resultat = await db.execute({
+    sql: 'UPDATE course_chapters SET title=?, summary=? WHERE id=?',
+    args: [propre, resume.trim().slice(0, 300) || null, chapitreId],
+  });
+  if (!resultat.rowsAffected) return echec('chapitre_introuvable');
+  return { ok: true, message: 'Chapitre enregistré.' };
+}
+
+/**
+ * Supprimer un chapitre supprime ses modules et leurs cours. La progression
+ * déjà acquise par les étudiants, elle, protège le chapitre : on n'efface
+ * jamais en silence le travail accompli.
+ */
+export async function supprimerChapitre(db: Db, chapitreId: string): Promise<Resultat> {
+  const chapitre = await db.execute({ sql: 'SELECT training_id FROM course_chapters WHERE id=?', args: [chapitreId] });
+  if (!chapitre.rows.length) return echec('chapitre_introuvable');
+  const parent = texte(chapitre.rows[0].training_id);
+  const progresse = await db.execute({
+    sql: `SELECT COUNT(*) AS n FROM lesson_completions c
+          JOIN course_lessons l ON l.id=c.lesson_id
+          JOIN course_modules m ON m.id=l.module_id WHERE m.chapter_id=?`,
+    args: [chapitreId],
+  });
+  if (nombre(progresse.rows[0]?.n))
+    return echec(
+      'progression_protegee : des cours de ce chapitre ont déjà été terminés par des étudiants. Les supprimer effacerait leur progression sans le leur dire — ce que le projet interdit.'
+    );
+  const modules = await ordreActuel(db, 'course_modules', 'chapter_id', chapitreId);
+  await db.batch(
+    [
+      ...modules.flatMap((id) => [
+        { sql: 'DELETE FROM course_lessons WHERE module_id=?', args: [id] },
+        { sql: 'DELETE FROM course_modules WHERE id=?', args: [id] },
+      ]),
+      { sql: 'DELETE FROM course_chapters WHERE id=?', args: [chapitreId] },
+    ],
+    'write'
+  );
+  const ordre = await ordreActuel(db, 'course_chapters', 'training_id', parent);
+  if (ordre.length) await reordonner(db, 'course_chapters', 'training_id', parent, ordre, 1000);
+  return { ok: true, message: 'Chapitre supprimé.' };
+}
+
+export async function deplacerChapitre(db: Db, chapitreId: string, sens: 'haut' | 'bas'): Promise<Resultat> {
+  const chapitre = await db.execute({ sql: 'SELECT training_id FROM course_chapters WHERE id=?', args: [chapitreId] });
+  if (!chapitre.rows.length) return echec('chapitre_introuvable');
+  const parent = texte(chapitre.rows[0].training_id);
+  const ordre = await ordreActuel(db, 'course_chapters', 'training_id', parent);
+  const index = ordre.indexOf(chapitreId);
+  const cible = sens === 'haut' ? index - 1 : index + 1;
+  if (index < 0 || cible < 0 || cible >= ordre.length) return { ok: true, message: 'Déjà en position.' };
+  [ordre[index], ordre[cible]] = [ordre[cible], ordre[index]];
+  await reordonner(db, 'course_chapters', 'training_id', parent, ordre, 1000);
+  return { ok: true, message: 'Ordre mis à jour.' };
+}
+
+/**
+ * Ajouter un module. Le module entre dans le chapitre désigné ; si aucun
+ * chapitre n'est désigné — ou si la formation n'en a pas encore — un chapitre
+ * est pris ou créé, afin qu'aucun module ne reste jamais sans chapitre.
+ */
+export async function ajouterModule(
+  db: Db,
+  formationId: string,
+  titre: string,
+  resume = '',
+  chapitreId?: string | null
+): Promise<Resultat> {
+  const propre = titre.trim();
+  if (propre.length < 2 || propre.length > 120) return echec('titre_invalide');
+  const existe = await db.execute({ sql: 'SELECT 1 FROM trainings WHERE id=?', args: [formationId] });
+  if (!existe.rows.length) return echec('formation_introuvable');
+  let chapitre = chapitreId || (await chapitreParDefaut(db, formationId));
+  if (!chapitre) {
+    const cree = await ajouterChapitre(db, formationId, 'Chapitre 1');
+    if (!cree.ok) return cree;
+    chapitre = await chapitreParDefaut(db, formationId);
+  }
+  // La position reste unique à l'échelle de la FORMATION (contrainte héritée du
+  // schéma) : elle sert à ordonner. Le rang affiché, lui, se calcule par
+  // chapitre — voir `ranger` plus bas.
   const suivant = await db.execute({
     sql: 'SELECT COALESCE(MAX(position),0)+1 AS p FROM course_modules WHERE training_id=?',
     args: [formationId],
   });
   const id = newId('mod');
   await db.execute({
-    sql: 'INSERT INTO course_modules(id,training_id,position,title,summary) VALUES (?,?,?,?,?)',
-    args: [id, formationId, nombre(suivant.rows[0]?.p), propre, resume.trim().slice(0, 300) || null],
+    sql: 'INSERT INTO course_modules(id,training_id,chapter_id,position,title,summary) VALUES (?,?,?,?,?,?)',
+    args: [id, formationId, chapitre, nombre(suivant.rows[0]?.p), propre, resume.trim().slice(0, 300) || null],
   });
-  return { ok: true, message: `Module ajouté : « ${propre} ».` };
+  return { ok: true, message: `Module ajouté : \u00ab ${propre} \u00bb.` };
 }
 
 export async function modifierModule(db: Db, moduleId: string, titre: string, resume = ''): Promise<Resultat> {
@@ -686,15 +849,24 @@ export async function supprimerModule(db: Db, moduleId: string): Promise<Resulta
 }
 
 export async function deplacerModule(db: Db, moduleId: string, sens: 'haut' | 'bas'): Promise<Resultat> {
-  const module = await db.execute({ sql: 'SELECT training_id FROM course_modules WHERE id=?', args: [moduleId] });
+  const module = await db.execute({
+    sql: 'SELECT training_id, chapter_id FROM course_modules WHERE id=?',
+    args: [moduleId],
+  });
   if (!module.rows.length) return echec('module_introuvable');
-  const parent = texte(module.rows[0].training_id);
-  const ordre = await ordreActuel(db, 'course_modules', 'training_id', parent);
+  // Un module se déplace À L'INTÉRIEUR de son chapitre, jamais d'un chapitre à
+  // l'autre : on refuse d'échanger avec un voisin qui n'est pas du même chapitre.
+  const chapitre = texte(module.rows[0].chapter_id);
+  const formation = texte(module.rows[0].training_id);
+  const ordre = await ordreActuel(db, 'course_modules', 'training_id', formation);
   const index = ordre.indexOf(moduleId);
   const cible = sens === 'haut' ? index - 1 : index + 1;
   if (index < 0 || cible < 0 || cible >= ordre.length) return { ok: true, message: 'Déjà en position.' };
+  const voisin = await db.execute({ sql: 'SELECT chapter_id FROM course_modules WHERE id=?', args: [ordre[cible]] });
+  if (texte(voisin.rows[0]?.chapter_id) !== chapitre)
+    return { ok: true, message: 'Le module est déjà au bord de son chapitre.' };
   [ordre[index], ordre[cible]] = [ordre[cible], ordre[index]];
-  await reordonner(db, 'course_modules', 'training_id', parent, ordre, 1000);
+  await reordonner(db, 'course_modules', 'training_id', formation, ordre, 1000);
   return { ok: true, message: 'Ordre mis à jour.' };
 }
 

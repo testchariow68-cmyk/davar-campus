@@ -174,8 +174,9 @@ export async function demandeEnCours(
         formationTitre,
         duAtMs: acquis,
         titre: 'Vos attentes',
+        // Les mots du propriétaire, repris tels quels.
         consigne:
-          'Bienvenue. Avant de commencer, dites-nous ce que vous attendez de cette formation : vos objectifs, ce que vous voulez savoir faire à la fin.',
+          'Bienvenue. Une seule question avant de commencer : quels sont vos attentes concernant cette formation ?',
       });
     }
     if (entier(row.avis1) === 0 && maintenant - acquis >= DELAI_PREMIER_AVIS_MS) {
@@ -186,7 +187,7 @@ export async function demandeEnCours(
         formationTitre,
         duAtMs: acquis + DELAI_PREMIER_AVIS_MS,
         titre: 'Votre avis',
-        consigne: `Quinze jours se sont écoulés depuis votre arrivée. Comment trouvez-vous les cours, la plateforme, votre expérience ?`,
+        consigne: `Quinze jours. Votre regard change notre campus : qu'avez-vous aimé ? Que devons-nous améliorer ?`,
       });
     }
     if (entier(row.avis2) === 0 && maintenant - acquis >= DELAI_SECOND_AVIS_MS) {
@@ -197,7 +198,7 @@ export async function demandeEnCours(
         formationTitre,
         duAtMs: acquis + DELAI_SECOND_AVIS_MS,
         titre: 'Votre avis',
-        consigne: `Un mois déjà. Vous touchez peut-être à la fin : votre avis compte pour la suite.`,
+        consigne: `Un mois avec nous. Vous touchez au but : Laissez-nous votre avis, il guidera les prochains.`,
       });
     }
 

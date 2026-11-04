@@ -26,12 +26,43 @@ export type Lesson = {
   completed: boolean;
 };
 
-export type Module = { id: string; position: number; title: string; summary: string | null; lessons: Lesson[] };
+export type Module = {
+  id: string;
+  /** Chapitre dont ce module fait partie ; null seulement pour un module créé avant la migration 025. */
+  chapitreId: string | null;
+  position: number;
+  title: string;
+  summary: string | null;
+  lessons: Lesson[];
+  /** Tous les cours du module sont marqués terminés. */
+  termine: boolean;
+  /** Le module peut être ouvert : c'est le premier, ou le précédent est terminé. */
+  ouvrable: boolean;
+};
+
+/**
+ * LE CHAPITRE — le niveau que le propriétaire a rappelé : une formation
+ * contient des chapitres, un chapitre contient des modules, un module
+ * contient les cours, les illustrations et les fichiers.
+ */
+export type Chapitre = {
+  id: string;
+  position: number;
+  title: string;
+  summary: string | null;
+  modules: Module[];
+  /** Tous les modules du chapitre sont terminés. */
+  termine: boolean;
+  /** Le chapitre figure dans la liste : c'est le premier, ou le précédent est terminé. */
+  visible: boolean;
+};
 
 export type TrainingDetail = {
   id: string;
   title: string;
   description: string | null;
+  chapitres: Chapitre[];
+  /** Tous les modules, à plat et dans l'ordre : les vues qui lisent tout en une fois. */
   modules: Module[];
   lessonCount: number;
   completedCount: number;
@@ -62,6 +93,52 @@ export function progressionFormation(formation: {
   const faits = formation.completedCount + formation.evaluationsReussies;
   const pct = total === 0 ? 0 : Math.round((faits / total) * 100);
   return { pct, terminee: total > 0 && faits >= total, faits, total };
+}
+
+/**
+ * LA RÈGLE DU PROPRIÉTAIRE — le parcours avance d'un chapitre à l'autre, et,
+ * à l'intérieur d'un chapitre, d'un module à l'autre. Rien ne s'ouvre deux
+ * crans à la fois.
+ *
+ *   - un MODULE est terminé quand TOUS ses cours sont marqués terminés ;
+ *   - un CHAPITRE est terminé quand TOUS ses modules sont terminés ;
+ *   - seul le chapitre en cours paraît : le suivant n'entre dans la liste QUE
+ *     lorsque le précédent est terminé, jamais avant ;
+ *   - dans un chapitre, tous les modules sont LISTÉS — mais seul le premier
+ *     est ouvrable. Les suivants sont grisés et ne s'ouvrent pas.
+ *
+ * Un chapitre ou un module encore vide ne bloque jamais : on n'exige pas la
+ * fin de ce qui n'existe pas encore, sinon l'élève resterait prisonnier d'un
+ * chapitre que l'administration n'a pas fini de remplir.
+ *
+ * Fonction pure, sans base ni effet : elle se teste seule.
+ */
+export function calculerDeblocage<C extends { modules: { lessons: { completed: boolean }[] }[] }>(
+  chapitres: C[]
+): (C & {
+  termine: boolean;
+  visible: boolean;
+  modules: (C['modules'][number] & { termine: boolean; ouvrable: boolean })[];
+})[] {
+  const finParChapitre = chapitres.map((chapitre) =>
+    chapitre.modules.map((module) => module.lessons.every((lecon) => lecon.completed))
+  );
+  return chapitres.map((chapitre, index) => {
+    const finModules = finParChapitre[index];
+    const modules = chapitre.modules.map((module, rang) => ({
+      ...module,
+      termine: finModules[rang],
+      ouvrable: rang === 0 || finModules.slice(0, rang).every(Boolean),
+    }));
+    return {
+      ...chapitre,
+      modules,
+      termine: finModules.every(Boolean),
+      visible:
+        index === 0 ||
+        finParChapitre.slice(0, index).every((finDuChapitre) => finDuChapitre.every(Boolean)),
+    };
+  });
 }
 
 /**
@@ -173,20 +250,27 @@ async function lireContenuFormation(
   if (!title) return null;
 
   const rows = await db.execute({
-    sql: `SELECT m.id AS module_id, m.position AS module_position, m.title AS module_title, m.summary,
+    sql: `SELECT m.id AS module_id, m.chapter_id AS chapter_id,
+                 m.position AS module_position, m.title AS module_title, m.summary,
+                 ch.position AS chapter_position, ch.title AS chapter_title, ch.summary AS chapter_summary,
                  l.id AS lesson_id, l.position AS lesson_position, l.title AS lesson_title,
                  l.kind, l.resource_url, l.duration_min,
                  CASE WHEN c.lesson_id IS NULL THEN 0 ELSE 1 END AS completed
           FROM course_modules m
+          LEFT JOIN course_chapters ch ON ch.id = m.chapter_id
           LEFT JOIN course_lessons l ON l.module_id = m.id
           LEFT JOIN lesson_completions c ON c.lesson_id = l.id AND c.user_id = ?
           WHERE m.training_id = ?
-          ORDER BY m.position, l.position`,
+          ORDER BY COALESCE(ch.position, 0), m.position, l.position`,
     args: [userId ?? '', trainingId],
   });
 
   const modules: Module[] = [];
   const byId = new Map<string, Module>();
+  const chapitresBruts = new Map<
+    string,
+    { id: string; position: number; title: string; summary: string | null; modules: Module[] }
+  >();
   let lessonCount = 0;
   let completedCount = 0;
   for (const row of rows.rows) {
@@ -196,13 +280,29 @@ async function lireContenuFormation(
     if (!module) {
       module = {
         id: moduleId,
+        chapitreId: text(row.chapter_id),
         position: num(row.module_position),
         title: text(row.module_title) ?? 'Module',
         summary: text(row.summary),
         lessons: [],
+        termine: false,
+        ouvrable: false,
       };
       byId.set(moduleId, module);
       modules.push(module);
+      // Un module sans chapitre (créé avant la migration 025) rejoint un chapitre
+      // de repli plutôt que de disparaître : on ne perd jamais du contenu.
+      const cle = module.chapitreId ?? '';
+      if (!chapitresBruts.has(cle)) {
+        chapitresBruts.set(cle, {
+          id: module.chapitreId ?? `chapitre-libre-${trainingId}`,
+          position: module.chapitreId ? num(row.chapter_position) : 1,
+          title: (module.chapitreId ? text(row.chapter_title) : null) ?? 'Chapitre 1',
+          summary: module.chapitreId ? text(row.chapter_summary) : null,
+          modules: [],
+        });
+      }
+      chapitresBruts.get(cle)?.modules.push(module);
     }
     const lessonId = text(row.lesson_id);
     if (!lessonId) continue;
@@ -221,11 +321,23 @@ async function lireContenuFormation(
     if (lesson.completed) completedCount += 1;
   }
 
+  const chapitres = calculerDeblocage(
+    [...chapitresBruts.values()].sort((a, b) => a.position - b.position)
+  );
+  // Le rang que voit l'élève : 1, 2, 3… à l'intérieur du chapitre. La position
+  // en base reste unique à l'échelle de la formation, elle ne sert qu'à ordonner.
+  for (const chapitre of chapitres) {
+    chapitre.modules.forEach((module, rang) => {
+      module.position = rang + 1;
+    });
+  }
+
   const evaluations = await compterEvaluations(db, trainingId, userId);
   return {
     id: trainingId,
     title,
     description: text(training?.description),
+    chapitres,
     modules,
     lessonCount,
     completedCount,

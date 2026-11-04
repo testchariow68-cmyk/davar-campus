@@ -92,7 +92,27 @@ export function PortailAvis({
         overflowY: 'auto',
       }}
     >
-      <div className="card card-pad" style={{ maxWidth: 620, width: '100%' }}>
+      <div style={{ maxWidth: 620, width: '100%' }}>
+      {/*
+        LA MARQUE — une étoile, et deux mots, plantés en haut à gauche, HORS de
+        la carte. Le propriétaire la veut comme une signature : avant même de
+        lire la consigne, l'élève voit qu'on lui demande SON avis.
+      */}
+      <div className="row" style={{ gap: 10, alignItems: 'center', marginBottom: 14 }}>
+        <img src="/etoile-avis.svg" alt="" width={46} height={46} aria-hidden="true" />
+        <span
+          style={{
+            fontFamily: 'Georgia, "Times New Roman", serif',
+            fontSize: 21,
+            fontWeight: 700,
+            letterSpacing: '0.01em',
+            color: 'var(--gold)',
+          }}
+        >
+          {genre === 'attentes' ? 'mes attentes' : 'mon avis'}
+        </span>
+      </div>
+      <div className="card card-pad">
         <div className="row" style={{ gap: 10 }}>
           <span className="badge b-gold">
             <Icon nom={genre === 'attentes' ? 'star' : 'quote'} taille={12} /> {genre === 'attentes' ? 'à l’arrivée' : `n°${step}`}
@@ -155,6 +175,7 @@ export function PortailAvis({
         <p className="xs faint mt16">
           Votre parole reste bloquante : le campus vous attend de l’autre côté.
         </p>
+      </div>
       </div>
     </div>
   );
