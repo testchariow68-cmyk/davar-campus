@@ -4,6 +4,7 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Icon } from './Icon';
+import { VisionneuseFichier } from './VisionneuseFichier';
 import type { Lesson, RessourceCours } from '@/lib/server/campus';
 
 /** Formats d'image du lecteur, tels que le prototype les nomme. */
@@ -121,6 +122,8 @@ export function CoursDetail({
   const [illustration, setIllustration] = useState<number | null>(null);
   const [occupe, setOccupe] = useState(false);
   const [erreur, setErreur] = useState<string | null>(null);
+  /** Le document ouvert en plein écran — jamais téléchargé sans qu'on le demande. */
+  const [visionneuse, setVisionneuse] = useState<RessourceCours | null>(null);
 
   const illustrations = lesson.assets.filter((a) => a.kind === 'illustration');
   const ressources = lesson.assets.filter((a) => a.kind === 'ressource');
@@ -173,7 +176,12 @@ export function CoursDetail({
                 {enCours && <span className="badge b-grey" style={{ marginLeft: 8 }}>hors progression</span>}
               </h2>
             </div>
-            {lesson.completed ? (
+            {enCours ? (
+              /* Une vidéo complémentaire éclaire : elle ne fait pas avancer. */
+              <span className="small muted">
+                Revenez à la vidéo principale pour marquer le cours comme terminé.
+              </span>
+            ) : lesson.completed ? (
               <span className="badge b-green">
                 <Icon nom="check" taille={12} /> Cours terminé
               </span>
@@ -221,7 +229,14 @@ export function CoursDetail({
           </div>
           <div className="res-list">
             {ressources.map((ressource) => (
-              <div className="res-item" key={ressource.id}>
+              <div
+                className="res-item"
+                key={ressource.id}
+                onClick={() => {
+                  if (ressource.url && ressource.type !== 'audio') setVisionneuse(ressource);
+                }}
+                style={{ cursor: ressource.url && ressource.type !== 'audio' ? 'pointer' : undefined }}
+              >
                 <span
                   className={`res-ico ${ressource.type === 'image' ? 'img' : ressource.type === 'doc' ? 'doc' : ''}`}
                 >
@@ -234,17 +249,19 @@ export function CoursDetail({
                     {ressource.size ? ` · ${ressource.size}` : ''}
                   </div>
                 </div>
-                {ressource.url ? (
-                  <a
+                {ressource.type === 'audio' && ressource.url ? (
+                  /* Un audio se JOUE là, tout de suite : ce n'est pas un fichier qu'on range. */
+                  <audio controls src={ressource.url} style={{ height: 34, maxWidth: 300, flex: '1 1 220px' }}>
+                    Votre navigateur ne sait pas lire cet audio.
+                  </audio>
+                ) : ressource.url ? (
+                  <button
                     className="btn btn-ghost btn-sm"
-                    href={ressource.url}
-                    target="_blank"
-                    rel="noreferrer"
-                    download={ressource.type === 'pdf' || ressource.type === 'doc' ? '' : undefined}
+                    onClick={() => setVisionneuse(ressource)}
+                    title={`Ouvrir ${ressource.title}`}
                   >
-                    <Icon nom={ressource.type === 'audio' ? 'play' : 'download'} taille={14} />
-                    {ressource.type === 'audio' ? ' Écouter' : ' Télécharger'}
-                  </a>
+                    <Icon nom={ressource.type === 'image' ? 'eye' : 'file'} taille={14} /> Ouvrir
+                  </button>
                 ) : (
                   <span className="xs faint">Adresse pas encore publiée</span>
                 )}
@@ -257,7 +274,7 @@ export function CoursDetail({
       {illustrations.length > 0 && (
         <div className="card mt16">
           <div className="card-head">
-            <h3>Vidéos d’illustration</h3>
+            <h3>Vidéos complémentaires</h3>
             <span className="xs faint">Pour aller plus loin</span>
           </div>
           <div className="grid g2" style={{ padding: 14, gap: 10 }}>
@@ -287,9 +304,19 @@ export function CoursDetail({
         </div>
       )}
 
+      {visionneuse?.url && (
+        <VisionneuseFichier
+          titre={visionneuse.title}
+          url={visionneuse.url}
+          type={visionneuse.type}
+          taille={visionneuse.size}
+          onClose={() => setVisionneuse(null)}
+        />
+      )}
+
       <div className="row between mt16" style={{ flexWrap: 'wrap', gap: 10 }}>
         <Link className="btn" href={retourHref}>
-          <Icon nom="chevL" taille={14} /> Retour au module
+          <Icon nom="chevL" taille={14} /> Retour au chapitre
         </Link>
         {lesson.completed && suivant && (
           <Link className="btn btn-primary" href={suivant.href}>
