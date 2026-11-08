@@ -21,9 +21,30 @@ export type Lesson = {
   position: number;
   title: string;
   kind: 'video' | 'text' | 'exercise' | 'live';
+  /** La VIDÉO PRINCIPALE du cours. */
   resourceUrl: string | null;
   durationMin: number | null;
+  /** Format d'image de la vidéo principale : 16:9, 9:16, 4:3 ou 1:1. */
+  ratio: string | null;
   completed: boolean;
+  /** Vidéos d'illustration et autres ressources (documents, audio, images). */
+  assets: RessourceCours[];
+};
+
+/**
+ * CE QUE PORTE UN COURS, comme au prototype : une vidéo principale, des vidéos
+ * d'illustration, et des ressources — PDF, document, audio, image.
+ */
+export type RessourceCours = {
+  id: string;
+  kind: 'illustration' | 'ressource';
+  position: number;
+  title: string;
+  type: 'video' | 'pdf' | 'doc' | 'audio' | 'image' | 'autre';
+  url: string | null;
+  duration: string | null;
+  ratio: string | null;
+  size: string | null;
 };
 
 export type Module = {
@@ -265,6 +286,36 @@ async function lireContenuFormation(
     args: [userId ?? '', trainingId],
   });
 
+  const lignesRessources = await db.execute({
+    sql: `SELECT a.id, a.lesson_id, a.kind, a.position, a.title, a.type, a.url, a.duration, a.ratio, a.size
+          FROM lesson_assets a
+          WHERE a.lesson_id IN (SELECT l.id FROM course_lessons l
+                                JOIN course_modules m ON m.id = l.module_id
+                                WHERE m.training_id = ?)
+          ORDER BY a.lesson_id, a.kind, a.position`,
+    args: [trainingId],
+  });
+  const ressourcesParLecon = new Map<string, RessourceCours[]>();
+  for (const ligne of lignesRessources.rows) {
+    const lessonId = text(ligne.lesson_id);
+    if (!lessonId) continue;
+    const liste = ressourcesParLecon.get(lessonId) ?? [];
+    liste.push({
+      id: text(ligne.id) ?? '',
+      kind: text(ligne.kind) === 'illustration' ? 'illustration' : 'ressource',
+      position: num(ligne.position),
+      title: text(ligne.title) ?? 'Ressource',
+      type: (['video', 'pdf', 'doc', 'audio', 'image'].includes(text(ligne.type) ?? '')
+        ? text(ligne.type)
+        : 'autre') as RessourceCours['type'],
+      url: text(ligne.url),
+      duration: text(ligne.duration),
+      ratio: text(ligne.ratio),
+      size: text(ligne.size),
+    });
+    ressourcesParLecon.set(lessonId, liste);
+  }
+
   const modules: Module[] = [];
   const byId = new Map<string, Module>();
   const chapitresBruts = new Map<
@@ -314,7 +365,9 @@ async function lireContenuFormation(
       kind: ['video', 'text', 'exercise', 'live'].includes(kind) ? (kind as Lesson['kind']) : 'video',
       resourceUrl: text(row.resource_url),
       durationMin: row.duration_min === null || row.duration_min === undefined ? null : num(row.duration_min),
+      ratio: text(row.ratio),
       completed: num(row.completed) === 1,
+      assets: ressourcesParLecon.get(lessonId) ?? [],
     };
     module.lessons.push(lesson);
     lessonCount += 1;

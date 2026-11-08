@@ -12,6 +12,17 @@ const TYPES = [
   { valeur: 'live', libelle: 'Séance en direct' },
 ];
 
+type RessourceVue = {
+  id: string;
+  kind: 'illustration' | 'ressource';
+  position: number;
+  title: string;
+  type: string;
+  url: string | null;
+  duration: string | null;
+  ratio: string | null;
+  size: string | null;
+};
 type LeconVue = {
   id: string;
   position: number;
@@ -19,8 +30,12 @@ type LeconVue = {
   kind: string;
   resourceUrl: string;
   durationMin: number | null;
+  /** Format d'image de la vidéo principale. */
+  ratio: string;
   content: string;
   terminees: number;
+  /** Vidéos d'illustration et ressources du cours. */
+  assets: RessourceVue[];
 };
 type ModuleVue = { id: string; position: number; title: string; summary: string; lecons: LeconVue[] };
 
@@ -34,8 +49,8 @@ function ChampsLecon({
   onChange,
   prefixe,
 }: {
-  valeur: { titre: string; type: string; duree: string; ressource: string; contenu: string };
-  onChange: (valeur: { titre: string; type: string; duree: string; ressource: string; contenu: string }) => void;
+  valeur: { titre: string; type: string; duree: string; ressource: string; contenu: string; ratio: string };
+  onChange: (valeur: { titre: string; type: string; duree: string; ressource: string; contenu: string; ratio: string }) => void;
   prefixe: string;
 }) {
   return (
@@ -69,26 +84,59 @@ function ChampsLecon({
   );
 }
 
+/** Formats d'image que sait afficher le lecteur. */
+const FORMATS = ['16:9', '9:16', '4:3', '1:1'];
+/** Types de ressource, dans les mots du prototype. */
+const TYPES_RESSOURCE = [
+  { valeur: 'pdf', libelle: 'PDF' },
+  { valeur: 'doc', libelle: 'Document' },
+  { valeur: 'audio', libelle: 'Audio' },
+  { valeur: 'image', libelle: 'Image' },
+  { valeur: 'video', libelle: 'Vidéo' },
+  { valeur: 'autre', libelle: 'Autre' },
+];
+
+/**
+ * UNE LEÇON — et, depuis l'enrichissement, ce qu'elle porte : le format d'image
+ * de sa vidéo principale, ses vidéos d'illustration, et ses ressources
+ * (documents, audio, images). Tout se fait en silence : aucune notification,
+ * aucune progression réinitialisée.
+ */
 function LigneLecon({ lecon, disabled, agir }: { lecon: LeconVue; disabled: boolean; agir: Agir }) {
   const [edition, setEdition] = useState(false);
+  const [enrichir, setEnrichir] = useState(false);
   const [valeur, setValeur] = useState({
     titre: lecon.title,
     type: lecon.kind,
     duree: lecon.durationMin == null ? '' : String(lecon.durationMin),
     ressource: lecon.resourceUrl,
     contenu: lecon.content,
+    ratio: lecon.ratio || '16:9',
   });
+  const [illustration, setIllustration] = useState({ titre: '', duree: '5:00', ratio: '16:9', url: '' });
+  const [ressource, setRessource] = useState({ titre: '', type: 'pdf', taille: '', url: '' });
+
+  const illustrations = lecon.assets.filter((a) => a.kind === 'illustration');
+  const ressources = lecon.assets.filter((a) => a.kind === 'ressource');
 
   if (edition)
     return (
       <div className="dv-les" style={{ flexDirection: 'column', alignItems: 'stretch', background: 'var(--violet-soft)' }}>
         <ChampsLecon valeur={valeur} onChange={setValeur} prefixe={`e-${lecon.id}`} />
+        <div className="field" style={{ marginBottom: 8, maxWidth: 220 }}>
+          <label htmlFor={`r-e-${lecon.id}`}>Format de la vidéo</label>
+          <select id={`r-e-${lecon.id}`} className="inp" value={valeur.ratio} onChange={(e) => setValeur({ ...valeur, ratio: e.target.value })}>
+            {FORMATS.map((f) => (
+              <option key={f} value={f}>{f}</option>
+            ))}
+          </select>
+        </div>
         <div className="row" style={{ gap: 8 }}>
           <button
             className="btn btn-primary"
             disabled={disabled}
             onClick={async () => {
-              await agir({ action: 'update-lesson', id: lecon.id, titre: valeur.titre, type: valeur.type, duree: valeur.duree, ressource: valeur.ressource, contenu: valeur.contenu });
+              await agir({ action: 'update-lesson', id: lecon.id, titre: valeur.titre, type: valeur.type, duree: valeur.duree, ressource: valeur.ressource, contenu: valeur.contenu, ratio: valeur.ratio });
               setEdition(false);
             }}
           >
@@ -102,45 +150,169 @@ function LigneLecon({ lecon, disabled, agir }: { lecon: LeconVue; disabled: bool
     );
 
   return (
-    <div className="dv-les">
-      <span className="dv-num">{lecon.position}</span>
-      <span style={{ fontWeight: 600 }}>{lecon.title}</span>
-      <span className="dv-tag">{libelleType(lecon.kind)}</span>
-      {lecon.durationMin ? <span className="small muted">{lecon.durationMin} min</span> : null}
-      {lecon.resourceUrl ? (
-        <span className="small" style={{ color: 'var(--green)' }}>
-          ressource en place
+    <div style={{ borderBottom: '1px solid var(--line)' }}>
+      <div className="dv-les">
+        <span className="dv-num">{lecon.position}</span>
+        <span style={{ fontWeight: 600 }}>{lecon.title}</span>
+        <span className="dv-tag">{libelleType(lecon.kind)}</span>
+        {lecon.durationMin ? <span className="small muted">{lecon.durationMin} min</span> : null}
+        {lecon.resourceUrl ? (
+          <span className="small" style={{ color: 'var(--green)' }}>
+            vidéo en place
+          </span>
+        ) : (
+          <span className="small" style={{ color: 'var(--amber)' }}>
+            aucune vidéo
+          </span>
+        )}
+        {lecon.assets.length > 0 ? (
+          <span className="small muted">
+            {illustrations.length} illustration{illustrations.length > 1 ? 's' : ''} · {ressources.length} ressource
+            {ressources.length > 1 ? 's' : ''}
+          </span>
+        ) : null}
+        {lecon.terminees > 0 ? (
+          <span className="small muted">
+            {lecon.terminees} étudiant{lecon.terminees > 1 ? 's' : ''} l&apos;ont terminée
+          </span>
+        ) : null}
+        <span className="dv-actions">
+          <button className="dv-mini" disabled={disabled} onClick={() => agir({ action: 'move-lesson', id: lecon.id, sens: 'haut' })} title="Monter">
+            ↑
+          </button>
+          <button className="dv-mini" disabled={disabled} onClick={() => agir({ action: 'move-lesson', id: lecon.id, sens: 'bas' })} title="Descendre">
+            ↓
+          </button>
+          <button className="dv-mini" onClick={() => setEdition(true)}>
+            Modifier
+          </button>
+          <button className="dv-mini" onClick={() => setEnrichir((ouvert) => !ouvert)}>
+            {enrichir ? 'Fermer' : 'Enrichir'}
+          </button>
+          <button
+            className="dv-mini danger"
+            disabled={disabled}
+            onClick={() => {
+              if (confirm(`Supprimer le cours « ${lecon.title} » ?`)) agir({ action: 'delete-lesson', id: lecon.id });
+            }}
+          >
+            Supprimer
+          </button>
         </span>
-      ) : (
-        <span className="small" style={{ color: 'var(--amber)' }}>
-          aucune ressource
-        </span>
+      </div>
+
+      {enrichir && (
+        <div className="card card-pad" style={{ margin: '0 12px 12px' }}>
+          <h4 className="mb8">Vidéos d’illustration ({illustrations.length})</h4>
+          <div className="small muted">
+            Elles se jouent dans le lecteur du cours, à la place de la vidéo principale, et ne comptent jamais dans la
+            progression.
+          </div>
+          {illustrations.map((v) => (
+            <div className="row between mt8" key={v.id} style={{ borderBottom: '1px solid var(--line)', paddingBottom: 6 }}>
+              <span className="small">
+                <b>{v.title}</b> <span className="xs faint">{v.duration} · {v.ratio}</span>
+              </span>
+              <button
+                className="dv-mini danger"
+                disabled={disabled}
+                onClick={() => {
+                  if (confirm(`Retirer l’illustration « ${v.title} » ?`)) agir({ action: 'delete-asset', id: v.id });
+                }}
+              >
+                ✕
+              </button>
+            </div>
+          ))}
+          <div className="grid" style={{ gridTemplateColumns: '2fr 1fr 1fr 2fr', gap: 8, marginTop: 10 }}>
+            <div className="field" style={{ marginBottom: 0 }}>
+              <label>Titre</label>
+              <input className="inp" value={illustration.titre} onChange={(e) => setIllustration({ ...illustration, titre: e.target.value })} placeholder="Complément : la posture" />
+            </div>
+            <div className="field" style={{ marginBottom: 0 }}>
+              <label>Durée</label>
+              <input className="inp" value={illustration.duree} onChange={(e) => setIllustration({ ...illustration, duree: e.target.value })} />
+            </div>
+            <div className="field" style={{ marginBottom: 0 }}>
+              <label>Format</label>
+              <select className="inp" value={illustration.ratio} onChange={(e) => setIllustration({ ...illustration, ratio: e.target.value })}>
+                {FORMATS.map((f) => (
+                  <option key={f} value={f}>{f}</option>
+                ))}
+              </select>
+            </div>
+            <div className="field" style={{ marginBottom: 0 }}>
+              <label>URL de la vidéo</label>
+              <input className="inp" value={illustration.url} onChange={(e) => setIllustration({ ...illustration, url: e.target.value })} placeholder="https://…" />
+            </div>
+          </div>
+          <button
+            className="btn btn-sm mt8"
+            disabled={disabled || illustration.titre.trim().length < 2}
+            onClick={async () => {
+              await agir({ action: 'add-asset', id: lecon.id, genre: 'illustration', type: 'video', titre: illustration.titre, duree: illustration.duree, ratio: illustration.ratio, url: illustration.url });
+              setIllustration({ titre: '', duree: '5:00', ratio: '16:9', url: '' });
+            }}
+          >
+            + Ajouter l’illustration
+          </button>
+
+          <h4 className="mb8 mt16">Ressources ({ressources.length})</h4>
+          <div className="small muted">Documents, audio, images : l’élève les télécharge ou les écoute.</div>
+          {ressources.map((r) => (
+            <div className="row between mt8" key={r.id} style={{ borderBottom: '1px solid var(--line)', paddingBottom: 6 }}>
+              <span className="small">
+                <b>{r.title}</b>{' '}
+                <span className="xs faint">
+                  {TYPES_RESSOURCE.find((t) => t.valeur === r.type)?.libelle ?? r.type}
+                  {r.size ? ` · ${r.size}` : ''}
+                </span>
+              </span>
+              <button
+                className="dv-mini danger"
+                disabled={disabled}
+                onClick={() => {
+                  if (confirm(`Retirer la ressource « ${r.title} » ?`)) agir({ action: 'delete-asset', id: r.id });
+                }}
+              >
+                ✕
+              </button>
+            </div>
+          ))}
+          <div className="grid" style={{ gridTemplateColumns: '2fr 1fr 1fr 2fr', gap: 8, marginTop: 10 }}>
+            <div className="field" style={{ marginBottom: 0 }}>
+              <label>Nom</label>
+              <input className="inp" value={ressource.titre} onChange={(e) => setRessource({ ...ressource, titre: e.target.value })} placeholder="Fiche respiration (PDF)" />
+            </div>
+            <div className="field" style={{ marginBottom: 0 }}>
+              <label>Type</label>
+              <select className="inp" value={ressource.type} onChange={(e) => setRessource({ ...ressource, type: e.target.value })}>
+                {TYPES_RESSOURCE.map((t) => (
+                  <option key={t.valeur} value={t.valeur}>{t.libelle}</option>
+                ))}
+              </select>
+            </div>
+            <div className="field" style={{ marginBottom: 0 }}>
+              <label>Taille</label>
+              <input className="inp" value={ressource.taille} onChange={(e) => setRessource({ ...ressource, taille: e.target.value })} placeholder="1,1 Mo" />
+            </div>
+            <div className="field" style={{ marginBottom: 0 }}>
+              <label>URL (https)</label>
+              <input className="inp" value={ressource.url} onChange={(e) => setRessource({ ...ressource, url: e.target.value })} placeholder="https://…" />
+            </div>
+          </div>
+          <button
+            className="btn btn-sm mt8"
+            disabled={disabled || ressource.titre.trim().length < 2}
+            onClick={async () => {
+              await agir({ action: 'add-asset', id: lecon.id, genre: 'ressource', type: ressource.type, titre: ressource.titre, taille: ressource.taille, url: ressource.url });
+              setRessource({ titre: '', type: 'pdf', taille: '', url: '' });
+            }}
+          >
+            + Ajouter la ressource
+          </button>
+        </div>
       )}
-      {lecon.terminees > 0 ? (
-        <span className="small muted">
-          {lecon.terminees} étudiant{lecon.terminees > 1 ? 's' : ''} l&apos;ont terminée
-        </span>
-      ) : null}
-      <span className="dv-actions">
-        <button className="dv-mini" disabled={disabled} onClick={() => agir({ action: 'move-lesson', id: lecon.id, sens: 'haut' })} title="Monter">
-          ↑
-        </button>
-        <button className="dv-mini" disabled={disabled} onClick={() => agir({ action: 'move-lesson', id: lecon.id, sens: 'bas' })} title="Descendre">
-          ↓
-        </button>
-        <button className="dv-mini" onClick={() => setEdition(true)}>
-          Modifier
-        </button>
-        <button
-          className="dv-mini danger"
-          disabled={disabled}
-          onClick={() => {
-            if (confirm(`Supprimer la leçon « ${lecon.title} » ?`)) agir({ action: 'delete-lesson', id: lecon.id });
-          }}
-        >
-          Supprimer
-        </button>
-      </span>
     </div>
   );
 }
@@ -150,7 +322,7 @@ function BlocModule({ module, disabled, agir }: { module: ModuleVue; disabled: b
   const [titre, setTitre] = useState(module.title);
   const [resume, setResume] = useState(module.summary);
   const [ajout, setAjout] = useState(false);
-  const [lecon, setLecon] = useState({ titre: '', type: 'video', duree: '', ressource: '', contenu: '' });
+  const [lecon, setLecon] = useState({ titre: '', type: 'video', duree: '', ressource: '', contenu: '', ratio: '16:9' });
 
   return (
     <div className="dv-mod">
@@ -227,8 +399,8 @@ function BlocModule({ module, disabled, agir }: { module: ModuleVue; disabled: b
                 className="btn btn-primary"
                 disabled={disabled || lecon.titre.trim().length < 2}
                 onClick={async () => {
-                  await agir({ action: 'add-lesson', id: module.id, titre: lecon.titre, type: lecon.type, duree: lecon.duree, ressource: lecon.ressource, contenu: lecon.contenu });
-                  setLecon({ titre: '', type: 'video', duree: '', ressource: '', contenu: '' });
+                  await agir({ action: 'add-lesson', id: module.id, titre: lecon.titre, type: lecon.type, duree: lecon.duree, ressource: lecon.ressource, contenu: lecon.contenu, ratio: lecon.ratio });
+                  setLecon({ titre: '', type: 'video', duree: '', ressource: '', contenu: '', ratio: '16:9' });
                   setAjout(false);
                 }}
               >

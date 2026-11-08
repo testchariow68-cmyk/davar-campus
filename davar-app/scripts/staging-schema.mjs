@@ -201,8 +201,15 @@ const MIGRATIONS = [
     ddl: 4, // une table de chapitres, une colonne de rattachement, puis la reprise des modules existants
     creates: ['course_chapters'],
   },
+  {
+    version: 26,
+    file: '026_ressources_cours.sqlite.sql',
+    sha256: 'c3317325a7249a0ab0c1fb8a3eccaf02cfe82bc125e4396e341fbb0431d66d06',
+    ddl: 2, // une table de ressources de cours, et le format d'image de la vidéo principale
+    creates: ['lesson_assets'],
+  },
 ];
-const EXPECTED_TABLE_COUNT = 54; // 48 après 013 — 014, 015 et 019 ajoutent des colonnes, 016 le journal, 020 les clés d'appareil, 021 les appareils abonnés, 022 les attentes
+const EXPECTED_TABLE_COUNT = 55; // 48 après 013 — 014, 015 et 019 ajoutent des colonnes, 016 le journal, 020 les clés d'appareil, 021 les appareils abonnés, 022 les attentes
 const FORBIDDEN = /\b(drop|truncate|delete\s+from)\b/i;
 
 const mode = process.argv[2];

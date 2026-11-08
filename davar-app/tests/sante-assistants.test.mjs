@@ -38,7 +38,7 @@ test('la santé technique ne dit « relié » que pour ce qui l’est', async ()
 
   const base = etat.services.find((service) => service.cle === 'base');
   assert.equal(base.etat, 'relie', 'la base répond, elle est reliée');
-  assert.match(base.detail, /54 tables/, 'les migrations ont laissé leurs 54 tables (025 ajoute les chapitres)');
+  assert.match(base.detail, /55 tables/, 'les migrations ont laissé leurs 55 tables (026 ajoute les ressources de cours)');
 
   const stockage = etat.services.find((service) => service.cle === 'stockage');
   assert.equal(stockage.etat, 'en_attente', 'sans clés R2, le stockage est annoncé en attente');

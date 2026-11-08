@@ -569,8 +569,29 @@ export type Lecon = {
   kind: string;
   resourceUrl: string;
   durationMin: number | null;
+  /** Format d'image de la vidéo principale : 16:9, 9:16, 4:3 ou 1:1. */
+  ratio: string;
   content: string;
   terminees: number;
+  /** Vidéos d'illustration et ressources (documents, audio, images) du cours. */
+  assets: RessourceLecon[];
+};
+
+/**
+ * CE QUE PORTE UN COURS : une vidéo principale, des vidéos d'illustration, et
+ * des ressources à télécharger. Le genre sépare les deux listes, et chacune
+ * garde sa propre numérotation.
+ */
+export type RessourceLecon = {
+  id: string;
+  kind: 'illustration' | 'ressource';
+  position: number;
+  title: string;
+  type: string;
+  url: string | null;
+  duration: string | null;
+  ratio: string | null;
+  size: string | null;
 };
 export type Module = {
   id: string;
@@ -604,12 +625,39 @@ export async function lireStructure(db: Db, formationId: string): Promise<Chapit
     args: [formationId],
   });
   const lecons = await db.execute({
-    sql: `SELECT l.id, l.module_id, l.position, l.title, l.kind, l.resource_url, l.duration_min, l.content_text,
+    sql: `SELECT l.id, l.module_id, l.position, l.title, l.kind, l.resource_url, l.duration_min, l.ratio, l.content_text,
                  (SELECT COUNT(*) FROM lesson_completions c WHERE c.lesson_id=l.id) AS terminees
           FROM course_lessons l JOIN course_modules m ON m.id=l.module_id
           WHERE m.training_id=? ORDER BY l.position`,
     args: [formationId],
   });
+  const ressources = await db.execute({
+    sql: `SELECT a.id, a.lesson_id, a.kind, a.position, a.title, a.type, a.url, a.duration, a.ratio, a.size
+          FROM lesson_assets a
+          WHERE a.lesson_id IN (SELECT l.id FROM course_lessons l
+                                JOIN course_modules m ON m.id = l.module_id
+                                WHERE m.training_id = ?)
+          ORDER BY a.lesson_id, a.kind, a.position`,
+    args: [formationId],
+  });
+  const assetsParLecon = new Map<string, RessourceLecon[]>();
+  for (const ligne of ressources.rows) {
+    const id = texte(ligne.lesson_id);
+    if (!id) continue;
+    const liste = assetsParLecon.get(id) ?? [];
+    liste.push({
+      id: texte(ligne.id) ?? '',
+      kind: texte(ligne.kind) === 'illustration' ? 'illustration' : 'ressource',
+      position: nombre(ligne.position),
+      title: texte(ligne.title) ?? 'Ressource',
+      type: texte(ligne.type) ?? 'autre',
+      url: texte(ligne.url),
+      duration: texte(ligne.duration),
+      ratio: texte(ligne.ratio),
+      size: texte(ligne.size),
+    });
+    assetsParLecon.set(id, liste);
+  }
 
   const construits: Module[] = modules.rows.map((module) => ({
     id: texte(module.id),
@@ -627,7 +675,9 @@ export async function lireStructure(db: Db, formationId: string): Promise<Chapit
         content: texte(lecon.content_text) ?? '',
         resourceUrl: texte(lecon.resource_url),
         durationMin: lecon.duration_min == null ? null : nombre(lecon.duration_min),
+        ratio: texte(lecon.ratio) ?? '16:9',
         terminees: nombre(lecon.terminees),
+        assets: assetsParLecon.get(texte(lecon.id)) ?? [],
       })),
   }));
 
@@ -662,8 +712,8 @@ export async function lireStructure(db: Db, formationId: string): Promise<Chapit
 /** Réordonnancement sûr malgré la contrainte d'unicité : décalage puis placement final. */
 async function reordonner(
   db: Db,
-  table: 'course_chapters' | 'course_modules' | 'course_lessons',
-  colonne: 'training_id' | 'module_id' | 'chapter_id',
+  table: 'course_chapters' | 'course_modules' | 'course_lessons' | 'lesson_assets',
+  colonne: 'training_id' | 'module_id' | 'chapter_id' | 'lesson_id',
   parentId: string,
   ordre: string[],
   decalage: number
@@ -679,7 +729,7 @@ async function reordonner(
 
 async function ordreActuel(
   db: Db,
-  table: 'course_chapters' | 'course_modules' | 'course_lessons',
+  table: 'course_chapters' | 'course_modules' | 'course_lessons' | 'lesson_assets',
   colonne: string,
   parentId: string
 ): Promise<string[]> {
@@ -872,6 +922,125 @@ export async function deplacerModule(db: Db, moduleId: string, sens: 'haut' | 'b
 
 const TYPES_LECON = ['video', 'text', 'exercise', 'live'];
 
+/** Formats d'image acceptés pour une vidéo — ceux que sait afficher le lecteur. */
+const FORMATS_IMAGE = ['16:9', '9:16', '4:3', '1:1'];
+const GENRES_RESSOURCE = ['illustration', 'ressource'];
+const TYPES_RESSOURCE = ['video', 'pdf', 'doc', 'audio', 'image', 'autre'];
+
+function formatImage(valeur: string): string {
+  const propre = (valeur ?? '').trim();
+  return FORMATS_IMAGE.includes(propre) ? propre : '16:9';
+}
+
+function texteBorne(valeur: string, max: number): string | null {
+  const propre = (valeur ?? '').trim();
+  return propre.length ? propre.slice(0, max) : null;
+}
+
+/**
+ * Ajouter une vidéo d'illustration ou une ressource à un cours — « enrichir »,
+ * comme au prototype. L'ajout est silencieux : aucune notification, aucune
+ * progression réinitialisée.
+ */
+export async function ajouterRessource(
+  db: Db,
+  leconId: string,
+  champs: { kind?: string; title?: string; type?: string; url?: string; duration?: string; ratio?: string; size?: string }
+): Promise<Resultat> {
+  const titre = (champs.title ?? '').trim();
+  if (titre.length < 2 || titre.length > 160) return echec('titre_invalide');
+  const genre = GENRES_RESSOURCE.includes(champs.kind ?? '') ? (champs.kind as string) : 'ressource';
+  const type = TYPES_RESSOURCE.includes(champs.type ?? '')
+    ? (champs.type as string)
+    : genre === 'illustration'
+      ? 'video'
+      : 'autre';
+  const url = (champs.url ?? '').trim().slice(0, 500);
+  if (url && !/^https:\/\//i.test(url)) return echec('ressource_non_https');
+  const existe = await db.execute({ sql: 'SELECT 1 FROM course_lessons WHERE id=?', args: [leconId] });
+  if (!existe.rows.length) return echec('lecon_introuvable');
+  const suivant = await db.execute({
+    sql: 'SELECT COALESCE(MAX(position),0)+1 AS p FROM lesson_assets WHERE lesson_id=? AND kind=?',
+    args: [leconId, genre],
+  });
+  await db.execute({
+    sql: 'INSERT INTO lesson_assets(id,lesson_id,kind,position,title,type,url,duration,ratio,size) VALUES (?,?,?,?,?,?,?,?,?,?)',
+    args: [
+      newId('res'),
+      leconId,
+      genre,
+      nombre(suivant.rows[0]?.p),
+      titre,
+      type,
+      url || null,
+      texteBorne(champs.duration ?? '', 20),
+      genre === 'illustration' ? formatImage(champs.ratio ?? '') : null,
+      texteBorne(champs.size ?? '', 30),
+    ],
+  });
+  return {
+    ok: true,
+    message:
+      genre === 'illustration'
+        ? `Vidéo d’illustration ajoutée : \u00ab ${titre} \u00bb.`
+        : `Ressource ajoutée : \u00ab ${titre} \u00bb.`,
+  };
+}
+
+export async function modifierRessource(
+  db: Db,
+  assetId: string,
+  champs: { title?: string; type?: string; url?: string; duration?: string; ratio?: string; size?: string }
+): Promise<Resultat> {
+  const titre = (champs.title ?? '').trim();
+  if (titre.length < 2 || titre.length > 160) return echec('titre_invalide');
+  const url = (champs.url ?? '').trim().slice(0, 500);
+  if (url && !/^https:\/\//i.test(url)) return echec('ressource_non_https');
+  const actuel = await db.execute({ sql: 'SELECT kind FROM lesson_assets WHERE id=?', args: [assetId] });
+  if (!actuel.rows.length) return echec('ressource_introuvable');
+  const genre = texte(actuel.rows[0].kind);
+  const type = TYPES_RESSOURCE.includes(champs.type ?? '') ? (champs.type as string) : 'autre';
+  await db.execute({
+    sql: 'UPDATE lesson_assets SET title=?, type=?, url=?, duration=?, ratio=?, size=? WHERE id=?',
+    args: [
+      titre,
+      type,
+      url || null,
+      texteBorne(champs.duration ?? '', 20),
+      genre === 'illustration' ? formatImage(champs.ratio ?? '') : null,
+      texteBorne(champs.size ?? '', 30),
+      assetId,
+    ],
+  });
+  return { ok: true, message: 'Ressource enregistrée.' };
+}
+
+export async function supprimerRessource(db: Db, assetId: string): Promise<Resultat> {
+  const actuel = await db.execute({
+    sql: 'SELECT lesson_id, kind FROM lesson_assets WHERE id=?',
+    args: [assetId],
+  });
+  if (!actuel.rows.length) return echec('ressource_introuvable');
+  const lecon = texte(actuel.rows[0].lesson_id);
+  const genre = texte(actuel.rows[0].kind);
+  await db.execute({ sql: 'DELETE FROM lesson_assets WHERE id=?', args: [assetId] });
+  const restantes = await db.execute({
+    sql: 'SELECT id FROM lesson_assets WHERE lesson_id=? AND kind=? ORDER BY position',
+    args: [lecon, genre],
+  });
+  if (restantes.rows.length)
+    await reordonner(
+      db,
+      'lesson_assets',
+      'lesson_id',
+      lecon,
+      restantes.rows.map((ligne) => texte(ligne.id)),
+      1000
+    );
+  return { ok: true, message: 'Ressource supprimée.' };
+}
+
+
 /**
  * Le texte d'une leçon : c'est ce que l'assistant lit pour répondre sans réciter.
  * Borné volontairement — un extrait utile, pas un livre entier dans chaque réponse.
@@ -891,7 +1060,8 @@ export async function ajouterLecon(
   type: string,
   duree: number | null,
   ressource: string,
-  contenu = ''
+  contenu = '',
+  ratio = ''
 ): Promise<Resultat> {
   const propre = titre.trim();
   if (propre.length < 2 || propre.length > 160) return echec('titre_invalide');
@@ -907,8 +1077,8 @@ export async function ajouterLecon(
     args: [moduleId],
   });
   await db.execute({
-    sql: 'INSERT INTO course_lessons(id,module_id,position,title,kind,resource_url,duration_min,content_text) VALUES (?,?,?,?,?,?,?,?)',
-    args: [newId('les'), moduleId, nombre(suivant.rows[0]?.p), propre, genre, url || null, minutes, texteContenu(contenu)],
+    sql: 'INSERT INTO course_lessons(id,module_id,position,title,kind,resource_url,duration_min,content_text,ratio) VALUES (?,?,?,?,?,?,?,?,?)',
+    args: [newId('les'), moduleId, nombre(suivant.rows[0]?.p), propre, genre, url || null, minutes, texteContenu(contenu), formatImage(ratio)],
   });
   return {
     ok: true,
@@ -923,7 +1093,8 @@ export async function modifierLecon(
   type: string,
   duree: number | null,
   ressource: string,
-  contenu = ''
+  contenu = '',
+  ratio = ''
 ): Promise<Resultat> {
   const propre = titre.trim();
   if (propre.length < 2 || propre.length > 160) return echec('titre_invalide');
@@ -933,8 +1104,8 @@ export async function modifierLecon(
   const url = ressource.trim().slice(0, 500);
   if (url && !/^https:\/\//i.test(url)) return echec('ressource_non_https');
   const resultat = await db.execute({
-    sql: 'UPDATE course_lessons SET title=?, kind=?, resource_url=?, duration_min=?, content_text=? WHERE id=?',
-    args: [propre, genre, url || null, minutes, texteContenu(contenu), leconId],
+    sql: 'UPDATE course_lessons SET title=?, kind=?, resource_url=?, duration_min=?, content_text=?, ratio=? WHERE id=?',
+    args: [propre, genre, url || null, minutes, texteContenu(contenu), formatImage(ratio), leconId],
   });
   if (!resultat.rowsAffected) return echec('lecon_introuvable');
   return { ok: true, message: 'Leçon enregistrée.' };

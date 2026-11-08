@@ -6,15 +6,18 @@ import {
   ajouterChapitre,
   ajouterLecon,
   ajouterModule,
+  ajouterRessource,
   deplacerChapitre,
   deplacerLecon,
   deplacerModule,
   modifierChapitre,
   modifierLecon,
   modifierModule,
+  modifierRessource,
   supprimerChapitre,
   supprimerLecon,
   supprimerModule,
+  supprimerRessource,
   type Resultat,
 } from '@/lib/server/direction';
 
@@ -67,10 +70,34 @@ export async function POST(request: Request) {
         resultat = await deplacerModule(db, id, body?.sens === 'bas' ? 'bas' : 'haut');
         break;
       case 'add-lesson':
-        resultat = await ajouterLecon(db, id, String(body?.titre ?? ''), String(body?.type ?? 'video'), duree, String(body?.ressource ?? ''), String(body?.contenu ?? ''));
+        resultat = await ajouterLecon(db, id, String(body?.titre ?? ''), String(body?.type ?? 'video'), duree, String(body?.ressource ?? ''), String(body?.contenu ?? ''), String(body?.ratio ?? ''));
         break;
       case 'update-lesson':
-        resultat = await modifierLecon(db, id, String(body?.titre ?? ''), String(body?.type ?? 'video'), duree, String(body?.ressource ?? ''), String(body?.contenu ?? ''));
+        resultat = await modifierLecon(db, id, String(body?.titre ?? ''), String(body?.type ?? 'video'), duree, String(body?.ressource ?? ''), String(body?.contenu ?? ''), String(body?.ratio ?? ''));
+        break;
+      case 'add-asset':
+        resultat = await ajouterRessource(db, id, {
+          kind: String(body?.genre ?? 'ressource'),
+          title: String(body?.titre ?? ''),
+          type: String(body?.type ?? 'autre'),
+          url: String(body?.url ?? ''),
+          duration: String(body?.duree ?? ''),
+          ratio: String(body?.ratio ?? '16:9'),
+          size: String(body?.taille ?? ''),
+        });
+        break;
+      case 'update-asset':
+        resultat = await modifierRessource(db, id, {
+          title: String(body?.titre ?? ''),
+          type: String(body?.type ?? 'autre'),
+          url: String(body?.url ?? ''),
+          duration: String(body?.duree ?? ''),
+          ratio: String(body?.ratio ?? '16:9'),
+          size: String(body?.taille ?? ''),
+        });
+        break;
+      case 'delete-asset':
+        resultat = await supprimerRessource(db, id);
         break;
       case 'delete-lesson':
         resultat = await supprimerLecon(db, id);

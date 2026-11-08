@@ -435,3 +435,101 @@ test('une formation se construit en chapitres, et chaque module reste dans le si
   );
   await db.close();
 });
+
+/**
+ * CE QUE PORTE UN COURS — une vidéo principale, des vidéos d'illustration, et
+ * des ressources (documents, audio, images). C'est la lecture du prototype.
+ */
+test('un cours porte une vidéo, des illustrations et des ressources', async () => {
+  const db = await baseVide();
+  const { ajouterChapitre, ajouterLecon, ajouterModule, ajouterRessource } = await import(
+    '../lib/server/direction.ts'
+  );
+  await creerFormation(db, { titre: 'Ressources', prixCfa: 0 });
+  const [formation] = await listerFormations(db);
+  await ajouterChapitre(db, formation.id, 'Chapitre 1');
+  let structure = await lireStructure(db, formation.id);
+  await ajouterModule(db, formation.id, 'Module', '', structure[0].id);
+  structure = await lireStructure(db, formation.id);
+  const cours0 = modulesDe(structure)[0];
+
+  const cree = await ajouterLecon(
+    db,
+    cours0.id,
+    'Le cours',
+    'video',
+    12,
+    'https://exemple.test/v.mp4',
+    '',
+    '9:16'
+  );
+  assert.equal(cree.ok, true);
+
+  structure = await lireStructure(db, formation.id);
+  const cours = modulesDe(structure)[0].lecons[0];
+  assert.equal(cours.ratio, '9:16', 'le format d’image de la vidéo est enregistré');
+
+  assert.equal(
+    (
+      await ajouterRessource(db, cours.id, {
+        kind: 'illustration',
+        title: 'La posture',
+        type: 'video',
+        url: 'https://exemple.test/p.mp4',
+        duration: '6:00',
+        ratio: '16:9',
+      })
+    ).ok,
+    true
+  );
+  assert.equal(
+    (
+      await ajouterRessource(db, cours.id, {
+        kind: 'ressource',
+        title: 'Fiche (PDF)',
+        type: 'pdf',
+        size: '1,1 Mo',
+        url: 'https://exemple.test/f.pdf',
+      })
+    ).ok,
+    true
+  );
+  assert.equal(
+    (
+      await ajouterRessource(db, cours.id, {
+        kind: 'ressource',
+        title: 'Échauffement',
+        type: 'audio',
+        url: 'https://exemple.test/a.mp3',
+      })
+    ).ok,
+    true
+  );
+
+  // Rien de ce que l'élève ouvre ne voyage en clair.
+  const insecure = await ajouterRessource(db, cours.id, {
+    kind: 'ressource',
+    title: 'Insecure',
+    url: 'http://exemple.test/x.pdf',
+  });
+  assert.equal(insecure.ok, false);
+  assert.equal(insecure.erreur, 'ressource_non_https');
+
+  structure = await lireStructure(db, formation.id);
+  const relu = modulesDe(structure)[0].lecons[0];
+  assert.deepEqual(
+    relu.assets.filter((a) => a.kind === 'illustration').map((a) => a.title),
+    ['La posture'],
+    'l’illustration est rattachée au cours'
+  );
+  assert.deepEqual(
+    relu.assets.filter((a) => a.kind === 'ressource').map((a) => a.title),
+    ['Fiche (PDF)', 'Échauffement']
+  );
+  assert.deepEqual(
+    relu.assets.filter((a) => a.kind === 'ressource').map((a) => a.position),
+    [1, 2],
+    'chaque genre garde sa propre numérotation'
+  );
+  await db.close();
+});

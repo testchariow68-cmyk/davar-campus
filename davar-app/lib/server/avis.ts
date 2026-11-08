@@ -174,9 +174,10 @@ export async function demandeEnCours(
         formationTitre,
         duAtMs: acquis,
         titre: 'Vos attentes',
-        // Les mots du propriétaire, repris tels quels.
+        // Les mots du propriétaire. « attentes » est féminin : « quelles », et non
+        // le « quels » qu'avait laissé la dictée vocale.
         consigne:
-          'Bienvenue. Une seule question avant de commencer : quels sont vos attentes concernant cette formation ?',
+          'Bienvenue. Une seule question avant de commencer : quelles sont vos attentes concernant cette formation ?',
       });
     }
     if (entier(row.avis1) === 0 && maintenant - acquis >= DELAI_PREMIER_AVIS_MS) {

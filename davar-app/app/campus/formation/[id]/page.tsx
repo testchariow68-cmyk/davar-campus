@@ -4,7 +4,7 @@ import { AssistantPanel } from '@/components/campus/AssistantPanel';
 import { ExerciceBloc } from '@/components/campus/ExerciceBloc';
 import { Icon } from '@/components/campus/Icon';
 import { SupportFab } from '@/components/campus/SupportFab';
-import { LessonList } from '@/components/LessonList';
+import { CoursDetail } from '@/components/campus/CoursDetail';
 import { currentSession } from '@/lib/server/auth';
 import { getTrainingApercu, getTrainingForUser, progressionFormation } from '@/lib/server/campus';
 import { lireConfig, nomAssistant } from '@/lib/server/assistant';
@@ -31,12 +31,12 @@ export default async function FormationPage({
   searchParams,
 }: {
   params: Promise<{ id: string }>;
-  searchParams: Promise<{ chapitre?: string; module?: string }>;
+  searchParams: Promise<{ chapitre?: string; module?: string; cours?: string }>;
 }) {
   const session = await currentSession();
   if (!session) redirect('/connexion');
   const { id } = await params;
-  const { chapitre: chapitreDemande, module: moduleDemande } = await searchParams;
+  const { chapitre: chapitreDemande, module: moduleDemande, cours: coursDemande } = await searchParams;
 
   let training: Awaited<ReturnType<typeof getTrainingForUser>> = null;
   try {
@@ -71,6 +71,53 @@ export default async function FormationPage({
 
   const base = `/campus/formation/${training.id}`;
 
+  /* ---- Niveau 4 : un cours, son lecteur et ses ressources ---- */
+  const coursOuvert = moduleOuvert?.lessons.find((lecon) => lecon.id === coursDemande) ?? null;
+  if (chapitreOuvert && moduleOuvert && coursOuvert) {
+    const rangChapitre = chapitreOuvert.position;
+    const lecons = moduleOuvert.lessons;
+    const index = lecons.findIndex((lecon) => lecon.id === coursOuvert.id);
+    // Le cours suivant : d'abord dans le module, puis le premier cours du module
+    // suivant si celui-ci est achevé et que le suivant est ouvert.
+    let suivant: { titre: string; href: string } | null = null;
+    const leconSuivante = lecons[index + 1];
+    if (leconSuivante) {
+      suivant = {
+        titre: leconSuivante.title,
+        href: `${base}?chapitre=${encodeURIComponent(chapitreOuvert.id)}&module=${encodeURIComponent(moduleOuvert.id)}&cours=${encodeURIComponent(leconSuivante.id)}`,
+      };
+    } else if (moduleOuvert.termine) {
+      const rangModule = chapitreOuvert.modules.findIndex((m) => m.id === moduleOuvert.id);
+      const moduleSuivant = chapitreOuvert.modules[rangModule + 1];
+      if (moduleSuivant?.ouvrable && moduleSuivant.lessons[0]) {
+        suivant = {
+          titre: moduleSuivant.title,
+          href: `${base}?chapitre=${encodeURIComponent(chapitreOuvert.id)}&module=${encodeURIComponent(moduleSuivant.id)}&cours=${encodeURIComponent(moduleSuivant.lessons[0].id)}`,
+        };
+      }
+    }
+    // Le chapitre suivant n'est proposé que lorsqu'il est réellement débloqué.
+    const rangActuel = chapitres.findIndex((c) => c.id === chapitreOuvert.id);
+    const apres = chapitres[rangActuel + 1];
+    const chapitreSuivant =
+      chapitreOuvert.termine && apres?.visible
+        ? { titre: apres.title, href: `${base}?chapitre=${encodeURIComponent(apres.id)}` }
+        : null;
+
+    return (
+      <div>
+        <CoursDetail
+          lesson={coursOuvert}
+          chapitreTitre={chapitreOuvert.title}
+          rangChapitre={rangChapitre}
+          suivant={suivant}
+          chapitreSuivant={chapitreSuivant}
+          retourHref={`${base}?chapitre=${encodeURIComponent(chapitreOuvert.id)}&module=${encodeURIComponent(moduleOuvert.id)}`}
+        />
+      </div>
+    );
+  }
+
   /* ---- Niveau 3 : les cours d'un module ---- */
   if (chapitreOuvert && moduleOuvert) {
     return (
@@ -87,7 +134,38 @@ export default async function FormationPage({
           </div>
         ) : (
           <div className="mt16">
-            <LessonList lessons={moduleOuvert.lessons} />
+            {moduleOuvert.lessons.map((lecon) => (
+              <Link
+                key={lecon.id}
+                href={`${base}?chapitre=${encodeURIComponent(chapitreOuvert.id)}&module=${encodeURIComponent(moduleOuvert.id)}&cours=${encodeURIComponent(lecon.id)}`}
+                className="card card-pad mt16 row between"
+                style={{ textDecoration: 'none', color: 'inherit', alignItems: 'center', gap: 12 }}
+              >
+                <span className="row" style={{ gap: 10, alignItems: 'center' }}>
+                  <span className={`step-ico ${lecon.completed ? 's-done' : 's-cur'}`}>
+                    <Icon nom={lecon.completed ? 'check' : 'play'} taille={13} />
+                  </span>
+                  <span>
+                    <span style={{ fontWeight: 600 }}>{lecon.title}</span>
+                    <span className="small muted" style={{ display: 'block' }}>
+                      Cours {lecon.position}
+                      {lecon.durationMin ? ` · ${lecon.durationMin} min` : ''}
+                      {(() => {
+                        const illustrations = lecon.assets.filter((a) => a.kind === 'illustration').length;
+                        const ressources = lecon.assets.filter((a) => a.kind === 'ressource').length;
+                        const morceaux: string[] = [];
+                        // On n'annonce jamais « 0 illustration » : le silence dit mieux le vide.
+                        if (illustrations) morceaux.push(`${illustrations} illustration${illustrations > 1 ? 's' : ''}`);
+                        if (ressources) morceaux.push(`${ressources} ressource${ressources > 1 ? 's' : ''}`);
+                        return morceaux.length ? ` · ${morceaux.join(' · ')}` : '';
+                      })()}
+                      {lecon.completed ? ' · terminé ✓' : ''}
+                    </span>
+                  </span>
+                </span>
+                <Icon nom="chevR" taille={14} />
+              </Link>
+            ))}
           </div>
         )}
 
