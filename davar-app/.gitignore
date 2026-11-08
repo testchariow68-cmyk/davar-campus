@@ -66,3 +66,6 @@ __pycache__/
 
 # base de développement locale (jamais une base hébergée)
 /dev-data/
+
+# Fichiers de demonstration (jamais pousses)
+public/demo/

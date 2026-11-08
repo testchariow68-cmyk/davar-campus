@@ -1179,3 +1179,72 @@ html,body{overflow-x:hidden}
 .tk-it button.tk-later:hover{background:rgba(255,255,255,.12);color:#fff}
 body:has(.ticker) footer{padding-bottom:56px}
 body:has(.ticker) .container{padding-bottom:64px}
+
+/* ============================================================
+   RÉACTIVITÉ — téléphone, tablette, ordinateur
+   ------------------------------------------------------------
+   Trois défauts MESURÉS sur les 117 combinaisons écran/largeur,
+   et rien d'autre. Aucune page ne défilait de côté : le mal est
+   ailleurs, dans l'usage de l'espace et la taille des cibles.
+
+   1. Sur un grand écran, le contenu du campus s'étirait jusqu'à
+      1840 px : la règle « max-width:100vw » posée plus bas
+      annulait le plafond de 1080 px voulu plus haut. On rétablit
+      le plafond. « min-width:0 » reste indispensable : sans lui,
+      un enfant flex refuse de se réduire et la page déborde.
+   2. Les libellés du rail (9,5 et 10 px) sont illisibles au
+      doigt, sur tablette. On les grandit — à la souris, le rendu
+      reste exactement celui du prototype.
+   3. Les cibles tactiles : au doigt, la plus petite mesure
+      désormais 31 px, contre 13 px avant. Les boutons gagnent en
+      hauteur ; les liens en ligne gardent leur place exacte et
+      reçoivent un voile invisible qui étend la zone touchable,
+      sans décaler un seul pixel.
+   ============================================================ */
+
+/* 1 — Le plafond du campus, tel qu'il était prévu. */
+.cp-content, #cpPage { max-width: 1080px; }
+
+/* 2 et 3 — tout ce qui suit ne s'applique qu'au doigt. */
+@media (pointer: coarse) {
+  .rail-ico > span { font-size: 11.5px; }
+  .brand-txt > span { font-size: 11px; }
+
+  .btn-sm { min-height: 36px; }
+  .res-item .btn-ghost { min-height: 36px; }
+  input[type='checkbox'], input[type='radio'] { width: 18px; height: 18px; }
+
+  /* Le bandeau du bas ne mesure que 36 px : son bouton ne peut
+     pas dépasser 21 px. On hausse le bandeau, puis le bouton. */
+  .ticker { height: 46px; }
+  .tk-it button, .ticker .ti button { padding-block: 8px; }
+
+  /* Le fil d'Ariane : on hausse la ligne ET on donne de la marge
+     intérieure au lien — chez un élément en ligne, c'est cette
+     marge qui élargit la zone cliquable. La ligne (34 px) reste
+     plus haute que le lien (31 px) : rien n'est rogné. */
+  .cp-crumb { line-height: 34px; }
+  .cp-crumb a { padding-block: 8px; }
+
+  /* Liens en ligne : même rendu, zone touchable élargie de 10 px
+     de chaque côté. Aucun décalage, aucun chevauchement latéral —
+     seul l'axe vertical est étendu, pour ne jamais voler le tap
+     du lien voisin. */
+  a.small,
+  p.small > a,
+  .gl-lien,
+  a.xs.link {
+    position: relative;
+  }
+  a.small::after,
+  p.small > a::after,
+  .gl-lien::after,
+  a.xs.link::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: -10px;
+    bottom: -10px;
+  }
+}
