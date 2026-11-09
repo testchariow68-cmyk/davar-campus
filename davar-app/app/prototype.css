@@ -1281,12 +1281,14 @@ body:has(.ticker) .container{padding-bottom:64px}
 .lg-slogan {
   position: relative;
   z-index: 2;
-  margin: 4px 0 0;
+  /* Rapproché du logo : c'est le slogan qui monte vers lui, et non le
+     logo qui descend vers le slogan. */
+  margin: 2px 0 0;
   text-align: center;
   color: #fff;
-  /* La police du logo, pas celle du site : le slogan appartient au bloc
-     de marque, il ne doit pas jurer avec lui. */
-  font-family: Georgia, 'Times New Roman', serif;
+  /* La police de la plateforme, la même que le reste de la page de
+     connexion — et non la police du logo. */
+  font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
   font-style: italic;
   font-weight: 700;
   font-size: 15px;
@@ -1297,11 +1299,10 @@ body:has(.ticker) .container{padding-bottom:64px}
 }
 
 @media (max-width: 767px) {
-  .lg-slogan { font-size: 13px; letter-spacing: 1.6px; margin-top: 5px; }
+  .lg-slogan { font-size: 13px; letter-spacing: 1.6px; margin-top: 2px; }
 }
 
-/* Le slogan reste seul en haut : il n'a plus de logo au-dessus de lui, mais
-   il garde sa place et son allure, et le formulaire ne bouge pas. */
+/* Le logo et son slogan ne forment qu'un bloc, centré en haut de page. */
 .lg-bloc {
   position: relative;
   z-index: 2;
@@ -1310,8 +1311,25 @@ body:has(.ticker) .container{padding-bottom:64px}
   align-items: center;
 }
 
-/* Le pied de page : la marque seule, puis la mention. Aucun fond, aucune
-   bordure, aucun rayon — la forme ronde a disparu du site. */
+/* L'anneau de l'animation d'ouverture, sans les écritures. Assez grand pour
+   qu'on le voie, pas assez pour qu'il mange la page. Aucun fond rapporté,
+   aucune bordure, aucun rayon : le dessin suffit. */
+.lg-anneau {
+  display: block;
+  width: 128px;
+  height: auto;
+  background: transparent;
+  border: none;
+  border-radius: 0;
+  padding: 0;
+  object-fit: contain;
+  opacity: 0;
+  filter: drop-shadow(0 10px 30px rgba(0, 0, 0, .45));
+  animation: lg-in .6s ease-out forwards;
+}
+
+/* Le pied de page ne porte plus que la mention : le logo est remonté en
+   haut, où est sa place. */
 .lg-pied {
   position: relative;
   z-index: 2;
@@ -1324,20 +1342,7 @@ body:has(.ticker) .container{padding-bottom:64px}
   animation: lg-in .6s ease-out .3s forwards;
 }
 
-.lg-marque {
-  display: block;
-  width: 104px;
-  height: auto;
-  background: transparent;
-  border: none;
-  border-radius: 0;
-  padding: 0;
-  object-fit: contain;
-  opacity: .9;
-  filter: drop-shadow(0 6px 20px rgba(0, 0, 0, .45));
-}
-
 @media (max-width: 767px) {
-  .lg-marque { width: 88px; }
+  .lg-anneau { width: 104px; }
   .lg-pied { margin-top: 22px; gap: 10px; }
 }

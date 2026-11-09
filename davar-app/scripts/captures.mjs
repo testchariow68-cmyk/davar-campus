@@ -32,6 +32,7 @@ const PUBLIC = '/home/user/davar-campus/davar-app/public';
 const LOGOS = [
   ['campus-icon.svg', 'L1-favicon.svg'],
   ['campus-splash.svg', 'L2-animation-ouverture.svg'],
+  ['campus-anneau.svg', 'L2b-anneau-pages-auth.svg'],
   ['logo-structure.png', 'L3-structure.png'],
   ['logos-propositions/1-la-tribune.svg', 'L5-modele-la-tribune.svg'],
   ['logos-propositions/2-la-signature.svg', 'L6-modele-la-signature.svg'],

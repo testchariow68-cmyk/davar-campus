@@ -45,9 +45,12 @@ export default async function ReinitialiserPage({
 
   return (
     <div className="login-glass">
-      {/* Le haut ne porte plus que le slogan : la marque est descendue en
-          pied de page, où le propriétaire la veut seule. */}
+      {/* Le logo est remonté en haut, au centre : c'est l'anneau de
+          l'animation d'ouverture, sans les écritures. Le slogan se tient
+          juste en dessous, collé contre lui. */}
       <div className="lg-bloc">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img className="lg-anneau" src="/campus-anneau.svg" alt="DAVAR ACADÉMIE CAMPUS" />
         <p className="lg-slogan">L’ÉCOLE DE L’EXCELLENCE ORATOIRE</p>
       </div>
       <div className="gcard">
@@ -72,8 +75,6 @@ export default async function ReinitialiserPage({
         )}
       </div>
       <div className="lg-pied">
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img className="lg-marque" src="/logo-structure.png" alt="Davar Académie" />
         <div className="gl-foot">© 2026 Davar Académie — Abidjan, Côte d’Ivoire</div>
       </div>
     </div>

@@ -87,6 +87,11 @@ const LEGENDES = {
     appareil: 'logo',
     texte: "Fichier campus-splash.svg. C’est le grand logo qui apparaît quatre secondes au démarrage. Le slogan en a été retiré ; à sa place, le mot CAMPUS, à présent dans la même police et à la même taille que les deux autres.",
   },
+  'L2b-anneau-pages-auth': {
+    titre: 'L’anneau des pages de connexion',
+    appareil: 'logo',
+    texte: "Fichier campus-anneau.svg : le même dessin que l’animation d’ouverture, mais sans les écritures. Il est seul, centré en haut des pages de connexion et d’inscription, avec le slogan juste en dessous. Son fond est le violet sombre du favicon.",
+  },
   'L3-structure': {
     titre: 'Le logo de la structure',
     appareil: 'logo',
