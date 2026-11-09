@@ -62,16 +62,73 @@ const LEGENDES = {
     appareil: 'telephone',
     texte: 'Le rail est masqué, tout tient dans la largeur, et chaque cible mesure au moins 31 px.',
   },
+  'A-animation-ouverture': {
+    titre: 'L’animation d’ouverture',
+    appareil: 'telephone',
+    texte: "Les quatre premières secondes. Le slogan a disparu ; à sa place, le mot CAMPUS, dans la même police et à la même taille que DAVAR et ACADÉMIE.",
+  },
+  'B-connexion-telephone': {
+    titre: 'La page de connexion',
+    appareil: 'telephone',
+    texte: "Le cercle doré qui encadrait le logo a été retiré ; la marque reste, posée à même le fond. Le slogan s’est glissé dessous, en blanc, italique et gras.",
+  },
+  'C-inscription-ordinateur': {
+    titre: 'La page d’inscription',
+    appareil: 'ordinateur',
+    texte: "Le même traitement sur ordinateur : plus de pavé, la marque seule, et le slogan en blanc, italique et gras, collé au logo.",
+  },
+  'L1-favicon': {
+    titre: 'Le favicon — l’icône du navigateur',
+    appareil: 'logo',
+    texte: "Fichier campus-icon.svg. C’est lui qui apparaît dans l’onglet du navigateur et sur l’écran d’accueil d’un téléphone. Il sert AUSSI de logo sur les pages de connexion et d’inscription.",
+  },
+  'L2-animation-ouverture': {
+    titre: 'L’animation d’ouverture',
+    appareil: 'logo',
+    texte: "Fichier campus-splash.svg. C’est le grand logo qui apparaît quatre secondes au démarrage. Le slogan en a été retiré ; à sa place, le mot CAMPUS, à présent dans la même police et à la même taille que les deux autres.",
+  },
+  'L3-structure': {
+    titre: 'Le logo de la structure',
+    appareil: 'logo',
+    texte: "Fichier logo-structure.svg. C’est la marque seule, sans le nom : on la voit dans le rail latéral du campus et dans la barre latérale de l’administration.",
+  },
+  'L4-marque-pages-auth': {
+    titre: 'La marque des pages d’authentification',
+    appareil: 'logo',
+    texte: "Fichier campus-marque.svg, créé pour l’occasion : le pavé violet et l’anneau d’or ont été retirés, il ne reste que le pupitre. C’est lui qu’on voit sur la connexion et l’inscription.",
+  },
+  'L5-modele-la-tribune': {
+    titre: 'Modèle 1 — La Tribune',
+    appareil: 'logo',
+    texte: "La marque posée sur un pavé sombre, comme aujourd’hui, avec un filet d’or sous le nom. Le plus proche de l’existant.",
+  },
+  'L6-modele-la-signature': {
+    titre: 'Modèle 2 — La Signature',
+    appareil: 'logo',
+    texte: "Aucun pavé : la marque respire à même le fond, encadrée d’un feuille d’or. Léger, pour les fonds déjà colorés.",
+  },
+  'L7-modele-l-ecusson': {
+    titre: 'Modèle 3 — L’Écusson',
+    appareil: 'logo',
+    texte: "La marque posée sur un écu d’académie, et CAMPUS en bandeau doré. Solennel, taillé pour un certificat.",
+  },
+  'L8-modele-le-sceau': {
+    titre: 'Modèle 4 — Le Sceau',
+    appareil: 'logo',
+    texte: "Le nom court le long de l’anneau, la marque trône au centre : un véritable sceau. Le plus orné des quatre.",
+  },
 };
 
 const APPAREILS = {
   telephone: { nom: 'Téléphone', largeur: '390 px' },
   tablette: { nom: 'Tablette', largeur: '820 px' },
   ordinateur: { nom: 'Ordinateur', largeur: '1440 px' },
+  logo: { nom: 'Logos', largeur: 'SVG' },
 };
 
 /** Devine l'appareil d'après le nom si la légende ne le dit pas. */
 function appareilDuNom(nom) {
+  if (/^L[0-9]/.test(nom)) return 'logo';
   if (/telephone/i.test(nom)) return 'telephone';
   if (/tablette/i.test(nom)) return 'tablette';
   if (/ordinateur/i.test(nom)) return 'ordinateur';
@@ -87,27 +144,35 @@ function echapper(texte) {
 }
 
 const fichiers = readdirSync(DOSSIER)
-  .filter((f) => /\.png$/i.test(f))
+  .filter((f) => /\.png$/i.test(f) || /\.svg$/i.test(f))
   .filter((f) => !/^galerie/i.test(f))
   .sort((a, b) => a.localeCompare(b, 'fr', { numeric: true }));
 
 if (fichiers.length === 0) {
-  console.error('Aucune capture .png dans ' + DOSSIER);
+  console.error('Aucune capture .png ni .svg dans ' + DOSSIER);
   process.exit(1);
 }
 
 const figures = [];
 for (const nom of fichiers) {
-  const cle = nom.replace(/\.png$/i, '');
+  const cle = nom.replace(/\.(png|svg)$/i, '');
   const chemin = join(DOSSIER, nom);
+  const estSvg = /\.svg$/i.test(nom);
   const octets = readFileSync(chemin);
   const base64 = octets.toString('base64');
+  const mime = estSvg ? 'image/svg+xml' : 'image/png';
   const legende = LEGENDES[cle] ?? {};
   const appareil = legende.appareil ?? appareilDuNom(nom);
   let largeurReelle = null;
   try {
-    // Largeur réelle lue dans l'en-tête PNG, pour l'afficher à sa taille vraie.
-    largeurReelle = octets.readUInt32BE(16);
+    if (estSvg) {
+      const t = octets.toString('utf8');
+      const m = /\swidth="([0-9.]+)/.exec(t);
+      if (m) largeurReelle = Math.round(parseFloat(m[1]));
+    } else {
+      // Largeur réelle lue dans l'en-tête PNG.
+      largeurReelle = octets.readUInt32BE(16);
+    }
   } catch {
     largeurReelle = null;
   }
@@ -117,6 +182,8 @@ for (const nom of fichiers) {
     titre: legende.titre ?? cle.replace(/-/g, ' '),
     texte: legende.texte ?? '',
     base64,
+    mime,
+    estSvg,
     poids: statSync(chemin).size,
     largeurReelle,
   });
@@ -207,6 +274,7 @@ const html = `<!DOCTYPE html>
     <button class="filtre" data-appareil="telephone">Téléphone · 390 px</button>
     <button class="filtre" data-appareil="tablette">Tablette · 820 px</button>
     <button class="filtre" data-appareil="ordinateur">Ordinateur · 1440 px</button>
+    <button class="filtre" data-appareil="logo">Les logos</button>
     <span class="compte" id="compte"></span>
   </div>
 </nav>
@@ -217,7 +285,7 @@ ${figures
     (f) => `  <figure data-appareil="${f.appareil}">
     <div class="cadre">
       <span class="puce ${f.appareil}">${APPAREILS[f.appareil].nom} · ${APPAREILS[f.appareil].largeur}</span>
-      <img src="data:image/png;base64,${f.base64}" alt="${echapper(f.titre)}" loading="lazy">
+      <img src="data:${f.mime};base64,${f.base64}" alt="${echapper(f.titre)}" loading="lazy">
     </div>
     <figcaption>
       <h2>${echapper(f.titre)}</h2>

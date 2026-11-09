@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 660 180" width="660" height="180" role="img" aria-label="Davar Académie Campus — modèle La Signature">
+  <title>Modèle 2 — La Signature</title>
+  <defs>
+    <linearGradient id="s-or" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#F3DFA0"/>
+      <stop offset="55%" stop-color="#D9B662"/>
+      <stop offset="100%" stop-color="#B08D2C"/>
+    </linearGradient>
+    <g id="s-marque">
+      <circle cx="120" cy="120" r="96" fill="none" stroke="url(#s-or)" stroke-width="5.3"/>
+      <g stroke="url(#s-or)" stroke-width="6.7" stroke-linecap="round" stroke-linejoin="round" fill="none">
+        <path d="M48 115.9 L120 92.4 L192 115.9 L120 140.7 Z" fill="#D9B662" fill-opacity=".18"/>
+        <path d="M82.6 139.9 L82.6 161.4 Q120 176.6 157.4 161.4 L157.4 139.9"/>
+        <path d="M190.6 115.9 L190.6 149"/>
+        <circle cx="190.6" cy="155.9" r="6.7" fill="url(#s-or)" stroke="none"/>
+      </g>
+    </g>
+  </defs>
+
+  <!-- Aucun pavé : la marque respire à même le fond. Deux feuilles d'or
+       l'encadrent, comme une signature au bas d'une page. -->
+  <use href="#s-marque" transform="translate(14 14) scale(0.567)"/>
+  <path d="M158 52 L200 90 L158 128" fill="none" stroke="url(#s-or)" stroke-width="2.5" stroke-opacity=".45"
+        stroke-linecap="round" stroke-linejoin="round"/>
+
+  <text x="222" y="76" font-family="Georgia, 'Times New Roman', serif" font-size="48" font-weight="700"
+        letter-spacing="6" fill="url(#s-or)">DAVAR</text>
+  <text x="224" y="110" font-family="Georgia, 'Times New Roman', serif" font-size="25" font-weight="400"
+        letter-spacing="11" fill="#EFE6D6">ACADÉMIE</text>
+  <text x="224" y="146" font-family="Inter, system-ui, -apple-system, 'Segoe UI', sans-serif" font-size="17"
+        font-weight="500" letter-spacing="15" fill="#B79CF0">CAMPUS</text>
+  <line x1="224" y1="122" x2="470" y2="122" stroke="url(#s-or)" stroke-width="1.6" stroke-opacity=".55"/>
+</svg>

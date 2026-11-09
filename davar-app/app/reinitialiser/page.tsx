@@ -46,7 +46,10 @@ export default async function ReinitialiserPage({
   return (
     <div className="login-glass">
       {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img className="lg-logo" src="/campus-icon.svg" alt="DAVAR ACADÉMIE CAMPUS" />
+      <div className="lg-bloc">
+        <img className="lg-logo lg-nu" src="/campus-marque.svg" alt="DAVAR ACADÉMIE CAMPUS" />
+        <p className="lg-slogan">L’ÉCOLE DE L’EXCELLENCE ORATOIRE</p>
+      </div>
       <div className="gcard">
         <h1>DAVAR ACADÉMIE CAMPUS</h1>
         {jeton ? (

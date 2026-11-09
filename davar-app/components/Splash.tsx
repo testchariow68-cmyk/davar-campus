@@ -53,8 +53,8 @@ export function Splash() {
       {/* Logo : naît plus petit, prend sa taille définitive en 0,8 s */}
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
-        src="/campus-slogan.svg"
-        alt="DAVAR ACADÉMIE CAMPUS — L'école de l'excellence oratoire"
+        src="/campus-splash.svg"
+        alt="DAVAR ACADÉMIE CAMPUS"
         style={{
           position: "relative", width: "min(380px, 70vw)", zIndex: 2,
           opacity: 0, transform: "scale(.8)",

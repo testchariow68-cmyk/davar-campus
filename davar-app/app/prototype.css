@@ -1248,3 +1248,60 @@ body:has(.ticker) .container{padding-bottom:64px}
     bottom: -10px;
   }
 }
+
+/* ============================================================
+   PAGES D'AUTHENTIFICATION — le logo sans son cercle
+   ------------------------------------------------------------
+   Le propriétaire veut le logo, pas le cadre : on retire le rond
+   doré que traçait la feuille de style (fond, bordure, rayon) et
+   on ne garde que la marque. Le slogan, lui, quitte l'animation
+   d'ouverture mais reste ici, en blanc, italique et gras, juste
+   sous le logo.
+   ============================================================ */
+
+.lg-logo.lg-nu {
+  display: block;
+  width: min(232px, 62vw);
+  height: auto;
+  background: transparent;
+  border: none;
+  border-radius: 0;
+  padding: 0;
+  box-sizing: border-box;
+  object-fit: contain;
+  filter: drop-shadow(0 10px 30px rgba(0, 0, 0, .45));
+}
+
+.lg-slogan {
+  position: relative;
+  z-index: 2;
+  margin: 4px 0 0;
+  text-align: center;
+  color: #fff;
+  /* La police du logo, pas celle du site : le slogan appartient au bloc
+     de marque, il ne doit pas jurer avec lui. */
+  font-family: Georgia, 'Times New Roman', serif;
+  font-style: italic;
+  font-weight: 700;
+  font-size: 15px;
+  letter-spacing: 2.2px;
+  text-shadow: 0 2px 12px rgba(0, 0, 0, .5);
+  opacity: 0;
+  animation: lg-in .5s ease-out .18s forwards;
+}
+
+@media (max-width: 767px) {
+  .lg-slogan { font-size: 13px; letter-spacing: 1.6px; margin-top: 5px; }
+}
+
+/* Le logo et son slogan ne forment qu'un bloc : sans cela, l'écart de 20 px
+   que le conteneur met entre ses enfants les séparait, et le slogan avait
+   l'air de flotter. Réunis, ils se tiennent et on lit d'un coup d'œil que
+   c'est le slogan de la maison. */
+.lg-bloc {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}

@@ -13,13 +13,30 @@
  *   puis décompresser node_modules/@sparticuz/chromium/bin/ dans /tmp/libs
  *   (chromium.br + al2023.tar.br + fonts.tar.br + swiftshader.tar.br)
  */
-import { readFileSync, existsSync, mkdirSync } from 'node:fs';
+import { readFileSync, existsSync, mkdirSync, copyFileSync } from 'node:fs';
 import { execFileSync } from 'node:child_process';
 import { createRequire } from 'node:module';
 
 const CHROMIUM = '/tmp/libs/chromium';
 const DOSSIER = '/home/user/captures-parcours';
 const OUTILS = '/tmp/shot/';
+const PUBLIC = '/home/user/davar-campus/davar-app/public';
+
+/**
+ * Les logos, dans l'ordre : les trois EN SERVICE (avec leur rôle), puis les
+ * modèles proposés au choix. Le propriétaire ne savait pas où ils étaient
+ * ni à quoi chacun servait : ils rejoignent donc la galerie, étiquetés.
+ */
+const LOGOS = [
+  ['campus-icon.svg', 'L1-favicon.svg'],
+  ['campus-splash.svg', 'L2-animation-ouverture.svg'],
+  ['logo-structure.svg', 'L3-structure.svg'],
+  ['campus-marque.svg', 'L4-marque-pages-auth.svg'],
+  ['logos-propositions/1-la-tribune.svg', 'L5-modele-la-tribune.svg'],
+  ['logos-propositions/2-la-signature.svg', 'L6-modele-la-signature.svg'],
+  ['logos-propositions/3-l-ecusson.svg', 'L7-modele-l-ecusson.svg'],
+  ['logos-propositions/4-le-sceau.svg', 'L8-modele-le-sceau.svg'],
+];
 
 // puppeteer-core vit hors du projet, dans un dossier d'outils jetable :
 // on ne veut surtout pas l'ajouter aux dépendances de la plateforme.
@@ -90,7 +107,36 @@ await photo(MODULE, '6-visionneuse-tablette', 820, 1180, true, ouvrirPdf);
 await photo(MODULE, '7-visionneuse-ordinateur', 1440, 900, false, ouvrirPdf);
 await photo(ACCUEIL, '8-accueil-ordinateur', 1440, 900, false);
 await photo(ACCUEIL, '9-accueil-telephone', 390, 844, true);
+
+// L'animation d'ouverture ne dure que quatre secondes : on la saisit au vol,
+// avant qu'elle ne s'efface.
+async function photoAuVol(url, nom, largeur, hauteur, tactile, delai) {
+  const page = await n.newPage();
+  await page.setViewport({ width: largeur, height: hauteur, hasTouch: tactile, isMobile: tactile });
+  await page.setCookie({ name: 'davar_session', value: jetons['visite@davar.test'], domain: 'localhost', path: '/' });
+  await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 60000 });
+  await new Promise((r) => setTimeout(r, delai));
+  await page.screenshot({ path: `${DOSSIER}/${nom}.png` });
+  console.log('  capture : ' + nom);
+  await page.close();
+}
+
+// Les pages d'authentification : le logo sans son cercle, le slogan en blanc.
+await photoAuVol('http://localhost:3000/connexion', 'A-animation-ouverture', 390, 844, true, 1800);
+await photo('http://localhost:3000/connexion', 'B-connexion-telephone', 390, 844, true);
+await photo('http://localhost:3000/inscription', 'C-inscription-ordinateur', 1440, 900, false);
 await n.close();
+
+console.log('\nLogos :');
+for (const [source, destination] of LOGOS) {
+  const chemin = `${PUBLIC}/${source}`;
+  if (!existsSync(chemin)) {
+    console.log('  manque : ' + source);
+    continue;
+  }
+  copyFileSync(chemin, `${DOSSIER}/${destination}`);
+  console.log('  ' + source + ' -> ' + destination);
+}
 
 console.log('\nGalerie :');
 console.log(
