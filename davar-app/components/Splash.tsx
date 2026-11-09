@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 
 /**
- * 🎬 L'Expérience d'Ouverture — 5 secondes.
+ * 🎬 L'Expérience d'Ouverture — 4 secondes, comme le prototype.
  * Fond noir absolu · logo campus en zoom fondu (0,8 s) · halo violet #5B2A86
  * qui pulse comme une respiration · barre de chargement or (#D4AF37 à 30 %)
  * remplie de violet profond de gauche à droite · fondu vers la connexion.
@@ -18,7 +18,7 @@ export function Splash() {
     const hide = () => {
       if (done) return;
       done = true;
-      const wait = Math.max(0, 5000 - (Date.now() - t0));
+      const wait = Math.max(0, 4000 - (Date.now() - t0));
       setTimeout(() => {
         setOff(true);
         setTimeout(() => setGone(true), 900);
@@ -53,8 +53,8 @@ export function Splash() {
       {/* Logo : naît plus petit, prend sa taille définitive en 0,8 s */}
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
-        src="/campus-slogan.png"
-        alt="DAVAR ACADÉMIE CAMPUS — L'école de l'excellence oratoire"
+        src="/campus-splash.svg"
+        alt="DAVAR ACADÉMIE CAMPUS"
         style={{
           position: "relative", width: "min(380px, 70vw)", zIndex: 2,
           opacity: 0, transform: "scale(.8)",
@@ -74,7 +74,7 @@ export function Splash() {
           style={{
             position: "absolute", inset: 0, background: "#5B2A86",
             transformOrigin: "left", transform: "scaleX(0)",
-            animation: "sp-fill 5s linear .1s forwards", display: "block",
+            animation: "sp-fill 4s linear .1s forwards", display: "block",
           }}
         />
       </div>

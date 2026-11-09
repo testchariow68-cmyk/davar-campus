@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" width="120" height="120" role="img" aria-label="Étoile, marque de la demande d'avis">
+  <title>Étoile — mon avis</title>
+  <defs>
+    <linearGradient id="or" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#E8C96B"/>
+      <stop offset="0.55" stop-color="#D4AF37"/>
+      <stop offset="1" stop-color="#B8923E"/>
+    </linearGradient>
+  </defs>
+  <polygon
+    points="60,6 72.11,43.33 111.36,43.31 79.59,66.37 91.74,103.69 60,80.6 28.26,103.69 40.41,66.37 8.64,43.31 47.89,43.33"
+    fill="url(#or)"
+    stroke="#A87F2E"
+    stroke-width="1.1"
+    stroke-linejoin="round"/>
+</svg>

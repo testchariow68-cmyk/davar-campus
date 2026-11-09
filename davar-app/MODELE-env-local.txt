@@ -1,0 +1,133 @@
+# ═══════════════════════════════════════════════════════════════════════════════
+#  DAVAR CAMPUS — VOS VALEURS À REMPLIR  (modèle fourni avec le projet)
+#
+#  Ce modèle ne contient AUCUNE valeur : les lignes sont vides ou marquées « … ».
+#  Il voyage avec le code parce qu'il est sans secret.
+#
+#  CE FICHIER EST PRIVÉ quand vous l'aurez rempli. Il ne va JAMAIS sur GitHub, et
+#  jamais dans une conversation. Enregistrez-le sous le nom « .env.local », à la
+#  racine du dossier « davar-app » — c'est-à-dire :
+#
+#        davar-app\.env.local
+#
+#  Enregistré sous un autre nom, il ne sera PAS lu par l'application.
+#
+#  Les lignes commençant par # sont des explications : elles restent dans le
+#  fichier, elles ne gênent rien.
+#
+#  Règle d'écriture : NOM=valeur  — pas d'espace autour du =, pas de guillemets.
+#
+#  Plus simple encore : lancez « npm run env:local » — il écrit lui-même ce
+#  fichier avec les trois clés déjà fabriquées, et ne remplace jamais une valeur
+#  déjà présente.
+# ═══════════════════════════════════════════════════════════════════════════════
+
+
+# ── Le campus tourne en mode développement (sûr sur votre machine) ─────────────
+APP_ENV=development
+
+
+# ── 1. BASE DE DONNÉES (Turso) ────────────────────────────────────────────────
+# Pour la VRAIE base Turso, collez son URL libsql://… après le =
+# (sinon, laissez la base locale pour travailler hors ligne).
+TURSO_DATABASE_URL=file:dev-data/davar-dev.db
+# Le jeton d'accès de cette base (il commence par eyJ… et il est très long :
+# c'est normal). À ne coller QUE si vous utilisez la vraie base Turso.
+TURSO_AUTH_TOKEN=
+# L'hôte seul, sans « libsql:// » ni barre oblique (pour le déploiement public).
+# Exemple : mon-campus-davar-42.aws-eu-west-1.turso.io
+TURSO_EXPECTED_HOST=
+
+
+# ── 2. VOS CLÉS FABRIQUÉES (personne ne peut vous les donner) ─────────────────
+# Ces trois valeurs se FABRIQUENT. Le plus simple : « npm run env:local ».
+# Sinon, inventez-les : une longue chaîne au hasard, 32 caractères minimum.
+# Attention : une fois le campus ouvert, ne les changez plus (cela déconnecterait
+# les comptes déjà créés).
+AUTH_PARAMS_SECRET=
+AUTH_VERIFIER_PEPPER=
+APP_DIAGNOSTIC_TOKEN=
+
+
+# ── 3. ENVOI DES E-MAILS (Google Apps Script) ─────────────────────────────────
+# « apps_script » est le bon mot : recopiez-le tel quel.
+MAILER_KIND=apps_script
+# L'URL du déploiement, celle qui finit par /exec
+# Exemple : https://script.google.com/macros/s/AKfy…/exec
+MAIL_APPS_SCRIPT_URL=
+# La propriété DAVAR_MAIL_SECRET de votre script (32 caractères minimum)
+MAIL_APPS_SCRIPT_TOKEN=
+
+
+# ── 4. STOCKAGE DES FICHIERS (Cloudflare R2) ──────────────────────────────────
+# ATTENTION : la clé d'accès et son secret viennent de « Gérer les clés d'API S3 »
+# dans R2 — ce n'est PAS votre jeton d'API Cloudflare.
+# R2_ACCOUNT_ID : 32 caractères hexadécimaux (l'identifiant de compte Cloudflare)
+R2_ACCOUNT_ID=
+R2_ACCESS_KEY_ID=
+R2_SECRET_ACCESS_KEY=
+# Le NOM de votre seau : minuscules, chiffres et tirets (pas de majuscules).
+# ⚠️ Ni une valeur de jeton, ni le nom du jeton (« R2 Account Token » ne va
+# nulle part ici) : c'est le nom du SEAU, affiché en haut de sa page, par
+# exemple davar-campus-fichiers.
+R2_BUCKET=
+
+
+# ── 5. VENTE CHARIOW (automatisation Pulse) ───────────────────────────────────
+# Le drapeau reste FERMÉ jusqu'à la recette sur le compte marchand : ne le
+# passez pas à true maintenant.
+CHARIOW_ENABLE_PULSE=false
+# Le secret de signature du Pulse (whsec_…) — visible dans l'onglet « Aperçu »
+# du Pulse, bloc « Secret de signature » → Révéler. Ce n'est PAS votre clé API.
+CHARIOW_PULSE_SECRET=
+# L'identifiant du Pulse (pulse_…) et celui de la boutique (str_…)
+CHARIOW_PULSE_ID=
+CHARIOW_STORE_ID=
+# La clé API de la boutique (sk_…)
+CHARIOW_API_KEY=
+
+
+# ── 6. ASSISTANTS (la même clé sert la dictée vocale des avis) ─────────────────
+# ⚠️ Si Groq vous répond « Access denied. Please check your network settings. »,
+# ce n'est PAS votre clé : Groq bloque les adresses de serveur (et certains pays).
+# Dans ce cas, laissez cette ligne VIDE et prenez Gemini ci-dessous : l'assistant
+# fonctionne, et la dictée bascule sur l'appareil de l'étudiant. Personne n'est
+# bloqué. (Détail : GUIDE-MES-VALEURS.md §5a)
+# ── LES CINQ MOTEURS POSSIBLES ──────────────────────────────────────────────
+# Un SEUL suffit pour que l'assistant marche. Les autres sont des RELAIS : si le
+# premier est épuisé ou injoignable, le suivant répond, sans rien demander à
+# l'étudiant. Remplissez ceux que vous avez déjà ; laissez vides les autres.
+#
+#   1. Groq        — le plus rapide, n'entraîne pas ses modèles sur vos données
+#   2. Gemini      — gratuit, joignable de presque partout
+#   3. OpenRouter  — donne accès à beaucoup de modèles en une seule clé
+#   4. Hugging Face— open source, plus lent
+#   5. Le vôtre    — n'importe quelle IA au format OpenAI (OpenAI, Mistral,
+#                    DeepSeek, un modèle auto-hébergé…) : les DEUX lignes
+#                    ASSISTANT_CUSTOM_URL et ASSISTANT_CUSTOM_KEY ensemble.
+#
+# ⚠️ Si Groq vous répond « Access denied. Please check your network settings. »,
+# ce n'est PAS votre clé : Groq bloque les adresses de serveur (et certains pays).
+# Dans ce cas, laissez cette ligne VIDE et prenez Gemini ci-dessous : l'assistant
+# fonctionne, et la dictée bascule sur Gemini ou sur l'appareil de l'étudiant.
+# Personne n'est bloqué. (Détail : GUIDE-MES-VALEURS.md §5a)
+GROQ_API_KEY=
+# Clé Gemini : gratuite, joignable de presque partout. C'est elle qui fait
+# marcher l'assistant si Groq est injoignable depuis chez vous.
+GEMINI_API_KEY=
+# Facultatifs — relais seulement :
+OPENROUTER_API_KEY=
+HUGGINGFACE_API_KEY=
+# Un moteur de votre choix (les DEUX lignes, sinon il est ignoré) :
+# Exemple : ASSISTANT_CUSTOM_URL=https://api.mistral.ai/v1/chat/completions
+ASSISTANT_CUSTOM_URL=
+ASSISTANT_CUSTOM_KEY=
+
+
+# ── Ensuite ───────────────────────────────────────────────────────────────────
+# 1) Enregistrez ce fichier sous : davar-app\.env.local
+# 2) Dans le dossier davar-app, tapez :  npm run recette:services
+#    La recette vous dit, service par service, ce qui est branché et ce qui
+#    manque — sans jamais afficher la valeur d'un secret.
+# 3) Collez-moi sa sortie : elle ne contient aucun secret, et elle me dit
+#    exactement où vous en êtes.
