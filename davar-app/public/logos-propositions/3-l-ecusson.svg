@@ -2,8 +2,8 @@
   <title>Modèle 3 — L'Écusson</title>
   <defs>
     <linearGradient id="e-champ" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0%" stop-color="#2A1A4D"/>
-      <stop offset="100%" stop-color="#140D22"/>
+      <stop offset="0%" stop-color="#241640"/>
+      <stop offset="100%" stop-color="#150E24"/>
     </linearGradient>
     <linearGradient id="e-or" x1="0" y1="0" x2="1" y2="1">
       <stop offset="0%" stop-color="#F0D98A"/>
