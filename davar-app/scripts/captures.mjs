@@ -19,7 +19,9 @@ import { createRequire } from 'node:module';
 
 const CHROMIUM = '/tmp/libs/chromium';
 const DOSSIER = '/home/user/captures-parcours';
-const OUTILS = '/tmp/shot/';
+// On cherche les outils dans l'espace de travail (qui survit aux vidages)
+// avant de regarder dans /tmp.
+const OUTILS = ['/home/user/outils2/', '/tmp/shot/'].find((c) => existsSync(c + 'node_modules/puppeteer-core')) ?? '/tmp/shot/';
 const PUBLIC = '/home/user/davar-campus/davar-app/public';
 
 /**
@@ -45,7 +47,7 @@ if (!existsSync(CHROMIUM) || !existsSync(OUTILS + 'node_modules/puppeteer-core')
   console.error('Voir les prérequis en tête de scripts/captures.mjs');
   process.exit(1);
 }
-const puppeteer = createRequire(OUTILS)('puppeteer-core');
+const puppeteer = createRequire(OUTILS + 'package.json')('puppeteer-core');
 
 const jetons = JSON.parse(readFileSync('/tmp/shot/jetons.json', 'utf8'));
 mkdirSync(DOSSIER, { recursive: true });

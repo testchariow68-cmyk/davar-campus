@@ -1250,13 +1250,19 @@ body:has(.ticker) .container{padding-bottom:64px}
 }
 
 /* ============================================================
-   PAGES D'AUTHENTIFICATION — le logo sans son cercle
+   PAGES D'AUTHENTIFICATION — plus de forme ronde, la marque en pied
    ------------------------------------------------------------
-   Le propriétaire veut le logo, pas le cadre : on retire le rond
-   doré que traçait la feuille de style (fond, bordure, rayon) et
-   on ne garde que la marque. Le slogan, lui, quitte l'animation
-   d'ouverture mais reste ici, en blanc, italique et gras, juste
-   sous le logo.
+   Ce qui encadrait le logo était une forme ronde : contour doré
+   fin, fond violet tirant sur le noir. Elle est retirée de ces
+   pages, purement et simplement — elle n'est plus dessinée nulle
+   part ici.
+
+   La marque, elle, quitte le haut du formulaire et descend en pied
+   de page, seule. Le haut ne garde que le slogan, en blanc,
+   italique et gras. Le reste du formulaire ne bouge pas.
+
+   Les fichiers SVG ne sont pas touchés : la marque reste celle qui
+   a été validée.
    ============================================================ */
 
 .lg-logo.lg-nu {
@@ -1294,14 +1300,44 @@ body:has(.ticker) .container{padding-bottom:64px}
   .lg-slogan { font-size: 13px; letter-spacing: 1.6px; margin-top: 5px; }
 }
 
-/* Le logo et son slogan ne forment qu'un bloc : sans cela, l'écart de 20 px
-   que le conteneur met entre ses enfants les séparait, et le slogan avait
-   l'air de flotter. Réunis, ils se tiennent et on lit d'un coup d'œil que
-   c'est le slogan de la maison. */
+/* Le slogan reste seul en haut : il n'a plus de logo au-dessus de lui, mais
+   il garde sa place et son allure, et le formulaire ne bouge pas. */
 .lg-bloc {
   position: relative;
   z-index: 2;
   display: flex;
   flex-direction: column;
   align-items: center;
+}
+
+/* Le pied de page : la marque seule, puis la mention. Aucun fond, aucune
+   bordure, aucun rayon — la forme ronde a disparu du site. */
+.lg-pied {
+  position: relative;
+  z-index: 2;
+  margin-top: 30px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  opacity: 0;
+  animation: lg-in .6s ease-out .3s forwards;
+}
+
+.lg-marque {
+  display: block;
+  width: 104px;
+  height: auto;
+  background: transparent;
+  border: none;
+  border-radius: 0;
+  padding: 0;
+  object-fit: contain;
+  opacity: .9;
+  filter: drop-shadow(0 6px 20px rgba(0, 0, 0, .45));
+}
+
+@media (max-width: 767px) {
+  .lg-marque { width: 88px; }
+  .lg-pied { margin-top: 22px; gap: 10px; }
 }

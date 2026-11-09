@@ -27,9 +27,9 @@ export default async function InscriptionPage() {
 
   return (
     <div className="login-glass">
-      {/* eslint-disable-next-line @next/next/no-img-element */}
+      {/* Le haut ne porte plus que le slogan : la marque est descendue en
+          pied de page, où le propriétaire la veut seule. */}
       <div className="lg-bloc">
-        <img className="lg-logo lg-nu" src="/campus-marque.svg" alt="DAVAR ACADÉMIE CAMPUS" />
         <p className="lg-slogan">L’ÉCOLE DE L’EXCELLENCE ORATOIRE</p>
       </div>
       <div className="gcard">
@@ -56,7 +56,11 @@ export default async function InscriptionPage() {
           <SignupForm />
         )}
       </div>
-      <div className="gl-foot">© 2026 Davar Académie — Abidjan, Côte d’Ivoire</div>
+      <div className="lg-pied">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img className="lg-marque" src="/campus-marque.svg" alt="DAVAR ACADÉMIE CAMPUS" />
+        <div className="gl-foot">© 2026 Davar Académie — Abidjan, Côte d’Ivoire</div>
+      </div>
     </div>
   );
 }
