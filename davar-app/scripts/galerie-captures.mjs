@@ -90,12 +90,7 @@ const LEGENDES = {
   'L3-structure': {
     titre: 'Le logo de la structure',
     appareil: 'logo',
-    texte: "Fichier logo-structure.svg. C’est la marque seule, sans le nom : on la voit dans le rail latéral du campus et dans la barre latérale de l’administration.",
-  },
-  'L4-marque-pages-auth': {
-    titre: 'La marque des pages d’authentification',
-    appareil: 'logo',
-    texte: "Fichier campus-marque.svg, créé pour l’occasion : le pavé violet et l’anneau d’or ont été retirés, il ne reste que le pupitre. C’est lui qu’on voit sur la connexion et l’inscription.",
+    texte: "Fichier logo-structure.png : le logo d’origine, celui du prototype, laissé tel quel. On le voit en pied des pages de connexion et d’inscription, et dans la barre latérale de l’administration.",
   },
   'L5-modele-la-tribune': {
     titre: 'Modèle 1 — La Tribune',

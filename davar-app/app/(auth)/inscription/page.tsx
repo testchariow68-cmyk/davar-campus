@@ -58,7 +58,7 @@ export default async function InscriptionPage() {
       </div>
       <div className="lg-pied">
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img className="lg-marque" src="/campus-marque.svg" alt="DAVAR ACADÉMIE CAMPUS" />
+        <img className="lg-marque" src="/logo-structure.png" alt="Davar Académie" />
         <div className="gl-foot">© 2026 Davar Académie — Abidjan, Côte d’Ivoire</div>
       </div>
     </div>

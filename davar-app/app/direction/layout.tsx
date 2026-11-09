@@ -149,7 +149,7 @@ export default async function DirectionLayout({ children }: { children: React.Re
           <div className="row" style={{ gap: 12 }}>
             <Link href="/direction" style={{ textDecoration: 'none' }}>
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src="/logo-structure.svg" alt="Davar Académie" className="brand-img" />
+              <img src="/logo-structure.png" alt="Davar Académie" className="brand-img" />
             </Link>
             <span className="badge" style={{ background: 'var(--violet-soft)', color: 'var(--violet-deep)' }}>
               {estProprietaire ? 'Direction' : 'Équipe'}

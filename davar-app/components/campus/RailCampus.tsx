@@ -32,7 +32,7 @@ export function RailCampus({
     <aside className="rail" aria-label="Navigation principale">
       <Link className="rail-brand brand" href="/campus" title="Accueil">
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img className="brand-img" src="/logo-structure.svg" alt="Davar Académie" />
+        <img className="brand-img" src="/logo-structure.png" alt="Davar Académie" />
         <div className="brand-txt">
           DAVAR<span>Académie</span>
         </div>
