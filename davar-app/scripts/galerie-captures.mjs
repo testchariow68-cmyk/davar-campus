@@ -70,12 +70,12 @@ const LEGENDES = {
   'B-connexion-telephone': {
     titre: 'La page de connexion',
     appareil: 'telephone',
-    texte: "Le cercle doré qui encadrait le logo a été retiré ; la marque reste, posée à même le fond. Le slogan s’est glissé dessous, en blanc, italique et gras.",
+    texte: "L’anneau est vraiment en haut de page. Le slogan reste dessous, avec un peu d’air avant la carte de connexion : blanc, italique et gras.",
   },
   'C-inscription-ordinateur': {
     titre: 'La page d’inscription',
     appareil: 'ordinateur',
-    texte: "Le même traitement sur ordinateur : plus de pavé, la marque seule, et le slogan en blanc, italique et gras, collé au logo.",
+    texte: "Le même traitement sur ordinateur : l’anneau est remonté tout en haut, le slogan respire dessous, puis la carte d’inscription commence plus bas.",
   },
   'L1-favicon': {
     titre: 'Le favicon — l’icône du navigateur',

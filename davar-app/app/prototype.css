@@ -500,8 +500,8 @@ body{font-family:"Inter",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Aria
 [data-theme="dark"] .brand-img, .sidebar .sb-logo { filter: drop-shadow(0 2px 8px rgba(91,42,134,.55)); }
 
 /* ---------- Pages publiques : verre dépoli (design DAVAR) ---------- */
-.login-glass{min-height:100vh;position:relative;overflow:hidden;display:flex;flex-direction:column;
-  align-items:center;justify-content:center;gap:20px;padding:40px 16px;
+.login-glass{min-height:100vh;position:relative;overflow-x:hidden;overflow-y:auto;display:flex;flex-direction:column;
+  align-items:center;justify-content:flex-start;gap:0;padding:16px 16px 32px;
   background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);color:#fff}
 /* Glow : naît en haut, descend au centre, disparaît en 2,65 s pour révéler le logo */
 .login-glass .glow{position:absolute;left:50%;top:50%;width:560px;height:560px;border-radius:50%;pointer-events:none;z-index:1;
@@ -516,6 +516,7 @@ body{font-family:"Inter",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Aria
 @keyframes lg-in{to{opacity:1}}
 .gcard{position:relative;z-index:2;background:rgba(255,255,255,.1);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
   border:1px solid rgba(255,255,255,.2);border-radius:16px;padding:32px;width:100%;max-width:390px;box-sizing:border-box;
+  margin-top:42px;
   opacity:0;transform:translateY(8px);animation:card-in .45s ease-out forwards}
 @keyframes card-in{to{opacity:1;transform:none}}
 .gcard h1{text-align:center;margin:0 0 8px;font-size:18.5px;letter-spacing:.03em;font-weight:800}
@@ -1281,9 +1282,9 @@ body:has(.ticker) .container{padding-bottom:64px}
 .lg-slogan {
   position: relative;
   z-index: 2;
-  /* Rapproché du logo : c'est le slogan qui monte vers lui, et non le
-     logo qui descend vers le slogan. */
-  margin: 2px 0 0;
+  /* Le slogan reste sous le logo, mais respire enfin entre les deux.
+     Le logo ne descend pas pour le rejoindre. */
+  margin: 12px 0 0;
   text-align: center;
   color: #fff;
   /* La police de la plateforme, la même que le reste de la page de
@@ -1299,7 +1300,9 @@ body:has(.ticker) .container{padding-bottom:64px}
 }
 
 @media (max-width: 767px) {
-  .lg-slogan { font-size: 13px; letter-spacing: 1.6px; margin-top: 2px; }
+  .login-glass { padding-top: 10px; }
+  .lg-slogan { font-size: 13px; letter-spacing: 1.6px; margin-top: 10px; }
+  .gcard { margin-top: 32px; }
 }
 
 /* Le logo et son slogan ne forment qu'un bloc, centré en haut de page. */

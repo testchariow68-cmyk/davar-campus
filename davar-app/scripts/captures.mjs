@@ -61,7 +61,17 @@ const n = await puppeteer.launch({
   headless: 'shell',
 });
 
-async function photo(url, nom, largeur, hauteur, tactile, action) {
+async function attendreFinSplash(page) {
+  // Toutes les routes héritent de l'animation d'ouverture. Une capture de
+  // parcours doit montrer le Campus, pas l'écran de quatre secondes.
+  await new Promise((r) => setTimeout(r, 100));
+  await page.waitForFunction(
+    () => !document.querySelector('img[src="/campus-splash.svg"]'),
+    { timeout: 12000 },
+  );
+}
+
+async function photo(url, nom, largeur, hauteur, tactile, action, withSession = true) {
   const page = await n.newPage();
   await page.setViewport({
     width: largeur,
@@ -70,13 +80,20 @@ async function photo(url, nom, largeur, hauteur, tactile, action) {
     hasTouch: !!tactile,
     isMobile: !!tactile,
   });
-  await page.setCookie({
-    name: 'davar_session',
-    value: jetons['visite@davar.test'],
-    domain: 'localhost',
-    path: '/',
-  });
+  if (withSession) {
+    await page.setCookie({
+      name: 'davar_session',
+      value: jetons['visite@davar.test'],
+      domain: 'localhost',
+      path: '/',
+    });
+  } else {
+    // setCookie() is shared by the browser context: remove the student token
+    // left by the Campus captures before visiting a public auth page.
+    await page.deleteCookie({ name: 'davar_session', domain: 'localhost', path: '/' });
+  }
   await page.goto(url, { waitUntil: 'networkidle2', timeout: 60000 });
+  await attendreFinSplash(page);
   await new Promise((r) => setTimeout(r, 1600));
   if (action) {
     await action(page);
@@ -112,10 +129,14 @@ await photo(ACCUEIL, '9-accueil-telephone', 390, 844, true);
 
 // L'animation d'ouverture ne dure que quatre secondes : on la saisit au vol,
 // avant qu'elle ne s'efface.
-async function photoAuVol(url, nom, largeur, hauteur, tactile, delai) {
+async function photoAuVol(url, nom, largeur, hauteur, tactile, delai, withSession = true) {
   const page = await n.newPage();
   await page.setViewport({ width: largeur, height: hauteur, hasTouch: tactile, isMobile: tactile });
-  await page.setCookie({ name: 'davar_session', value: jetons['visite@davar.test'], domain: 'localhost', path: '/' });
+  if (withSession) {
+    await page.setCookie({ name: 'davar_session', value: jetons['visite@davar.test'], domain: 'localhost', path: '/' });
+  } else {
+    await page.deleteCookie({ name: 'davar_session', domain: 'localhost', path: '/' });
+  }
   await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 60000 });
   await new Promise((r) => setTimeout(r, delai));
   await page.screenshot({ path: `${DOSSIER}/${nom}.png` });
@@ -123,10 +144,11 @@ async function photoAuVol(url, nom, largeur, hauteur, tactile, delai) {
   await page.close();
 }
 
-// Les pages d'authentification : le logo sans son cercle, le slogan en blanc.
-await photoAuVol('http://localhost:3000/connexion', 'A-animation-ouverture', 390, 844, true, 1800);
-await photo('http://localhost:3000/connexion', 'B-connexion-telephone', 390, 844, true);
-await photo('http://localhost:3000/inscription', 'C-inscription-ordinateur', 1440, 900, false);
+// Les pages d'authentification : pas de session, sinon /connexion redirige
+// vers le Campus. A saisit l'animation ; B et C attendent la page elle-même.
+await photoAuVol('http://localhost:3000/connexion', 'A-animation-ouverture', 390, 844, true, 1800, false);
+await photo('http://localhost:3000/connexion', 'B-connexion-telephone', 390, 844, true, undefined, false);
+await photo('http://localhost:3000/inscription', 'C-inscription-ordinateur', 1440, 900, false, undefined, false);
 await n.close();
 
 console.log('\nLogos :');

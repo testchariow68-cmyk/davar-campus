@@ -45,9 +45,8 @@ export default async function ReinitialiserPage({
 
   return (
     <div className="login-glass">
-      {/* Le logo est remonté en haut, au centre : c'est l'anneau de
-          l'animation d'ouverture, sans les écritures. Le slogan se tient
-          juste en dessous, collé contre lui. */}
+      {/* L'anneau de l'animation, sans les écritures, est tout en haut.
+          Le slogan reste dessous avec un peu d'air avant la carte. */}
       <div className="lg-bloc">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img className="lg-anneau" src="/campus-anneau.svg" alt="DAVAR ACADÉMIE CAMPUS" />
