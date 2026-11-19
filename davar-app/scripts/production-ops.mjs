@@ -118,7 +118,7 @@ async function list() {
 async function whois(email) {
   const normalized = normalize(email);
   const user = await db.execute({
-    sql: 'SELECT id,display_name,status,email_verified_at_ms,created_at_ms FROM users WHERE email_normalized=?',
+    sql: 'SELECT id,display_name,role,status,email_verified_at_ms,created_at_ms FROM users WHERE email_normalized=?',
     args: [normalized],
   });
   if (!user.rows.length) {
@@ -130,6 +130,7 @@ async function whois(email) {
   const enrollments = await db.execute({ sql: 'SELECT training_id,source,acquired_at_ms FROM enrollments WHERE user_id=?', args: [String(row.id)] });
   console.log(`\n${normalized}`);
   console.log(`  nom        : ${row.display_name}`);
+  console.log(`  rôle       : ${row.role === 'admin' ? 'SUPER ADMIN / propriétaire' : row.role}`);
   console.log(`  état       : ${row.status}`);
   console.log(`  e-mail     : ${row.email_verified_at_ms ? 'CONFIRMÉ' : 'NON CONFIRMÉ'}`);
   console.log(`  accès      : ${enrollments.rows.length ? enrollments.rows.map((e) => `${e.training_id} (${e.source})`).join(', ') : 'aucun'}`);

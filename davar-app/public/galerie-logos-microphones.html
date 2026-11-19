@@ -1,0 +1,145 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Propositions de logo — microphone — Davar Académie Campus</title>
+  <style>
+    :root {
+      --fond: #0d0a14;
+      --surface: #171321;
+      --surface-2: #211a31;
+      --bord: #382c50;
+      --texte: #f4f0fa;
+      --doux: #b2a9c6;
+      --or: #d4af37;
+      --or-clair: #f0d98a;
+      --violet: #8b5cf6;
+      --vert: #42d39a;
+    }
+    * { box-sizing: border-box; }
+    html { color-scheme: dark; }
+    body {
+      margin: 0;
+      min-width: 0;
+      background:
+        radial-gradient(900px 500px at 10% -10%, rgba(109,40,217,.28), transparent 68%),
+        radial-gradient(700px 420px at 100% 12%, rgba(212,175,55,.10), transparent 66%),
+        var(--fond);
+      color: var(--texte);
+      font: 16px/1.55 Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+    }
+    .wrap { width: min(1180px, 100% - 40px); margin-inline: auto; }
+    header { padding: clamp(32px, 7vw, 78px) 0 34px; }
+    .kicker {
+      display: inline-flex; align-items: center; gap: 9px; color: var(--or-clair);
+      font-size: 11px; font-weight: 800; letter-spacing: .18em; text-transform: uppercase;
+    }
+    .kicker::before { content: ""; width: 28px; height: 1px; background: var(--or); }
+    h1 { max-width: 850px; margin: 14px 0 12px; font: 700 clamp(30px, 5vw, 58px)/1.05 Georgia, "Times New Roman", serif; letter-spacing: -.025em; }
+    .lead { max-width: 730px; margin: 0; color: var(--doux); font-size: clamp(15px, 2vw, 18px); }
+    .notice {
+      display: flex; gap: 12px; align-items: flex-start; margin-top: 25px; padding: 15px 17px;
+      border: 1px solid rgba(66,211,154,.28); border-radius: 12px; background: rgba(66,211,154,.08); color: #c9f5e3;
+      font-size: 14px;
+    }
+    .notice strong { color: #fff; }
+    .section-head { display: flex; gap: 18px; align-items: end; justify-content: space-between; margin: 28px 0 14px; }
+    .section-head h2 { margin: 0; font: 700 clamp(22px, 3vw, 30px)/1.1 Georgia, serif; }
+    .section-head p { margin: 0; color: var(--doux); font-size: 13px; }
+    .current {
+      display: grid; grid-template-columns: minmax(150px, 220px) 1fr; gap: 24px; align-items: center;
+      padding: 20px; border: 1px solid var(--bord); border-radius: 18px; background: rgba(23,19,33,.76);
+    }
+    .current .visual { display: grid; place-items: center; min-height: 160px; border-radius: 13px; background: #150e24; }
+    .current img { display: block; width: min(160px, 70%); height: auto; }
+    .tag {
+      display: inline-flex; align-items: center; border: 1px solid rgba(212,175,55,.4); border-radius: 999px;
+      padding: 5px 9px; color: var(--or-clair); font-size: 10px; font-weight: 800; letter-spacing: .12em; text-transform: uppercase;
+    }
+    .current h3 { margin: 10px 0 5px; font-size: 20px; }
+    .current p { margin: 0; color: var(--doux); font-size: 14px; }
+    .proposals { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 18px; margin: 0 0 44px; }
+    .proposal {
+      display: flex; min-width: 0; flex-direction: column; overflow: hidden; border: 1px solid var(--bord);
+      border-radius: 18px; background: linear-gradient(180deg, rgba(33,26,49,.96), rgba(23,19,33,.96));
+      box-shadow: 0 18px 50px rgba(0,0,0,.18);
+    }
+    .art { display: grid; place-items: center; min-height: 218px; padding: 17px; background: #f5f3f8; }
+    .art.dark { background: #100b1b; }
+    .art img { display: block; width: 100%; height: auto; max-height: 240px; object-fit: contain; }
+    .proposal-body { display: flex; flex: 1; flex-direction: column; padding: 18px 19px 20px; }
+    .number {
+      display: inline-grid; place-items: center; width: 32px; height: 32px; border-radius: 10px;
+      background: linear-gradient(135deg, var(--or-clair), var(--or)); color: #211705; font-weight: 900;
+    }
+    .proposal h3 { margin: 14px 0 7px; font: 700 24px/1.1 Georgia, serif; }
+    .proposal p { margin: 0; color: var(--doux); font-size: 14px; }
+    .details { display: flex; flex-wrap: wrap; gap: 7px; margin-top: 16px; }
+    .details span { padding: 5px 8px; border: 1px solid var(--bord); border-radius: 999px; color: #d5cde1; font-size: 11px; }
+    .choose { margin-top: auto; padding-top: 18px; color: var(--or-clair); font-size: 12px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; }
+    footer { padding: 23px 0 54px; border-top: 1px solid var(--bord); color: #817893; font-size: 13px; }
+    footer code { color: #bfb4d2; }
+    @media (max-width: 900px) {
+      .proposals { grid-template-columns: 1fr; }
+      .proposal { display: grid; grid-template-columns: minmax(260px, 1.1fr) 1fr; }
+      .art { min-height: 100%; }
+    }
+    @media (max-width: 620px) {
+      .wrap { width: min(100% - 28px, 560px); }
+      .current { grid-template-columns: 1fr; gap: 15px; }
+      .current .visual { min-height: 132px; }
+      .proposal { display: flex; }
+      .art { min-height: 176px; padding: 13px; }
+      .art img { max-height: 190px; }
+      .section-head { display: block; }
+      .section-head p { margin-top: 6px; }
+    }
+    @media (prefers-reduced-motion: no-preference) {
+      .proposal { transition: transform .18s ease, border-color .18s ease, box-shadow .18s ease; }
+      .proposal:hover { transform: translateY(-3px); border-color: rgba(212,175,55,.55); box-shadow: 0 24px 60px rgba(0,0,0,.28); }
+    }
+  </style>
+</head>
+<body>
+  <header class="wrap">
+    <div class="kicker">Davar Académie Campus · revue de marque</div>
+    <h1>Trois propositions avec un microphone orienté vers le bas.</h1>
+    <p class="lead">Le mortier, l’or et le violet restent dans le même esprit. Le cordon et le pompon sont remplacés par une capsule de microphone fine, reliée naturellement à la pointe du mortier et dessinée pour rester lisible à petite taille.</p>
+    <div class="notice" role="note">
+      <span aria-hidden="true">✓</span>
+      <div><strong>Le logo actuel n’a pas été remplacé.</strong> Cette page présente uniquement trois fichiers SVG de proposition. Le choix 1, 2 ou 3 pourra être appliqué après votre validation.</div>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <section aria-labelledby="actuel">
+      <div class="section-head"><h2 id="actuel">Référence conservée</h2><p>Production actuelle · aucune modification</p></div>
+      <div class="current">
+        <div class="visual"><img src="/campus-anneau.svg" alt="Logo actuel Davar Académie Campus"></div>
+        <div><span class="tag">Logo actuel</span><h3>Le logo validé reste le fallback</h3><p>Le fichier <code>campus-anneau.svg</code> et les autres actifs de production restent inchangés pendant la revue.</p></div>
+      </div>
+    </section>
+
+    <section aria-labelledby="propositions">
+      <div class="section-head"><h2 id="propositions">Propositions numérotées</h2><p>Choisissez simplement un numéro</p></div>
+      <div class="proposals">
+        <article class="proposal">
+          <div class="art dark"><img src="/logos-propositions/1-microphone-la-tribune.svg" alt="Proposition 1, La Tribune"></div>
+          <div class="proposal-body"><span class="number" aria-label="Numéro 1">1</span><h3>La Tribune</h3><p>La plus proche du langage actuel : un pavé violet protecteur, une signature horizontale et un filet d’or très lisible.</p><div class="details"><span>sobre</span><span>pavé sombre</span><span>marque principale</span></div><div class="choose">Proposition 1</div></div>
+        </article>
+        <article class="proposal">
+          <div class="art"><img src="/logos-propositions/2-microphone-la-signature.svg" alt="Proposition 2, La Signature"></div>
+          <div class="proposal-body"><span class="number" aria-label="Numéro 2">2</span><h3>La Signature</h3><p>La version la plus aérée : la marque respire sans pavé et s’adapte bien aux fonds clairs, aux documents et aux en-têtes.</p><div class="details"><span>fine</span><span>sans pavé</span><span>polyvalente</span></div><div class="choose">Proposition 2</div></div>
+        </article>
+        <article class="proposal">
+          <div class="art dark"><img src="/logos-propositions/3-microphone-le-sceau.svg" alt="Proposition 3, Le Sceau"></div>
+          <div class="proposal-body"><span class="number" aria-label="Numéro 3">3</span><h3>Le Sceau</h3><p>La plus institutionnelle : le mortier et le microphone vivent dans un sceau d’académie, conçu pour les certificats et distinctions.</p><div class="details"><span>solennelle</span><span>sceau</span><span>certificats</span></div><div class="choose">Proposition 3</div></div>
+        </article>
+      </div>
+    </section>
+  </main>
+
+  <footer><div class="wrap">Fichiers examinés : <code>1-microphone-la-tribune.svg</code> · <code>2-microphone-la-signature.svg</code> · <code>3-microphone-le-sceau.svg</code>. Rien n’est injecté dans le logo de production avant votre choix.</div></footer>
+</body>
+</html>

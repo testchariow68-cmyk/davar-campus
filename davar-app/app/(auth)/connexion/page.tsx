@@ -23,7 +23,7 @@ export default async function ConnexionPage() {
       <div className="lg-bloc">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img className="lg-anneau" src="/campus-anneau.svg" alt="DAVAR ACADÉMIE CAMPUS" />
-        <p className="lg-slogan">L’ÉCOLE DE L’EXCELLENCE ORATOIRE</p>
+        <p className="lg-slogan">L’école de l’excellence oratoire</p>
       </div>
       <div className="gcard">
         <h1>DAVAR ACADÉMIE CAMPUS</h1>

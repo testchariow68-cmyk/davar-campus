@@ -1157,3 +1157,152 @@ html,body{overflow-x:hidden}
 [data-palette]:not([data-palette="violet"])[data-theme="dark"] .topbar{background:rgba(10,10,12,.9)}
 [data-palette]:not([data-palette="violet"])[data-theme="dark"] .cp-top{background:rgba(10,10,12,.86)}
 [data-palette]:not([data-palette="violet"])[data-theme="dark"] .admin-top{background:rgba(10,10,12,.92)}
+
+/* ============================================================
+   RÉACTIVITÉ PAR VIEWPORT — dernière couche de composition
+   ------------------------------------------------------------
+   Les composants gardent le vocabulaire du prototype, mais leur enveloppe
+   n'est plus calibrée pour un moniteur précis : les gouttières, les cartes,
+   les rails et les écrans d'ouverture suivent désormais l'espace disponible.
+   Les petites dimensions d'icônes restent fixes volontairement ; les surfaces
+   de lecture, elles, utilisent min(), max() et clamp().
+   ============================================================ */
+html, body { width: 100%; max-width: 100%; min-width: 0; overflow-x: clip; }
+body { min-height: 100%; }
+img, video, iframe, object { max-width: 100%; }
+
+.container {
+  width: min(100%, 1600px);
+  max-width: none;
+  padding-inline: clamp(14px, 2.6vw, 42px);
+}
+.tb-inner {
+  width: min(100%, 1600px);
+  max-width: none;
+  gap: clamp(12px, 2vw, 30px);
+  padding-inline: clamp(14px, 2.6vw, 42px);
+}
+.admin-content {
+  width: min(100%, 1800px);
+  max-width: none;
+  padding: clamp(18px, 2.1vw, 38px) clamp(14px, 2.6vw, 42px) clamp(60px, 5vw, 92px);
+}
+.admin-content .grid > *, .container .grid > *, .grid > * { min-width: 0; }
+
+/* Le cockpit s'étend sur les grands écrans sans créer une ligne de lecture
+   interminable : son plafond devient fluide au lieu de rester à 1 080 px. */
+.cp-content, #cpPage {
+  width: min(100%, 1800px);
+  max-width: none;
+  padding: clamp(16px, 2.2vw, 38px) clamp(14px, 2.6vw, 42px);
+}
+.cp-main, .admin-main { min-width: 0; }
+.cp-top, .admin-top { padding-inline: clamp(14px, 2.2vw, 34px); }
+.cp-top > *, .admin-top > * { min-width: 0; }
+.cp-top > .row:first-child { flex: 1 1 160px; }
+.cp-top > .row:last-child { flex: 0 0 auto; }
+
+/* Des colonnes équilibrées restent lisibles jusque sur une tablette en
+   paysage ; les règles inline des écrans d'administration cèdent ici, avec
+   le même seuil que les autres grilles. */
+@media (max-width: 1020px) {
+  [style*="grid-template-columns"] { min-width: 0; }
+  .cp-grid2 { grid-template-columns: minmax(0, 1fr); }
+  .admin-content [style*="grid-template-columns"] { grid-template-columns: minmax(0, 1fr) !important; }
+}
+
+/* Ouverture : les dimensions suivent la fenêtre et les écrans très larges
+   reçoivent une marque réellement présente, pas un logo de téléphone agrandi. */
+.splash-shell {
+  position: fixed; inset: 0; z-index: 999; display: flex; flex-direction: column;
+  align-items: center; justify-content: center; gap: clamp(22px, 4vh, 38px);
+  background: #000; opacity: 1; transition: opacity .8s ease; pointer-events: auto;
+}
+.splash-shell.is-off { opacity: 0; pointer-events: none; }
+.splash-halo {
+  position: absolute; width: min(520px, 52vw, 70svh); aspect-ratio: 1; border-radius: 50%;
+  background: radial-gradient(circle, rgba(91,42,134,.55) 0%, rgba(91,42,134,.28) 42%, transparent 72%);
+  animation: sp-halo 2.5s ease-in-out infinite;
+}
+.splash-logo {
+  position: relative; z-index: 2; display: block; width: clamp(280px, 42vw, 680px); max-width: 86vw;
+  height: auto; opacity: 0; transform: scale(.8); filter: drop-shadow(0 10px 46px rgba(91,42,134,.6));
+  animation: sp-logo .8s ease-out .15s forwards;
+}
+.splash-progress {
+  position: relative; z-index: 2; width: min(420px, 62vw, calc(100vw - 48px)); height: 3px;
+  border-radius: 99px; overflow: hidden; background: rgba(212,175,55,.30);
+}
+.splash-progress i {
+  position: absolute; inset: 0; display: block; transform-origin: left; transform: scaleX(0);
+  background: #5B2A86; animation: sp-fill 4s linear .1s forwards;
+}
+
+/* Auth : même hiérarchie visuelle, mais une carte et une marque qui respirent
+   mieux sur un portable, une tablette et un grand écran. */
+.login-glass {
+  min-height: 100vh; min-height: 100svh;
+  padding: clamp(10px, 3.5vh, 50px) clamp(14px, 3vw, 42px) clamp(24px, 5vh, 64px);
+}
+.login-glass .glow { width: min(560px, 76vw, 76svh); height: min(560px, 76vw, 76svh); }
+.lg-bloc { width: min(100%, 760px); }
+.lg-anneau { width: clamp(112px, 13vw, 192px); max-width: 82vw; }
+.lg-slogan {
+  max-width: calc(100vw - 28px); font-size: clamp(13px, 1.15vw, 18px);
+  letter-spacing: clamp(1px, .16vw, 2.6px); line-height: 1.35;
+}
+.gcard {
+  width: min(100%, clamp(360px, 38vw, 560px)); max-width: none;
+  padding: clamp(22px, 2.6vw, 40px); margin-top: clamp(28px, 4vh, 56px);
+}
+.gcard h1 { font-size: clamp(18.5px, 1.45vw, 24px); }
+.lg-pied { margin-top: clamp(18px, 3.5vh, 42px); }
+
+/* Tables : leur largeur minimale se fait défiler dans la carte, jamais dans
+   toute la page. Les tableaux de direction restent donc lisibles au doigt. */
+.tbl, .dv-tbl { display: block; max-width: 100%; overflow-x: auto; }
+.tbl th, .tbl td, .dv-tbl th, .dv-tbl td { white-space: nowrap; }
+
+@media (max-width: 900px) {
+  .admin-top { height: auto; min-height: 58px; padding-block: 10px; flex-wrap: wrap; }
+  .admin-top h2 { flex: 1 1 220px; min-width: 0; }
+  .admin-top .tb-right { flex: 0 0 auto; }
+  .sidebar { max-width: 100%; }
+}
+
+@media (max-width: 767px) {
+  [style*="grid-template-columns"] { grid-template-columns: minmax(0, 1fr) !important; }
+  .cp-top { padding-block: 8px; flex-wrap: wrap; }
+  .cp-top > .row:first-child { flex-basis: 150px; }
+  .cp-content, #cpPage { padding-inline: clamp(12px, 4vw, 20px); }
+  .admin-content { padding-inline: clamp(12px, 4vw, 20px); }
+  .card, .gcard, .cp-content > *, .admin-content > * { min-width: 0; }
+  .row { min-width: 0; }
+  .row > .wrap { min-width: 0; overflow-wrap: anywhere; }
+  .card-pad { padding: clamp(14px, 4vw, 20px); }
+  .page-head h1 { font-size: clamp(19px, 6vw, 22px); }
+  .cp-hello { padding: clamp(20px, 5vw, 28px); }
+  .cp-hello h1 { font-size: clamp(19px, 5.5vw, 23px); }
+  .ticker { min-height: 46px; height: auto; }
+  .ticker-track { gap: 26px; padding-left: 14px; }
+  .fab-sup { right: 14px; bottom: 58px; }
+  .fab-home { right: 14px; bottom: 58px; }
+  .mn-head { padding-inline: clamp(14px, 4vw, 22px); }
+  .mn-body { padding-inline: clamp(14px, 4vw, 22px); }
+  .mn-foot { flex-wrap: wrap; }
+}
+
+@media (max-width: 420px) {
+  .login-glass { padding-inline: 12px; }
+  .lg-anneau { width: clamp(104px, 31vw, 136px); }
+  .lg-slogan { font-size: 12.5px; letter-spacing: .8px; }
+  .gcard { width: 100%; padding: 20px 17px; }
+  .gcard h1 { font-size: 18px; }
+  .gcard input { font-size: 16px; } /* évite le zoom automatique iOS */
+  .gl-links { flex-wrap: wrap; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .splash-halo, .splash-logo, .splash-progress i { animation-duration: .01ms; animation-iteration-count: 1; }
+  .login-glass .glow, .lg-logo, .lg-slogan, .gcard, .lg-pied { animation: none; opacity: 1; transform: none; }
+}
