@@ -6,7 +6,7 @@
    garantit que chaque écran reconstruit ressemble exactement au prototype.
    ============================================================================ */
 export type NomIcone =
-'home' | 'cap' | 'book' | 'layers' | 'play' | 'pause' | 'file' | 'download' | 'video' | 'message' | 'sparkles' | 'bell' | 'award' | 'check' | 'checkCircle' | 'x' | 'clock' | 'lock' | 'unlock' | 'chevR' | 'chevL' | 'chevD' | 'search' | 'plus' | 'edit' | 'trash' | 'users' | 'user' | 'settings' | 'shield' | 'chart' | 'card' | 'star' | 'alert' | 'refresh' | 'send' | 'eye' | 'logout' | 'upload' | 'mic' | 'sliders' | 'menu' | 'external' | 'expand' | 'calendar' | 'target' | 'zap' | 'globe' | 'key' | 'mail' | 'phone' | 'arrowR' | 'wallet' | 'trend' | 'clipboard' | 'list' | 'grid' | 'paperclip' | 'bot' | 'dot' | 'filter' | 'shieldCheck' | 'sun' | 'moon' | 'camera' | 'fingerprint' | 'quote' | 'back' | 'headset' | 'doc' | 'link' | 'image' | 'instagram' | 'tiktok' | 'facebook' | 'youtube' | 'linkedin' | 'xsocial' | 'whatsapp' | 'telegram' | 'rw_door' | 'rw_path' | 'rw_lines' | 'rw_resume' | 'rw_circle' | 'rw_seal';
+'home' | 'cap' | 'book' | 'layers' | 'play' | 'pause' | 'file' | 'download' | 'video' | 'message' | 'sparkles' | 'bell' | 'award' | 'check' | 'checkCircle' | 'x' | 'clock' | 'lock' | 'unlock' | 'chevR' | 'chevL' | 'chevD' | 'search' | 'plus' | 'edit' | 'trash' | 'users' | 'user' | 'settings' | 'shield' | 'chart' | 'card' | 'star' | 'hand' | 'alert' | 'refresh' | 'send' | 'eye' | 'logout' | 'upload' | 'mic' | 'sliders' | 'menu' | 'external' | 'expand' | 'calendar' | 'target' | 'zap' | 'globe' | 'key' | 'mail' | 'phone' | 'arrowR' | 'wallet' | 'trend' | 'clipboard' | 'list' | 'grid' | 'paperclip' | 'bot' | 'dot' | 'filter' | 'shieldCheck' | 'sun' | 'moon' | 'camera' | 'fingerprint' | 'quote' | 'back' | 'headset' | 'doc' | 'link' | 'image' | 'instagram' | 'tiktok' | 'facebook' | 'youtube' | 'linkedin' | 'xsocial' | 'whatsapp' | 'telegram' | 'rw_door' | 'rw_path' | 'rw_lines' | 'rw_resume' | 'rw_circle' | 'rw_seal';
 
 const TRACES: Record<string, React.ReactNode> = {
   home: (
@@ -107,6 +107,9 @@ const TRACES: Record<string, React.ReactNode> = {
   ),
   star: (
     <><path d="m12 3 2.7 5.7 6.3.8-4.6 4.3 1.2 6.2L12 17l-5.6 3 1.2-6.2L3 9.5l6.3-.8L12 3Z"/></>
+  ),
+  hand: (
+    <><path d="M7.5 11V5.8a1.55 1.55 0 0 1 3.1 0V10"/><path d="M10.6 9V4.8a1.55 1.55 0 0 1 3.1 0V10"/><path d="M13.7 9V5.7a1.55 1.55 0 0 1 3.1 0v5"/><path d="M16.8 10.2v-1a1.55 1.55 0 0 1 3.1 0v4.5c0 4.1-2.9 7.3-7 7.3h-1.2c-2.6 0-4.2-1.1-5.8-2.8L3.2 15.9a1.65 1.65 0 0 1 2.3-2.3l2 1.7V11Z"/></>
   ),
   alert: (
     <><path d="M12 4 2.5 20h19L12 4Z"/><path d="M12 10v4m0 3v.5"/></>

@@ -25,6 +25,15 @@ const texte = (valeur: unknown) => (valeur == null ? '' : String(valeur));
 const nombre = (valeur: unknown) => (valeur == null ? 0 : Number(valeur));
 const bool = (valeur: unknown) => nombre(valeur) === 1;
 
+function tempsEcoule(atMs: number, maintenant: number): string {
+  const minutes = Math.max(0, Math.round((maintenant - atMs) / 60000));
+  if (minutes < 60) return `il y a ${minutes} min`;
+  const heures = Math.round(minutes / 60);
+  if (heures < 24) return `il y a ${heures} h`;
+  const jours = Math.round(heures / 24);
+  return jours === 1 ? 'hier' : `il y a ${jours} j`;
+}
+
 export type Resultat = { ok: true; message: string } | { ok: false; erreur: string };
 
 const echec = (erreur: string): Resultat => ({ ok: false, erreur });
@@ -96,6 +105,8 @@ export type Tache = {
   genre: 'brouillon' | 'corriger' | 'certificat' | 'coach' | 'ia';
   titre: string;
   sousTitre: string;
+  /** Dernier message brut, utile à la file Support qui montre la conversation. */
+  details?: string;
   lien: string;
   atMs: number;
 };
@@ -189,7 +200,7 @@ export async function vuePilotage(db: Db, maintenant = Date.now()): Promise<VueP
             WHERE c.resolved = 0 ORDER BY c.updated_at_ms DESC LIMIT 12`,
     }),
     db.execute({
-      sql: `SELECT id, title, (SELECT COUNT(*) FROM course_modules m WHERE m.training_id = t.id) AS modules
+      sql: `SELECT id, title, (SELECT COUNT(*) FROM course_chapters c WHERE c.training_id = t.id) AS modules
               FROM trainings t WHERE published = 0 ORDER BY title ASC LIMIT 8`,
     }),
   ]);
@@ -199,7 +210,7 @@ export async function vuePilotage(db: Db, maintenant = Date.now()): Promise<VueP
     aTraiter.push({
       genre: 'corriger',
       titre: `Corriger : ${texte(ligne.file_key) ?? 'travail rendu'}`,
-      sousTitre: `${texte(ligne.display_name) ?? ''} · ${texte(ligne.title) ?? ''}`,
+      sousTitre: `${texte(ligne.display_name) ?? ''} · ${tempsEcoule(nombre(ligne.at_ms), maintenant)}`,
       lien: '/direction/devoirs',
       atMs: nombre(ligne.at_ms),
     });
@@ -222,14 +233,16 @@ export async function vuePilotage(db: Db, maintenant = Date.now()): Promise<VueP
         genre: 'coach',
         titre: `Répondre : ${nom}`,
         sousTitre: (texte(ligne.dernier) ?? '').slice(0, 80),
+        details: texte(ligne.dernier) ?? undefined,
         lien: `/direction/conversations/${texte(ligne.id) ?? ''}`,
         atMs: nombre(ligne.updated_at_ms),
       });
     else if (dernierAuteur === 'ai' && nombre(ligne.ai_validated) === 0)
       aTraiter.push({
         genre: 'ia',
-        titre: `Superviser la réponse de l’assistant — ${nom}`,
-        sousTitre: 'Valider, corriger ou compléter la réponse.',
+        titre: `Superviser la réponse IA — ${nom}`,
+        sousTitre: 'Valider, corriger ou compléter la réponse de Monsieur Koffi.',
+        details: texte(ligne.dernier) ?? undefined,
         lien: `/direction/conversations/${texte(ligne.id) ?? ''}`,
         atMs: nombre(ligne.updated_at_ms),
       });
@@ -267,7 +280,9 @@ export async function vuePilotage(db: Db, maintenant = Date.now()): Promise<VueP
 
   const [ventesRecentes, soumissionsRecentes, certificatsRecents, messagesRecents] = await Promise.all([
     db.execute({
-      sql: `SELECT v.verified_at_ms, v.amount_value_text, u.display_name, t.title
+      sql: `SELECT v.verified_at_ms, v.amount_value_text,
+                   COALESCE(u.display_name, v.buyer_email_normalized, 'Acheteur inconnu') AS display_name,
+                   t.title
             FROM verified_purchases v LEFT JOIN users u ON u.email_normalized = v.buyer_email_normalized
             JOIN trainings t ON t.id = v.training_id
             ORDER BY v.verified_at_ms DESC LIMIT 8`,
@@ -277,7 +292,9 @@ export async function vuePilotage(db: Db, maintenant = Date.now()): Promise<VueP
             ORDER BY s.at_ms DESC LIMIT 8`,
     }),
     db.execute({
-      sql: `SELECT c.issued_at_ms, u.display_name, t.title FROM certificates c
+      sql: `SELECT c.issued_at_ms, u.display_name,
+                   COALESCE(t.title, c.formation_title, 'Formation') AS title
+            FROM certificates c
             JOIN users u ON u.id = c.user_id JOIN trainings t ON t.id = c.training_id
             ORDER BY c.issued_at_ms DESC LIMIT 8`,
     }),
@@ -306,7 +323,7 @@ export async function vuePilotage(db: Db, maintenant = Date.now()): Promise<VueP
     })),
     ...messagesRecents.rows.map((ligne) => ({
       genre: 'question' as const,
-      texte: `Question de ${texte(ligne.display_name) ?? ''} (${texte(ligne.mode) === 'coach' ? 'adressée au coach' : 'répondue par l’assistant'})`,
+      texte: `Question de ${texte(ligne.display_name) ?? ''} (${texte(ligne.mode) === 'coach' ? 'adressée au coach' : 'répondue par l’IA'})`,
       atMs: nombre(ligne.at_ms),
     })),
   ]
@@ -331,8 +348,10 @@ export async function vuePilotage(db: Db, maintenant = Date.now()): Promise<VueP
     brouillons: brouillonsATraiter,
     tauxCompletion,
     badgesEmis,
-    // Une seule passerelle est branchée : Flutterwave. Les deux autres n'existent pas.
-    passerelles: 1,
+    // La vue d'ensemble du prototype compte les passerelles réellement
+    // observées dans le journal — aucune configuration n'est une connexion
+    // active par défaut.
+    passerelles: 0,
     noteMoyenne,
   };
 }
@@ -351,6 +370,8 @@ export type Formation = {
   code: string | null;
   hours: number;
   rating: number | null;
+  /** Nombre de chapitres affiché dans les dashboards de contenu. */
+  chapitres: number;
   modules: number;
   lecons: number;
   inscrits: number;
@@ -361,9 +382,10 @@ async function lireFormation(db: Db, ligne: Record<string, unknown>): Promise<Fo
   const id = texte(ligne.id);
   const [structure, inscrits, acheteurs] = await Promise.all([
     db.execute({
-      sql: `SELECT (SELECT COUNT(*) FROM course_modules WHERE training_id=?) AS modules,
+      sql: `SELECT (SELECT COUNT(*) FROM course_chapters WHERE training_id=?) AS chapitres,
+                   (SELECT COUNT(*) FROM course_modules WHERE training_id=?) AS modules,
                    (SELECT COUNT(*) FROM course_lessons l JOIN course_modules m ON m.id=l.module_id WHERE m.training_id=?) AS lecons`,
-      args: [id, id],
+      args: [id, id, id],
     }),
     db.execute({ sql: 'SELECT COUNT(*) AS n FROM enrollments WHERE training_id=?', args: [id] }),
     db.execute({ sql: 'SELECT COUNT(*) AS n FROM verified_purchases WHERE training_id=?', args: [id] }),
@@ -379,6 +401,7 @@ async function lireFormation(db: Db, ligne: Record<string, unknown>): Promise<Fo
     code: texte(ligne.code),
     hours: nombre(ligne.hours),
     rating: typeof ligne.rating === 'number' || typeof ligne.rating === 'bigint' ? Number(ligne.rating) : null,
+    chapitres: nombre(structure.rows[0]?.chapitres),
     modules: nombre(structure.rows[0]?.modules),
     lecons: nombre(structure.rows[0]?.lecons),
     inscrits: nombre(inscrits.rows[0]?.n),

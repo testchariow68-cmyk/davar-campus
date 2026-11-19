@@ -24,6 +24,8 @@ export type Ressource = {
   /** Nombre d'étudiants nommément attribués : 0 = offerte à tous. */
   attribueeA: number;
   obtenueLeMs: number | null;
+  /** Page/secondes de reprise, pour que le tableau de bord dise où reprendre. */
+  positionLecture: number | null;
   /** Publiée = visible des étudiants. Retirée = visible du seul propriétaire. */
   publiee: boolean;
 };
@@ -48,6 +50,7 @@ export async function ressourcesDeEtudiant(db: Db, userId: string): Promise<Ress
                  r.training_id, r.position, r.published, t.title AS formation_titre,
                  (SELECT COUNT(*) FROM resource_allocations ra WHERE ra.resource_id = r.id) AS attribuees,
                  (SELECT at_ms FROM resource_allocations ra WHERE ra.resource_id = r.id AND ra.user_id = ?) AS obtenue,
+                 (SELECT mp.position FROM media_progress mp WHERE mp.resource_id = r.id AND mp.user_id = ?) AS position_lecture,
                  (SELECT COUNT(*) FROM enrollments e WHERE e.user_id = ? AND e.training_id = r.training_id) AS inscrit
           FROM resources r
           LEFT JOIN trainings t ON t.id = r.training_id
@@ -59,7 +62,7 @@ export async function ressourcesDeEtudiant(db: Db, userId: string): Promise<Ress
               OR EXISTS (SELECT 1 FROM resource_allocations ra WHERE ra.resource_id = r.id AND ra.user_id = ?)
             )
           ORDER BY r.kind, r.position, r.title`,
-    args: [userId, userId, userId, userId],
+    args: [userId, userId, userId, userId, userId],
   });
   return lignes.rows.map((row) => ({
     id: texte(row.id),
@@ -74,6 +77,7 @@ export async function ressourcesDeEtudiant(db: Db, userId: string): Promise<Ress
     position: entier(row.position) ?? 0,
     attribueeA: entier(row.attribuees) ?? 0,
     obtenueLeMs: entier(row.obtenue),
+    positionLecture: entier(row.position_lecture),
     publiee: entier(row.published) === 1,
   }));
 }
@@ -159,6 +163,7 @@ export async function toutesRessources(db: Db): Promise<Ressource[]> {
     position: entier(row.position) ?? 0,
     attribueeA: entier(row.attribuees) ?? 0,
     obtenueLeMs: null,
+    positionLecture: null,
     publiee: entier(row.published) === 1,
   }));
 }

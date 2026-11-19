@@ -1,111 +1,110 @@
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
-import { LogoutButton } from '@/components/LogoutButton';
-import { NavDirection, type LienDirection } from '@/components/direction/NavDirection';
+import { BellMenu } from '@/components/campus/BellMenu';
+import { BandeauDefilant } from '@/components/campus/BandeauDefilant';
+import { ThemeButton } from '@/components/campus/ThemeButton';
+import { UserMenu } from '@/components/campus/UserMenu';
 import { VueTestBar } from '@/components/campus/VueTestBar';
 import { VueTestMenu } from '@/components/campus/VueTestMenu';
+import { Icon, type NomIcone } from '@/components/campus/Icon';
+import { SidebarDirection, type SidebarGroup, type SidebarItem } from '@/components/direction/SidebarDirection';
 import { currentSession } from '@/lib/server/auth';
-import { lireRoles, libellesDesRoles, rolesEnLigne, sectionsPour } from '@/lib/server/equipe';
+import { lireRoles, libellesDesRoles, sectionsPour } from '@/lib/server/equipe';
 import { listerComptesTest, peutTesterUneVue } from '@/lib/server/vue-test';
+import { compterNonLues, listerNotifications } from '@/lib/server/notifications';
+import { vuePilotage } from '@/lib/server/direction';
+import { plateformesNonSuivies } from '@/lib/server/social';
 
 export const dynamic = 'force-dynamic';
 
-/** Les libellés de la navigation, écrits une seule fois. */
-const LIBELLES: Record<string, string> = {
-  accueil: 'Vue d’ensemble',
-  analytics: 'Analytics',
-  sante: 'Santé technique',
-  assistants: 'Analyse assistants virtuels',
-  badges: 'Badges & distinctions',
-  activite: 'Activité étudiants',
-  formations: 'Formations',
-  ressources: 'Ressources',
-  exercices: 'Exercices',
-  devoirs: 'Évaluations',
-  etudiants: 'Étudiants',
-  conversations: 'Conversations',
-  avis: 'Avis',
-  certificats: 'Certifications',
-  recompenses: 'Récompenses',
-  ventes: 'Ventes',
-  cycle: 'Cycle de vie',
-  activites: 'Activités',
-  equipe: 'Équipe',
-  assistant: 'Assistant virtuel',
-  exports: 'Exports',
-  emails: 'E-mails',
-  reglages: 'Configuration',
-};
-const CHEMINS: Record<string, string> = {
-  accueil: '/direction',
-  analytics: '/direction/analytics',
-  sante: '/direction/sante',
-  assistants: '/direction/assistants',
-  badges: '/direction/badges',
-  activite: '/direction/activite',
-  formations: '/direction/formations',
-  ressources: '/direction/ressources',
-  exercices: '/direction/exercices',
-  devoirs: '/direction/devoirs',
-  etudiants: '/direction/etudiants',
-  conversations: '/direction/conversations',
-  avis: '/direction/avis',
-  certificats: '/direction/certificats',
-  recompenses: '/direction/recompenses',
-  ventes: '/direction/ventes',
-  cycle: '/direction/cycle-de-vie',
-  activites: '/direction/activites',
-  equipe: '/direction/equipe',
-  assistant: '/direction/assistant',
-  exports: '/direction/exports',
-  emails: '/direction/emails',
-  reglages: '/direction/reglages',
-};
-/** Ordre d'affichage, celui du prototype : pilotage, pédagogie, communauté, système. */
-const ORDRE = [
-  'accueil',
-  'analytics',
-  'sante',
-  'assistants',
-  'badges',
-  'activite',
-  'formations',
-  'ressources',
-  'exercices',
-  'devoirs',
-  'etudiants',
-  'conversations',
-  'avis',
-  'certificats',
-  'recompenses',
-  'ventes',
-  'exports',
-  'cycle',
-  'assistant',
-  'emails',
-  'activites',
-  'equipe',
-  'reglages',
+type ItemDefinition = [string, string, string, NomIcone];
+type GroupDefinition = [string, ItemDefinition[]];
+
+/** L'ordre et les libellés du rail sont ceux de `adminShell()` du prototype. */
+const GROUPES: GroupDefinition[] = [
+  [
+    'PILOTAGE',
+    [
+      ['accueil', 'Vue d’ensemble', '/direction', 'grid'],
+      ['analytics', 'Analytics', '/direction/analytics', 'chart'],
+      ['sante', 'Santé technique', '/direction/sante', 'wallet'],
+      ['assistants', 'Analyse assistants virtuels', '/direction/assistants', 'sparkles'],
+      ['badges', 'Badges & distinctions', '/direction/badges', 'rw_seal'],
+      ['activite', 'Activité étudiants', '/direction/activite', 'users'],
+    ],
+  ],
+  [
+    'PÉDAGOGIE',
+    [
+      ['formations', 'Formations', '/direction/formations', 'book'],
+      ['ressources', 'Ressources', '/direction/ressources', 'doc'],
+      ['exercices', 'Exercices', '/direction/exercices', 'clipboard'],
+      ['devoirs', 'Évaluations', '/direction/devoirs', 'target'],
+    ],
+  ],
+  [
+    'COMMUNAUTÉ',
+    [
+      ['etudiants', 'Étudiants', '/direction/etudiants', 'users'],
+      ['conversations', 'Conversations', '/direction/conversations', 'message'],
+      ['avis', 'Avis', '/direction/avis', 'star'],
+    ],
+  ],
+  [
+    'SYSTÈME',
+    [
+      ['certificats', 'Certifications', '/direction/certificats', 'award'],
+      ['recompenses', 'Récompenses', '/direction/recompenses', 'rw_seal'],
+      ['ventes', 'Ventes', '/direction/ventes', 'wallet'],
+      ['exports', 'Exports', '/direction/exports', 'download'],
+      ['cycle', 'Cycle de vie', '/direction/cycle-de-vie', 'clock'],
+      ['assistant', 'Assistant virtuel', '/direction/assistant', 'sparkles'],
+      ['emails', 'E-mails', '/direction/emails', 'mail'],
+      ['activites', 'Activités', '/direction/activites', 'chart'],
+      ['equipe', 'Équipe', '/direction/equipe', 'shield'],
+      ['reglages', 'Configuration', '/direction/reglages', 'settings'],
+    ],
+  ],
 ];
-const TOUT = [...ORDRE];
+
+function initiales(nom: string): string {
+  return (
+    nom
+      .trim()
+      .split(/\s+/)
+      .filter(Boolean)
+      .slice(0, 2)
+      .map((morceau) => morceau[0])
+      .join('')
+      .toUpperCase() || '?'
+  );
+}
+
+function groupesPour(sections: string[], copies: number, questions: number): SidebarGroup[] {
+  return GROUPES.map(([label, items]) => ({
+    label,
+    items: items
+      .filter(([section]) => sections.includes(section))
+      .map(([section, libelle, href, icone]): SidebarItem => ({
+        section,
+        libelle,
+        href,
+        icone,
+        compteur: section === 'devoirs' ? copies : section === 'conversations' ? questions : undefined,
+      })),
+  })).filter((groupe) => groupe.items.length > 0);
+}
 
 /**
- * L'Espace Direction est réservé au propriétaire et à son équipe.
- *
- * Le périmètre est calculé ICI, côté serveur, sur le compte AFFICHÉ : le
- * propriétaire voit tout, chaque membre du staff ne voit que ce que ses rôles
- * ouvrent — règle du prototype, « Chaque membre du staff voit uniquement ce dont
- * il a besoin. »
- *
- * Pendant une vue test, le compte affiché est le compte de test : la navigation
- * montre donc exactement les écrans de la personne dont on teste la vue. Les
- * PAGES, elles, continuent de vérifier les droits de la personne réelle — le
- * propriétaire « garde ses droits » pendant la visite, comme le prototype le
- * promet, et il revient par « Quitter » ou la touche Échap.
+ * Coquille d'administration : le prototype est un rail fixe de 236 px, une
+ * barre haute de 58 px et une zone de contenu élastique. La page enfant garde
+ * ses données et ses droits côté serveur ; cette coquille ne fait que les
+ * présenter au même endroit que le prototype.
  */
 export default async function DirectionLayout({ children }: { children: React.ReactNode }) {
   const session = await currentSession();
   if (!session) redirect('/connexion');
+
   const affiche = session.user;
   const estProprietaire = affiche.role === 'admin';
   const estMembre = affiche.role === 'staff';
@@ -128,53 +127,78 @@ export default async function DirectionLayout({ children }: { children: React.Re
   }
 
   const roles = estProprietaire ? [] : await lireRoles(session.db, affiche.id);
-  const sections = estProprietaire ? TOUT : sectionsPour(roles);
-  // Le propriétaire peut ouvrir une vue de test d'ici comme du campus ; la liste
-  // des comptes de test ne lui est lue qu'à lui, et jamais pendant une visite.
+  const sections = estProprietaire
+    ? GROUPES.flatMap(([, items]) => items.map(([section]) => section))
+    : sectionsPour(roles);
+  const vue = await vuePilotage(session.db);
+  const groupes = groupesPour(sections, vue.copiesEnAttente, vue.questionsCoach);
+
   const vuesTest =
     !session.vueTest && peutTesterUneVue(session.reel)
       ? (await listerComptesTest(session.db)).map((compte) => ({ id: compte.id, libelle: compte.libelle }))
       : [];
-  const liens: LienDirection[] = sections.map((section) => ({
-    section,
-    href: CHEMINS[section],
-    libelle: LIBELLES[section],
-  }));
+  const notifications = await listerNotifications(session.db, affiche.id, Date.now(), 20);
+  const nonLues = await compterNonLues(session.db, affiche.id, Date.now());
+  // Le prototype fait défiler les réseaux pour chaque membre de l'équipe,
+  // mais jamais pour le Super Admin.
+  const reseaux = estProprietaire ? [] : await plateformesNonSuivies(session.db, affiche.id);
+  const roleLabel = estProprietaire ? 'Super Administrateur' : libellesDesRoles(roles).join(' · ') || 'Équipe';
+  const couleur = estProprietaire ? 'var(--ava-sa)' : 'var(--violet2)';
 
   return (
     <>
       {session.vueTest && <VueTestBar nom={session.user.displayName} />}
-      <div className="container" style={{ paddingTop: 24, paddingBottom: 56 }}>
-        <header className="row between" style={{ flexWrap: 'wrap', gap: 12 }}>
-          <div className="row" style={{ gap: 12 }}>
-            <Link href="/direction" style={{ textDecoration: 'none' }}>
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src="/logo-structure.png" alt="Davar Académie" className="brand-img" />
-            </Link>
-            <span className="badge" style={{ background: 'var(--violet-soft)', color: 'var(--violet-deep)' }}>
-              {estProprietaire ? 'Direction' : 'Équipe'}
-            </span>
-            {!estProprietaire && (
-              <span className="small muted" title={rolesEnLigne(roles)}>
-                {libellesDesRoles(roles).join(' · ') || 'aucun rôle attribué'}
-              </span>
-            )}
-          </div>
-          <nav className="row" style={{ gap: 8, flexWrap: 'wrap' }}>
-            {vuesTest.length > 0 && <VueTestMenu vues={vuesTest} />}
-            <span className="small muted">{session.reel.displayName}</span>
-            <Link href="/campus" className="btn btn-ghost">
-              Mon campus
-            </Link>
-            <LogoutButton />
-          </nav>
-        </header>
+      <div className="admin-shell">
+        <SidebarDirection
+          groupes={groupes}
+          nom={affiche.displayName}
+          roleLabel={roleLabel}
+          initiales={initiales(affiche.displayName)}
+          couleur={couleur}
+        />
 
-        <div className="mt16 mb16">
-          <NavDirection liens={liens} />
+        <div className="admin-main">
+          <header className="admin-top">
+            <h2>
+              Vue d’ensemble
+              <span
+                className={`badge ${estProprietaire ? 'b-gold' : 'b-violet'}`}
+                style={{ marginLeft: 8 }}
+              >
+                {estProprietaire ? 'Super Admin' : 'Équipe'}
+              </span>
+            </h2>
+            <div className="tb-right">
+              {vuesTest.length > 0 && <VueTestMenu vues={vuesTest} />}
+              <ThemeButton />
+              <BellMenu
+                initiales={notifications.map((notification) => ({
+                  id: notification.id,
+                  kind: notification.kind,
+                  titre: notification.titre,
+                  corps: notification.corps,
+                  route: notification.route,
+                  atMs: notification.atMs,
+                  lue: notification.lue,
+                }))}
+                nonLuesInitiales={nonLues}
+              />
+              <UserMenu nom={affiche.displayName} email={affiche.email} variante="avatar" couleur={couleur} />
+            </div>
+          </header>
+
+          <main className="admin-content">{children}</main>
+          {!estProprietaire && <BandeauDefilant annonce={null} reseaux={reseaux} />}
         </div>
 
-        <main>{children}</main>
+        <a
+          className="fab-home"
+          href="/direction"
+          title="Accueil"
+          aria-label="Accueil"
+        >
+          <Icon nom="home" taille={17} />
+        </a>
       </div>
     </>
   );

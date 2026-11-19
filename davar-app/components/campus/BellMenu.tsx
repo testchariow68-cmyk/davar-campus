@@ -60,14 +60,7 @@ export function BellMenu({ initiales, nonLuesInitiales }: { initiales: Notificat
     <div className="dd-anchor" ref={zone}>
       <button className="icon-btn" aria-label="Notifications" onClick={() => setOuvert((etat) => !etat)}>
         <Icon nom="bell" taille={18} />
-        {nonLues > 0 && (
-          <span
-            className="badge b-red"
-            style={{ position: 'absolute', top: -4, right: -4, minWidth: 18, height: 18, padding: '0 4px', fontSize: 10, justifyContent: 'center' }}
-          >
-            {nonLues > 9 ? '9+' : nonLues}
-          </span>
-        )}
+        {nonLues > 0 && <span className="n-badge" aria-label={`${nonLues} notification${nonLues > 1 ? 's' : ''} non lue${nonLues > 1 ? 's' : ''}`} />}
       </button>
 
       {ouvert && (

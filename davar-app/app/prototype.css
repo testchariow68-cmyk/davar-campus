@@ -1203,8 +1203,10 @@ body:has(.ticker) .container{padding-bottom:64px}
       sans décaler un seul pixel.
    ============================================================ */
 
-/* 1 — Le plafond du campus, tel qu'il était prévu. */
-.cp-content, #cpPage { max-width: 1080px; }
+/* 1 — Le cockpit occupe l'espace utile du viewport, comme le prototype.
+   La largeur reste pilotée par le parent et les breakpoints, jamais par un
+   appareil nommé ou une échelle fixe. */
+.cp-content, #cpPage { max-width: 100%; }
 
 /* 2 et 3 — tout ce qui suit ne s'applique qu'au doigt. */
 @media (pointer: coarse) {
@@ -1349,3 +1351,96 @@ body:has(.ticker) .container{padding-bottom:64px}
   .lg-anneau { width: 104px; }
   .lg-pied { margin-top: 22px; gap: 10px; }
 }
+
+/* Dashboard fidelity: visible, font-independent greeting mark.  The
+   prototype's emoji fallback can be tofu in a headless capture browser; the
+   inline SVG icon remains a real, visible glyph at every viewport. */
+.greeting-wave {
+  display: inline-flex;
+  align-items: center;
+  vertical-align: -0.16em;
+  color: var(--gold2);
+}
+.greeting-wave .ic { display: block; }
+.metric-value-with-icon { display: inline-flex; align-items: center; gap: 5px; }
+.metric-value-with-icon .ic { color: var(--gold); }
+.empty-with-icon { display: inline-flex; align-items: center; justify-content: center; gap: 6px; }
+
+/* Direction shell: it must be the full viewport admin shell, not the public
+   centered container used by secondary direction screens. */
+.admin-shell .sidebar .brand { min-width: 0; }
+.admin-shell .sidebar .brand-txt { white-space: nowrap; }
+.admin-shell .sidebar .brand-txt > span {
+  display: block;
+  margin-top: 0;
+  font-family: Georgia, 'Times New Roman', serif;
+  font-size: 16px;
+  line-height: 1.05;
+  font-weight: 700;
+  letter-spacing: .07em;
+  color: #fff;
+}
+.admin-shell .sidebar .brand-txt > small {
+  display: block;
+  margin-top: 3px;
+  font-family: Georgia, 'Times New Roman', serif;
+  font-size: 9.5px;
+  font-weight: 700;
+  letter-spacing: .3em;
+  color: var(--gold2);
+  text-transform: uppercase;
+}
+.admin-shell .admin-content > * { min-width: 0; }
+.admin-shell .tb-right { margin-left: auto; }
+
+@media (max-width: 1020px) {
+  .admin-shell .sidebar { width: 210px; }
+}
+
+/* Direction on small viewports: the rail becomes one deliberately scrollable
+   top strip. Keep each group intact so the role-specific navigation never
+   overlaps the brand or the header. */
+@media (max-width: 900px) {
+  .admin-shell .sidebar {
+    width: 100%;
+    height: auto;
+    min-height: 70px;
+    position: static;
+    flex: 0 0 auto;
+    flex-direction: row;
+    align-items: center;
+    gap: 4px;
+    padding: 8px;
+    overflow-x: auto;
+    overflow-y: hidden;
+  }
+  .admin-shell .sidebar .brand {
+    flex: 0 0 auto;
+    width: auto;
+    min-width: max-content;
+    padding: 4px 10px;
+  }
+  .admin-shell .sidebar .sb-sec {
+    flex: 0 0 auto;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: 0;
+  }
+  .admin-shell .sidebar .sb-label { display: none; }
+  .admin-shell .sidebar .sb-item {
+    flex: 0 0 auto;
+    white-space: nowrap;
+  }
+  .admin-shell .sidebar .sb-foot { display: none; }
+}
+
+/* Les sous-lignes de file de travail restent sur une seule ligne comme dans
+   le prototype; la largeur disponible fournit l'ellipse, jamais un débordement. */
+.admin-content .res-item .wrap > .xs {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.admin-content .grid > * { min-width: 0; }

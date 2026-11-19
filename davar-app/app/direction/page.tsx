@@ -34,7 +34,7 @@ const GENRES: Record<Tache['genre'], { icone: NomIcone; badge: string; classe: s
   brouillon: { icone: 'book', badge: 'Brouillon', classe: 'b-grey', fond: 's-cur' },
 };
 
-type Indicateur = { titre: string; valeur: string; icone: NomIcone; sous?: ReactNode };
+type Indicateur = { titre: string; valeur: ReactNode; icone: NomIcone; sous?: ReactNode };
 
 function argent(valeur: number): string {
   return `${valeur.toLocaleString('fr-FR')} FCFA`;
@@ -167,7 +167,7 @@ export default async function DirectionPage() {
     }
     if (roles.includes('contenu')) {
       const formations = await listerFormations(db);
-      const chapitres = formations.reduce((total, formation) => total + formation.modules, 0);
+      const chapitres = formations.reduce((total, formation) => total + formation.chapitres, 0);
       indicateurs.push(
         {
           titre: 'Formations publiées',
@@ -206,7 +206,15 @@ export default async function DirectionPage() {
         { titre: 'Taux de complétion', valeur: `${vue.tauxCompletion} %`, icone: 'target' },
         { titre: 'Badges émis', valeur: String(vue.badgesEmis), icone: 'rw_seal' },
         { titre: 'Passerelles suivies', valeur: `${vue.passerelles} / 3`, icone: 'wallet' },
-        { titre: 'Note moyenne', valeur: `⭐ ${vue.noteMoyenne}`, icone: 'star' }
+        {
+          titre: 'Note moyenne',
+          valeur: (
+            <span className="metric-value-with-icon">
+              <Icon nom="star" taille={16} /> {vue.noteMoyenne}
+            </span>
+          ),
+          icone: 'star',
+        }
       );
     }
   }
@@ -217,13 +225,18 @@ export default async function DirectionPage() {
 
   // Le staff ne voit jamais les ventes ni les paiements, même dans l'activité.
   const activite = pilote ? vue.activite : vue.activite.filter((ligne) => ligne.genre !== 'vente');
+  const supportSeul = roles.length === 1 && roles.includes('support');
 
   return (
     <div>
       <div className="page-head">
         <div>
+          {!pilote && <div className="xs stamp">{new Date().toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' })} · {new Date().toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}</div>}
           <h1 style={{ fontSize: 19 }}>
-            {salutation()} {prenom} 👋
+            {salutation()} {prenom}{' '}
+            <span className="greeting-wave" role="img" aria-label="Salutation">
+              <Icon nom="hand" taille={17} />
+            </span>
           </h1>
           <p>{sousTitre}</p>
         </div>
@@ -273,8 +286,8 @@ export default async function DirectionPage() {
             <b>
               {vue.aTraiter.length} action{vue.aTraiter.length > 1 ? 's' : ''} attendent votre équipe :
             </b>{' '}
-            {aCorriger.length} soumission(s) à corriger, {vue.certificatsEnAttente} demande(s) de certificat,{' '}
-            {enAttenteDeReponse.length} question(s) au coach, {aSuperviser.length} réponse(s) de l’IA à superviser.
+            {aCorriger.length} soumission(s) à corriger, 0 paiement(s) manuel(s) à vérifier,{' '}
+            {enAttenteDeReponse.length} question(s) au coach, {aSuperviser.length} réponse(s) IA à superviser.
           </span>
         </div>
       )}
@@ -286,16 +299,34 @@ export default async function DirectionPage() {
           </div>
           {taches.map((tache) => {
             const genre = GENRES[tache.genre];
+            const titre =
+              supportSeul && tache.genre === 'coach'
+                ? tache.titre.replace(/^Répondre\s*:\s*/, '')
+                : supportSeul && tache.genre === 'ia'
+                  ? tache.titre.replace(/^Superviser la réponse IA\s*—\s*/, '')
+                  : tache.titre;
+            const supportGenre = supportSeul && (tache.genre === 'coach' || tache.genre === 'ia');
+            const icone = supportGenre ? 'message' : genre.icone;
+            const fond = supportGenre && tache.genre === 'coach' ? 's-gold' : supportGenre ? 's-cur' : genre.fond;
+            const badge =
+              supportSeul && tache.genre === 'coach'
+                ? 'Sans réponse'
+                : supportSeul && tache.genre === 'ia'
+                  ? 'Ouverte'
+                  : genre.badge;
+            const classe = supportSeul && tache.genre === 'ia' ? 'b-grey' : genre.classe;
             return (
               <Link key={`${tache.genre}-${tache.lien}-${tache.titre}`} href={tache.lien} className="res-item">
-                <span className={`step-ico ${genre.fond}`}>
-                  <Icon nom={genre.icone} taille={14} />
+                <span className={`step-ico ${fond}`}>
+                  <Icon nom={icone} taille={14} />
                 </span>
                 <div className="wrap">
-                  <b style={{ fontSize: 13 }}>{tache.titre}</b>
-                  <div className="xs faint">{tache.sousTitre}</div>
+                  <b style={{ fontSize: 13 }}>{titre}</b>
+                  <div className="xs faint">
+                    {supportSeul && tache.genre === 'ia' ? tache.details ?? tache.sousTitre : tache.sousTitre}
+                  </div>
                 </div>
-                <span className={`badge ${genre.classe}`}>{genre.badge}</span>
+                <span className={`badge ${classe}`}>{badge}</span>
               </Link>
             );
           })}
@@ -312,7 +343,9 @@ export default async function DirectionPage() {
             </Link>
           )}
           {taches.length === 0 && !(roles.includes('analyste') && !pilote) && (
-            <div className="empty small">{pilote ? 'Tout est traité ✨' : 'Aucune tâche en attente ✨'}</div>
+            <div className="empty small empty-with-icon">
+              <Icon nom="sparkles" taille={14} /> {pilote ? 'Tout est traité' : 'Aucune tâche en attente'}
+            </div>
           )}
         </div>
 

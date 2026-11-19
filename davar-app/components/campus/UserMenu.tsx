@@ -13,11 +13,13 @@ export function UserMenu({
   nom,
   email,
   variante = 'barre',
+  couleur,
 }: {
   nom: string;
   email: string;
   /** « avatar » : le bouton du bandeau, comme `cpUserMenu()` du prototype. */
   variante?: 'barre' | 'avatar';
+  couleur?: string;
 }) {
   const [ouvert, setOuvert] = useState(false);
   const zone = useRef<HTMLDivElement>(null);
@@ -37,7 +39,14 @@ export function UserMenu({
     };
   }, [ouvert]);
 
-  const initiale = (nom.trim()[0] ?? '?').toUpperCase();
+  const initiale = nom
+    .trim()
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((morceau) => morceau[0])
+    .join('')
+    .toUpperCase() || '?';
 
   return (
     <div className="dd-anchor" ref={zone}>
@@ -48,7 +57,7 @@ export function UserMenu({
         title="Mon compte"
         aria-label="Mon compte"
       >
-        <span className="avatar" aria-hidden="true">
+        <span className="avatar" style={{ background: couleur ?? 'var(--violet)' }} aria-hidden="true">
           {initiale}
         </span>
       </button>

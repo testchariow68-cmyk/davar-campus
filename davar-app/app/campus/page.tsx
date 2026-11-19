@@ -80,7 +80,10 @@ export default async function CampusDashboard() {
             {dateLongue} · {heure}
           </div>
           <h1>
-            {salutation()}, {prenom} 👋
+            {salutation()}, {prenom}{' '}
+            <span className="greeting-wave" role="img" aria-label="Salutation">
+              <Icon nom="hand" taille={19} />
+            </span>
           </h1>
           <p>{phrase}</p>
           {active ? (
@@ -192,7 +195,11 @@ export default async function CampusDashboard() {
                 </span>
                 <div className="wrap">
                   <b style={{ fontSize: 14.5 }}>{livres[0].title}</b>
-                  <div className="xs muted">Votre lecteur reprend là où vous vous êtes arrêté(e).</div>
+                  <div className="xs muted">
+                    {livres[0].positionLecture != null
+                      ? `Vous vous êtes arrêté(e) à la page ${livres[0].positionLecture}.`
+                      : 'Votre lecteur reprend là où vous vous êtes arrêté(e).'}
+                  </div>
                 </div>
                 <Link className="btn" href={`/campus/ressources/livre/${livres[0].id}`}>
                   <Icon nom="book" taille={15} /> Continuer

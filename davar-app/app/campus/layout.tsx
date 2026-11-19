@@ -14,7 +14,6 @@ import { passageEtudiant } from '@/lib/server/assiduite';
 import { compterNonLues, listerNotifications } from '@/lib/server/notifications';
 import { lirePreferences } from '@/lib/server/profil';
 import { EchelleAffichage } from '@/components/campus/EchelleAffichage';
-import { SupportFab } from '@/components/campus/SupportFab';
 import { lireReglages } from '@/lib/server/settings';
 import { annonceDepuisReglages, annonceViseLUtilisateur, plateformesNonSuivies } from '@/lib/server/social';
 import { demandeEnCours } from '@/lib/server/avis';
@@ -157,13 +156,6 @@ export default async function CampusLayout({ children }: { children: React.React
             ramènent à l'accueil, et on le glisse où l'on veut. */}
         <BoutonAccueil />
 
-        {/* Le bouton d'aide flottant, comme le panneau d'aide du prototype : il
-            est present sur TOUS les ecrans du campus, pas sur une page a part. */}
-        <SupportFab
-          whatsapp={reglages['support.whatsapp']}
-          telephone={reglages['support.phone']}
-          courriel={reglages['support.email']}
-        />
       </div>
     </>
   );
