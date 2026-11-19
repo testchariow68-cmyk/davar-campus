@@ -574,6 +574,9 @@ export async function supprimerFormation(db: Db, id: string): Promise<Resultat> 
     args: [id],
   });
   const instructions = [
+    { sql: 'DELETE FROM lesson_comments WHERE lesson_id IN (SELECT l.id FROM course_lessons l JOIN course_modules m ON m.id=l.module_id WHERE m.training_id=?)', args: [id] },
+    { sql: 'DELETE FROM lesson_reactions WHERE lesson_id IN (SELECT l.id FROM course_lessons l JOIN course_modules m ON m.id=l.module_id WHERE m.training_id=?)', args: [id] },
+    { sql: 'DELETE FROM lesson_assets WHERE lesson_id IN (SELECT l.id FROM course_lessons l JOIN course_modules m ON m.id=l.module_id WHERE m.training_id=?)', args: [id] },
     ...lecons.rows.map((ligne) => ({ sql: 'DELETE FROM lesson_completions WHERE lesson_id=?', args: [texte(ligne.id)] })),
     { sql: 'DELETE FROM course_lessons WHERE module_id IN (SELECT id FROM course_modules WHERE training_id=?)', args: [id] },
     { sql: 'DELETE FROM course_modules WHERE training_id=?', args: [id] },
@@ -911,6 +914,9 @@ export async function supprimerModule(db: Db, moduleId: string): Promise<Resulta
   if (!module.rows.length) return echec('module_introuvable');
   await db.batch(
     [
+      { sql: 'DELETE FROM lesson_comments WHERE lesson_id IN (SELECT id FROM course_lessons WHERE module_id=?)', args: [moduleId] },
+      { sql: 'DELETE FROM lesson_reactions WHERE lesson_id IN (SELECT id FROM course_lessons WHERE module_id=?)', args: [moduleId] },
+      { sql: 'DELETE FROM lesson_assets WHERE lesson_id IN (SELECT id FROM course_lessons WHERE module_id=?)', args: [moduleId] },
       { sql: 'DELETE FROM course_lessons WHERE module_id=?', args: [moduleId] },
       { sql: 'DELETE FROM course_modules WHERE id=?', args: [moduleId] },
     ],
@@ -1146,7 +1152,15 @@ export async function supprimerLecon(db: Db, leconId: string): Promise<Resultat>
     );
   const lecon = await db.execute({ sql: 'SELECT module_id FROM course_lessons WHERE id=?', args: [leconId] });
   if (!lecon.rows.length) return echec('lecon_introuvable');
-  await db.execute({ sql: 'DELETE FROM course_lessons WHERE id=?', args: [leconId] });
+  await db.batch(
+    [
+      { sql: 'DELETE FROM lesson_comments WHERE lesson_id=?', args: [leconId] },
+      { sql: 'DELETE FROM lesson_reactions WHERE lesson_id=?', args: [leconId] },
+      { sql: 'DELETE FROM lesson_assets WHERE lesson_id=?', args: [leconId] },
+      { sql: 'DELETE FROM course_lessons WHERE id=?', args: [leconId] },
+    ],
+    'write'
+  );
   const parent = texte(lecon.rows[0].module_id);
   const ordre = await ordreActuel(db, 'course_lessons', 'module_id', parent);
   if (ordre.length) await reordonner(db, 'course_lessons', 'module_id', parent, ordre, 1000);
@@ -1414,6 +1428,9 @@ export async function purgerContenu(db: Db, confirmation: string): Promise<Resul
     return echec(`ventes_reelles : ${nbAchats} achat(s) vérifié(s) existent. Une vente est une pièce comptable : la purge est refusée.`);
   await db.batch(
     [
+      { sql: 'DELETE FROM lesson_comments' },
+      { sql: 'DELETE FROM lesson_reactions' },
+      { sql: 'DELETE FROM lesson_assets' },
       { sql: 'DELETE FROM lesson_completions' },
       { sql: 'DELETE FROM enrollments' },
       { sql: 'DELETE FROM course_lessons' },

@@ -16,6 +16,10 @@ DDL_PATTERNS = {
     'CREATE TABLE': r'^CREATE\s+TABLE\s+([a-z_]+)',
     'CREATE INDEX': r'^CREATE\s+INDEX\s+([a-z_]+)',
     'ALTER TABLE': r'^ALTER\s+TABLE\s+([a-z_]+)\s+ADD\s+COLUMN\s+([a-z_]+)',
+    # La reprise additive de la migration 025 porte aussi des données
+    # existantes : elles restent autorisées, sans DELETE/TRUNCATE ni DROP.
+    'INSERT INTO': r'^INSERT\s+INTO\s+([a-z_]+)',
+    'UPDATE': r'^UPDATE\s+([a-z_]+)',
 }
 FORBIDDEN = ('drop table', 'drop index', 'truncate', 'delete from')
 

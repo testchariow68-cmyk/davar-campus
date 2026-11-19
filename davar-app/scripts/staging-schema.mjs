@@ -208,8 +208,15 @@ const MIGRATIONS = [
     ddl: 2, // une table de ressources de cours, et le format d'image de la vidéo principale
     creates: ['lesson_assets'],
   },
+  {
+    version: 27,
+    file: '027_interactions_cours.sqlite.sql',
+    sha256: '89248841ed1ecf30a03d94f6fe7142f6bca78ffdd529fbadf262c7a50ab73b5b',
+    ddl: 4, // réactions emoji et commentaires publics, avec leurs index
+    creates: ['lesson_reactions', 'lesson_comments'],
+  },
 ];
-const EXPECTED_TABLE_COUNT = 55; // 48 après 013 — 014, 015 et 019 ajoutent des colonnes, 016 le journal, 020 les clés d'appareil, 021 les appareils abonnés, 022 les attentes
+const EXPECTED_TABLE_COUNT = 57; // 55 après 026 — 027 ajoute les réactions et les commentaires publics
 const FORBIDDEN = /\b(drop|truncate|delete\s+from)\b/i;
 
 const mode = process.argv[2];

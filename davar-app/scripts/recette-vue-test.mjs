@@ -267,7 +267,7 @@ try {
   // Les clés étrangères SONT appliquées : on retire d'abord les lignes filles.
   // `staff_events` en fait partie depuis le journal de l'équipe : la recette
   // écrit de vraies actions, et le journal refuse un auteur qui n'existe plus.
-  for (const table of ['sessions', 'notifications', 'user_prefs', 'social_subscriptions']) {
+  for (const table of ['sessions', 'notifications', 'user_prefs', 'social_subscriptions', 'lesson_reactions', 'lesson_comments']) {
     await db.execute({ sql: `DELETE FROM ${table} WHERE user_id = 'usr_recette'` }).catch(() => {});
   }
   await db.execute({ sql: "DELETE FROM staff_events WHERE actor_id = 'usr_recette'" }).catch(() => {});

@@ -12,6 +12,7 @@
  * horodatée est le contrôle, exactement comme le prototype l'assume.
  */
 import type { Db } from './auth-core.ts';
+import { notifier } from './notifications.ts';
 import { lienSocialValide, lireReglages } from './settings.ts';
 
 function texte(valeur: unknown, defaut = ''): string {
@@ -143,4 +144,237 @@ export function annonceViseLUtilisateur(annonce: Annonce | null, role: 'student'
   if (annonce.audience === 'all') return true;
   if (annonce.audience === 'staff') return role === 'staff' || role === 'admin';
   return role === 'student';
+}
+
+
+/* ---------------------------------------------------------------- cours --- */
+
+/** Les six glyphes du prototype : ils restent des caractères Unicode, jamais des icônes SVG. */
+export const EMOJIS_COURS = ['👍', '❤️', '🔥', '👏', '😂', '🤩'] as const;
+export type EmojiCours = (typeof EMOJIS_COURS)[number];
+
+export type ReactionCours = { emoji: EmojiCours; total: number; parMoi: boolean };
+export type CommentaireCours = {
+  id: string;
+  parentId: string | null;
+  auteurId: string;
+  auteur: string;
+  initiales: string;
+  couleur: string;
+  texte: string;
+  atMs: number;
+};
+export type SocialCours = {
+  reactions: ReactionCours[];
+  totalReactions: number;
+  commentaires: CommentaireCours[];
+  totalCommentaires: number;
+};
+
+export class ErreurSocialCours extends Error {
+  readonly code: 'not_enrolled' | 'invalid_input' | 'invalid_parent' | 'unavailable';
+
+  constructor(code: 'not_enrolled' | 'invalid_input' | 'invalid_parent' | 'unavailable') {
+    super(`cours_social:${code}`);
+    this.name = 'ErreurSocialCours';
+    this.code = code;
+  }
+}
+
+const COULEURS_AVATAR = ['#7C3AED', '#6D28D9', '#C9A24B', '#2B6CB0', '#1F8A4C', '#C0392B'];
+
+function initialesPour(nom: string): string {
+  const morceaux = nom.trim().split(/\s+/).filter(Boolean);
+  return (morceaux.map((mot) => mot[0]).join('').slice(0, 2) || '??').toUpperCase();
+}
+
+function couleurPour(id: string): string {
+  let somme = 0;
+  for (let index = 0; index < id.length; index += 1) somme = (somme * 31 + id.charCodeAt(index)) | 0;
+  return COULEURS_AVATAR[Math.abs(somme) % COULEURS_AVATAR.length];
+}
+
+function estEmojiCours(value: unknown): value is EmojiCours {
+  return typeof value === 'string' && (EMOJIS_COURS as readonly string[]).includes(value);
+}
+
+/** Le droit de lire/écrire les interactions : le cours appartient à une formation suivie. */
+async function leconAccessible(
+  db: Db,
+  userId: string,
+  lessonId: string,
+  apercu = false
+): Promise<boolean> {
+  const resultat = await db.execute({
+    sql: `SELECT t.published,
+                 EXISTS(SELECT 1 FROM enrollments e WHERE e.training_id = m.training_id AND e.user_id = ?) AS enrolled
+          FROM course_lessons l
+          JOIN course_modules m ON m.id = l.module_id
+          JOIN trainings t ON t.id = m.training_id
+          WHERE l.id = ?`,
+    args: [userId, lessonId],
+  });
+  const row = resultat.rows[0];
+  if (!row) return false;
+  if (entier(row.enrolled) === 1) return true;
+  return apercu && entier(row.published) === 1;
+}
+
+/**
+ * Lecture publique et cohérente du cours : les mêmes compteurs et les mêmes
+ * commentaires sont renvoyés à chaque étudiant inscrit.
+ */
+export async function lireCoursSocial(
+  db: Db,
+  userId: string,
+  lessonId: string,
+  apercu = false
+): Promise<SocialCours | null> {
+  if (typeof lessonId !== 'string' || lessonId.length < 3 || lessonId.length > 120) return null;
+  if (!(await leconAccessible(db, userId, lessonId, apercu))) return null;
+
+  const [compteurs, miens, commentaires] = await Promise.all([
+    db.execute({
+      sql: 'SELECT emoji, COUNT(*) AS n FROM lesson_reactions WHERE lesson_id = ? GROUP BY emoji',
+      args: [lessonId],
+    }),
+    db.execute({
+      sql: 'SELECT emoji FROM lesson_reactions WHERE lesson_id = ? AND user_id = ?',
+      args: [lessonId, userId],
+    }),
+    db.execute({
+      sql: `SELECT c.id, c.parent_id, c.user_id, u.display_name, c.text, c.created_at_ms
+            FROM lesson_comments c JOIN users u ON u.id = c.user_id
+            WHERE c.lesson_id = ?
+            ORDER BY c.created_at_ms DESC LIMIT 500`,
+      args: [lessonId],
+    }),
+  ]);
+
+  const nombres = new Map<string, number>();
+  for (const row of compteurs.rows) {
+    if (estEmojiCours(row.emoji)) nombres.set(row.emoji, entier(row.n) ?? 0);
+  }
+  const miensSet = new Set(miens.rows.map((row) => texte(row.emoji)));
+  const reactions = EMOJIS_COURS.map((emoji) => ({
+    emoji,
+    total: nombres.get(emoji) ?? 0,
+    parMoi: miensSet.has(emoji),
+  }));
+  const totalReactions = reactions.reduce((total, reaction) => total + reaction.total, 0);
+
+  const liste = commentaires.rows.map((row) => {
+    const auteurId = texte(row.user_id);
+    const auteur = texte(row.display_name, 'Membre');
+    return {
+      id: texte(row.id),
+      parentId: row.parent_id === null || row.parent_id === undefined ? null : texte(row.parent_id),
+      auteurId,
+      auteur,
+      initiales: initialesPour(auteur),
+      couleur: couleurPour(auteurId),
+      texte: texte(row.text),
+      atMs: entier(row.created_at_ms) ?? 0,
+    } satisfies CommentaireCours;
+  });
+
+  return {
+    reactions,
+    totalReactions,
+    commentaires: liste,
+    totalCommentaires: liste.length,
+  };
+}
+
+/** Une réaction = un interrupteur, sans supprimer celles des autres étudiants. */
+export async function basculerReactionCours(
+  db: Db,
+  userId: string,
+  lessonId: string,
+  emoji: unknown,
+  maintenant = Date.now()
+): Promise<SocialCours> {
+  if (typeof lessonId !== 'string' || lessonId.length < 3 || lessonId.length > 120 || !estEmojiCours(emoji))
+    throw new ErreurSocialCours('invalid_input');
+  if (!(await leconAccessible(db, userId, lessonId))) throw new ErreurSocialCours('not_enrolled');
+
+  const existante = await db.execute({
+    sql: 'SELECT id FROM lesson_reactions WHERE lesson_id = ? AND user_id = ? AND emoji = ?',
+    args: [lessonId, userId, emoji],
+  });
+  if (existante.rows.length > 0) {
+    await db.execute({
+      sql: 'DELETE FROM lesson_reactions WHERE lesson_id = ? AND user_id = ? AND emoji = ?',
+      args: [lessonId, userId, emoji],
+    });
+  } else {
+    await db.execute({
+      sql: `INSERT INTO lesson_reactions(id, lesson_id, user_id, emoji, created_at_ms)
+            VALUES (?, ?, ?, ?, ?)`,
+      args: [`react_${maintenant.toString(36)}_${Math.random().toString(36).slice(2, 10)}`, lessonId, userId, emoji, maintenant],
+    });
+  }
+  const social = await lireCoursSocial(db, userId, lessonId);
+  if (!social) throw new ErreurSocialCours('unavailable');
+  return social;
+}
+
+/** Publication d'un commentaire racine ou d'une réponse, visible par tous les inscrits. */
+export async function ajouterCommentaireCours(
+  db: Db,
+  userId: string,
+  lessonId: string,
+  contenu: unknown,
+  parentId: unknown,
+  maintenant = Date.now()
+): Promise<SocialCours> {
+  if (typeof lessonId !== 'string' || lessonId.length < 3 || lessonId.length > 120)
+    throw new ErreurSocialCours('invalid_input');
+  const texteCommentaire = typeof contenu === 'string' ? contenu.trim() : '';
+  if (texteCommentaire.length === 0 || texteCommentaire.length > 2000)
+    throw new ErreurSocialCours('invalid_input');
+  if (!(await leconAccessible(db, userId, lessonId))) throw new ErreurSocialCours('not_enrolled');
+
+  const reponseA = typeof parentId === 'string' && parentId.length > 0 ? parentId : null;
+  let destinataire = '';
+  if (reponseA) {
+    const parent = await db.execute({
+      sql: 'SELECT user_id, parent_id FROM lesson_comments WHERE id = ? AND lesson_id = ?',
+      args: [reponseA, lessonId],
+    });
+    const ligne = parent.rows[0];
+    if (!ligne || (ligne.parent_id !== null && ligne.parent_id !== undefined))
+      throw new ErreurSocialCours('invalid_parent');
+    destinataire = texte(ligne.user_id);
+  }
+
+  const id = `cmt_${maintenant.toString(36)}_${Math.random().toString(36).slice(2, 10)}`;
+  await db.execute({
+    sql: `INSERT INTO lesson_comments(id, lesson_id, user_id, parent_id, text, created_at_ms)
+          VALUES (?, ?, ?, ?, ?, ?)`,
+    args: [id, lessonId, userId, reponseA, texteCommentaire, maintenant],
+  });
+
+  if (destinataire && destinataire !== userId) {
+    const auteur = await db.execute({ sql: 'SELECT display_name FROM users WHERE id = ?', args: [userId] });
+    const nom = texte(auteur.rows[0]?.display_name, 'Un membre');
+    try {
+      await notifier(
+        db,
+        {
+          userId: destinataire,
+          kind: 'reply',
+          titre: 'Quelqu’un a répondu à votre commentaire',
+          corps: `${nom} : « ${texteCommentaire.slice(0, 70)}${texteCommentaire.length > 70 ? '…' : ''} »`,
+        },
+        maintenant
+      );
+    } catch {
+      /* Une notification ne doit jamais empêcher la publication publique. */
+    }
+  }
+
+  const social = await lireCoursSocial(db, userId, lessonId);
+  if (!social) throw new ErreurSocialCours('unavailable');
+  return social;
 }

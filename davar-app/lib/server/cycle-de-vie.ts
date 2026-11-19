@@ -419,6 +419,12 @@ export async function effacerIdentite(db: Db, userId: string, maintenant = Date.
     ['sessions', 'DELETE FROM sessions WHERE user_id = ?'],
     ['email_tokens', 'DELETE FROM email_tokens WHERE user_id = ?'],
     ['notifications', 'DELETE FROM notifications WHERE user_id = ?'],
+    // Les interactions de cours sont personnelles aussi. Les réponses aux
+    // commentaires d’un compte passent avant son commentaire racine pour ne
+    // laisser aucune référence auto-référente cassée.
+    ['lesson_comments_replies', 'DELETE FROM lesson_comments WHERE parent_id IN (SELECT id FROM lesson_comments WHERE user_id = ?)'],
+    ['lesson_comments', 'DELETE FROM lesson_comments WHERE user_id = ?'],
+    ['lesson_reactions', 'DELETE FROM lesson_reactions WHERE user_id = ?'],
     ['conversation_messages', 'DELETE FROM conversation_messages WHERE conversation_id IN (SELECT id FROM conversations WHERE user_id = ?)'],
     ['conversations', 'DELETE FROM conversations WHERE user_id = ?'],
     ['reviews', 'DELETE FROM reviews WHERE user_id = ?'],

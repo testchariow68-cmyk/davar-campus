@@ -162,7 +162,17 @@ const FICHIERS = [
 ];
 
 function semerContenu(db) {
+  // Le contenu de démonstration peut être rejoué sur une base qui a déjà servi
+  // aux captures : retirer d'abord toutes les références qui pointent vers les
+  // cours, y compris les interactions publiques ajoutées par la migration 027.
+  db.exec("DELETE FROM lesson_comments WHERE lesson_id LIKE 'les-demo-%'");
+  db.exec("DELETE FROM lesson_reactions WHERE lesson_id LIKE 'les-demo-%'");
   db.exec("DELETE FROM lesson_assets WHERE id LIKE 'fic-demo-%'");
+  db.exec("DELETE FROM assessment_attempts WHERE assessment_id IN (SELECT id FROM lesson_assessments WHERE lesson_id LIKE 'les-demo-%')");
+  db.exec("DELETE FROM submissions WHERE assessment_id IN (SELECT id FROM lesson_assessments WHERE lesson_id LIKE 'les-demo-%')");
+  db.exec("DELETE FROM lesson_assessments WHERE lesson_id LIKE 'les-demo-%'");
+  db.exec("DELETE FROM lesson_exercises WHERE lesson_id LIKE 'les-demo-%'");
+  db.exec("DELETE FROM lesson_completions WHERE lesson_id LIKE 'les-demo-%'");
   db.exec("DELETE FROM course_lessons WHERE id LIKE 'les-demo-%'");
   db.exec("DELETE FROM course_modules WHERE id LIKE 'mod-demo-%'");
   db.exec("DELETE FROM course_chapters WHERE id LIKE 'chap-demo-%'");

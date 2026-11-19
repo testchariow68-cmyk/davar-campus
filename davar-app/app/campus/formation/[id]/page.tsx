@@ -1,6 +1,5 @@
 import Link from 'next/link';
 import { notFound, redirect } from 'next/navigation';
-import { AssistantPanel } from '@/components/campus/AssistantPanel';
 import { ExerciceBloc } from '@/components/campus/ExerciceBloc';
 import { Icon } from '@/components/campus/Icon';
 import { SupportFab } from '@/components/campus/SupportFab';
@@ -8,6 +7,7 @@ import { CoursDetail } from '@/components/campus/CoursDetail';
 import { currentSession } from '@/lib/server/auth';
 import { getTrainingApercu, getTrainingForUser, progressionFormation } from '@/lib/server/campus';
 import { lireConfig, nomAssistant } from '@/lib/server/assistant';
+import { lireCoursSocial } from '@/lib/server/social';
 import { pedagogieDeFormation } from '@/lib/server/pedagogie';
 import { lireReglages } from '@/lib/server/settings';
 import type { Chapitre, Module } from '@/lib/server/campus';
@@ -65,7 +65,7 @@ export default async function FormationPage({
   const apercu = session.vueTest !== null;
 
   const chapitres = training.chapitres;
-  const chapitreOuvert = chapitres.find((chapitre) => chapitre.id === chapitreDemande) ?? null;
+  const chapitreOuvert = chapitres.find((chapitre) => chapitre.id === chapitreDemande && chapitre.visible) ?? null;
   const moduleOuvert =
     chapitreOuvert?.modules.find((module) => module.id === moduleDemande && module.ouvrable) ?? null;
 
@@ -108,16 +108,22 @@ export default async function FormationPage({
         ? { titre: apres.title, href: `${base}?chapitre=${encodeURIComponent(apres.id)}` }
         : null;
 
+    let social = null;
+    if (coursOuvert) {
+      try {
+        social = await lireCoursSocial(session.db, session.user.id, coursOuvert.id, apercu);
+      } catch {
+        // Le lecteur reste utilisable si le service social est momentanément indisponible.
+        social = null;
+      }
+    }
+
     return (
       <div>
-        <Link href={`${base}?chapitre=${encodeURIComponent(chapitreOuvert.id)}`} className="small">
-          ← {chapitreOuvert.title}
-        </Link>
-        <h1 style={{ fontSize: 24, marginTop: 6 }}>{moduleOuvert.title}</h1>
-        {moduleOuvert.summary && <p className="muted">{moduleOuvert.summary}</p>}
-
         {coursOuvert ? (
           <>
+            {/* Plusieurs cours restent navigables, sans déplacer les blocs de ressources
+                et de vidéos complémentaires qui appartiennent au cours courant. */}
             {lecons.length > 1 && (
               <div className="row mt16" style={{ gap: 8, flexWrap: 'wrap' }}>
                 {lecons.map((lecon) => (
@@ -133,14 +139,28 @@ export default async function FormationPage({
                 ))}
               </div>
             )}
-            <div className="mt16">
+            <div className={lecons.length > 1 ? 'mt16' : undefined}>
               <CoursDetail
+                key={coursOuvert.id}
                 lesson={coursOuvert}
+                formationId={training.id}
+                formationTitre={training.title}
+                formationHref={base}
+                chapitres={chapitres}
+                moduleId={moduleOuvert.id}
+                moduleTitre={moduleOuvert.title}
                 chapitreTitre={chapitreOuvert.title}
                 rangChapitre={chapitreOuvert.position}
+                progressionPct={percent}
+                modulesTermines={training.modules.filter((module) => module.termine).length}
+                totalModules={training.modules.length}
                 suivant={suivant}
                 chapitreSuivant={chapitreSuivant}
                 retourHref={`${base}?chapitre=${encodeURIComponent(chapitreOuvert.id)}`}
+                social={social}
+                apercu={apercu}
+                assistantNom={nom}
+                assistantHue={config.hue}
               />
             </div>
           </>
@@ -178,20 +198,6 @@ export default async function FormationPage({
             </>
           );
         })()}
-
-        <div className="col mt16" style={{ gap: 6, alignItems: 'center' }}>
-          <AssistantPanel
-            nom={nom}
-            hue={config.hue}
-            formationId={training.id}
-            formationTitre={training.title}
-            moduleId={moduleOuvert.id}
-            moduleTitre={moduleOuvert.title}
-            messagesIA={[]}
-            messagesCoach={[]}
-            apercu={apercu}
-          />
-        </div>
 
         <SupportFab
           whatsapp={reglages['support.whatsapp']}

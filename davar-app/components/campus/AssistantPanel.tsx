@@ -30,6 +30,7 @@ export function AssistantPanel({
   messagesIA,
   messagesCoach,
   apercu = false,
+  compactActions = false,
 }: {
   nom: string;
   hue: number;
@@ -40,6 +41,8 @@ export function AssistantPanel({
   messagesIA: MessagePanneau[];
   messagesCoach: MessagePanneau[];
   apercu?: boolean;
+  /** Dans le lecteur, le prototype expose les deux actions côte à côte. */
+  compactActions?: boolean;
 }) {
   const [ouvert, setOuvert] = useState(false);
   const [mode, setMode] = useState<'ai' | 'coach'>('ai');
@@ -91,9 +94,14 @@ export function AssistantPanel({
 
   return (
     <>
-      <button className="btn btn-primary" onClick={() => setOuvert(true)}>
+      <button className={`btn btn-primary${compactActions ? ' btn-block' : ''}`} onClick={() => { setMode('ai'); setOuvert(true); }}>
         <Icon nom="sparkles" taille={15} /> Demander à {nom}
       </button>
+      {compactActions && (
+        <button className="btn btn-block" onClick={() => { setMode('coach'); setOuvert(true); }}>
+          <Icon nom="message" taille={15} /> Écrire à mon coach
+        </button>
+      )}
       <div className="xs faint" style={{ textAlign: 'center' }}>
         {nom} (IA) répond immédiatement · Coach humain sous 48 h
       </div>

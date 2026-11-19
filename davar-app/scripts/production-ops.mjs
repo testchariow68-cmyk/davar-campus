@@ -407,6 +407,9 @@ async function purge(confirmation) {
   }
 
   const instructions = [
+    { sql: 'DELETE FROM lesson_comments' },
+    { sql: 'DELETE FROM lesson_reactions' },
+    { sql: 'DELETE FROM lesson_assets' },
     { sql: 'DELETE FROM lesson_completions' },
     { sql: 'DELETE FROM enrollments' },
     { sql: 'DELETE FROM course_lessons' },

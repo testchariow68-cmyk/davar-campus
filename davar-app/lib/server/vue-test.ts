@@ -241,6 +241,12 @@ export async function supprimerComptesTest(db: Db): Promise<{ supprimes: number 
   if (presents.length === 0) return { supprimes: 0 };
 
   const marques = presents.map(() => '?').join(',');
+  // Une réponse publique pointe vers son commentaire racine : retirer les
+  // réponses avant les racines évite de laisser une FK auto-référente orpheline.
+  await db.execute({
+    sql: `DELETE FROM lesson_comments WHERE parent_id IN (SELECT id FROM lesson_comments WHERE user_id IN (${marques}))`,
+    args: presents,
+  });
   // Les dépendances d'abord (progression, réponses, préférences, sessions, avis…),
   // le compte ensuite : aucune ligne orpheline ne reste derrière.
   for (const { table, colonnes } of await ordreDeSuppression(db)) {
