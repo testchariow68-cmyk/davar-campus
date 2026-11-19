@@ -16,19 +16,18 @@ const RATIOS = ['16:9', '9:16', '4:3', '1:1'];
 const EMOJIS = ['👍', '❤️', '🔥', '👏', '😂', '🤩'] as const;
 
 const LIBELLE_TYPE: Record<RessourceCours['type'], string> = {
-  video: 'Vidéo',
+  video: 'VIDEO',
   pdf: 'PDF',
-  doc: 'Document',
-  audio: 'Audio',
-  image: 'Image',
-  autre: 'Fichier',
+  doc: 'DOC',
+  audio: 'AUDIO',
+  image: 'IMG',
+  autre: 'AUTRE',
 };
 
-/** Icône d'une ressource, selon son type — la même logique que le prototype. */
-function iconeDe(type: RessourceCours['type']): 'eye' | 'file' | 'download' | 'mic' {
+/** Icône d'une ressource, selon la logique exacte du prototype. */
+function iconeDe(type: RessourceCours['type']): 'eye' | 'file' | 'download' {
   if (type === 'image') return 'eye';
   if (type === 'doc') return 'file';
-  if (type === 'audio') return 'mic';
   return 'download';
 }
 

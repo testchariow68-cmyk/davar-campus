@@ -391,7 +391,10 @@ async function lireContenuFormation(
     title,
     description: text(training?.description),
     chapitres,
-    modules,
+    // Les modules plats doivent porter les mêmes états calculés que ceux
+    // affichés dans les chapitres ; sinon la progression du lecteur restait à
+    // zéro alors que la carte Programme savait déjà quels modules étaient finis.
+    modules: chapitres.flatMap((chapitre) => chapitre.modules),
     lessonCount,
     completedCount,
     ...evaluations,
