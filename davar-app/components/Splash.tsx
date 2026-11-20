@@ -23,7 +23,12 @@ export function Splash() {
         setTimeout(() => setGone(true), 900);
       }, wait);
     };
-    window.addEventListener("load", hide);
+    // En navigation initiale, React peut monter après l'événement `load`.
+    // Dans ce cas, écouter seulement `load` laisse la sécurité de 8 secondes
+    // prendre la main et garde un écran vide après la fin de la barre. Traiter
+    // aussi l'état déjà chargé conserve la durée de l'animation sans ce délai.
+    if (document.readyState === "complete") hide();
+    else window.addEventListener("load", hide);
     const safety = setTimeout(hide, 8000);
     return () => {
       window.removeEventListener("load", hide);
