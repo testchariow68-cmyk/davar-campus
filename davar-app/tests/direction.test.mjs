@@ -1,0 +1,535 @@
+/**
+ * Règles de l'Espace Direction, verrouillées par des tests.
+ * Exécution : npm test — base libSQL temporaire, aucun accès réseau.
+ *
+ * Ces tests protègent des décisions du propriétaire, pas seulement du code :
+ *   - la plateforme démarre VIDE (aucun contenu d'exemple) ;
+ *   - une formation vide ne peut PAS être ouverte à la vente ;
+ *   - la progression d'un étudiant ne se supprime jamais en silence ;
+ *   - une vente est une pièce comptable : ni suppression, ni purge ;
+ *   - le propriétaire est UNIQUE, et le dernier ne peut pas se rétrograder.
+ */
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { createClient } from '@libsql/client';
+import { mkdtempSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+import { applyAllMigrations } from './helpers/migrations.mjs';
+import {
+  accorderAcces,
+  ajouterLecon,
+  basculerCompteTest,
+  ajouterModule,
+  creerFormation,
+  definirRole,
+  deplacerLecon,
+  listerEtudiants,
+  listerFormations,
+  lireStructure,
+  modifierFormation,
+  modifierLecon,
+  publierFormation,
+  purgerContenu,
+  retirerAcces,
+  supprimerFormation,
+  supprimerLecon,
+  supprimerModule,
+  vueEnsemble,
+} from '../lib/server/direction.ts';
+import { pathToFileURL } from 'node:url';
+
+process.env.APP_ENV = 'development';
+
+async function baseVide() {
+  const fichier = join(mkdtempSync(join(tmpdir(), 'davar-direction-')), 'test.db');
+  const db = createClient({ url: pathToFileURL(fichier).href });
+  await applyAllMigrations(db);
+  return db;
+}
+
+async function creerProprietaire(db, email = 'proprietaire@davar.test') {
+  await db.execute({
+    sql: `INSERT INTO users(id,email_normalized,display_name,password_hash,email_verified_at_ms,role,status,created_at_ms)
+          VALUES ('usr_proprietaire',?, 'Propriétaire', 'peu-importe', ?, 'admin', 'active', ?)`,
+    args: [email, Date.now(), Date.now()],
+  });
+  return 'usr_proprietaire';
+}
+
+async function creerEtudiant(db, email = 'etudiant@davar.test', confirme = true, id = 'usr_etudiant') {
+  const now = Date.now();
+  await db.execute({
+    sql: `INSERT INTO users(id,email_normalized,display_name,password_hash,email_verified_at_ms,role,status,created_at_ms)
+          VALUES (?,?,'Étudiant','peu-importe',?,'student','active',?)`,
+    args: [id, email, confirme ? now : null, now],
+  });
+  return id;
+}
+
+/**
+ * `lireStructure` renvoie désormais des CHAPITRES (migration 025) : un chapitre
+ * contient des modules, un module contient des leçons. Ces tests parlent de
+ * modules — ce raccourci les aplatit, sans rien changer à leurs intentions.
+ */
+const modulesDe = (structure) => structure.flatMap((chapitre) => chapitre.modules);
+
+test('la plateforme démarre vide : la vue d’ensemble ne montre aucun contenu', async () => {
+  const db = await baseVide();
+  const vue = await vueEnsemble(db);
+  assert.equal(vue.formations, 0);
+  assert.equal(vue.modules, 0);
+  assert.equal(vue.lecons, 0);
+  assert.equal(vue.etudiants, 0);
+  assert.equal(vue.acces, 0);
+  assert.equal(vue.achats, 0);
+  await db.close();
+});
+
+test('une formation naît FERMÉE et ne s’ouvre jamais sans leçon', async () => {
+  const db = await baseVide();
+  const creation = await creerFormation(db, { titre: 'Devenir un excellent orateur', prixCfa: 45000 });
+  assert.equal(creation.ok, true);
+
+  const [formation] = await listerFormations(db);
+  assert.equal(formation.published, false, 'une formation neuve ne doit pas être visible');
+
+  const refus = await publierFormation(db, formation.id, true);
+  assert.equal(refus.ok, false);
+  assert.match(refus.erreur, /aucune_lecon/);
+
+  const module = await ajouterModule(db, formation.id, 'Vaincre le trac');
+  assert.equal(module.ok, true);
+  const structure = await lireStructure(db, formation.id);
+  const lecon = await ajouterLecon(db, modulesDe(structure)[0].id, 'D’où vient le trac ?', 'video', 12, '');
+  assert.equal(lecon.ok, true);
+  assert.match(lecon.message, /Ressource pas encore publiée/, 'une leçon sans ressource doit le dire');
+
+  const ouverture = await publierFormation(db, formation.id, true);
+  assert.equal(ouverture.ok, true);
+  await db.close();
+});
+
+test('l’ordre des modules et des leçons se réorganise sans collision d’unicité', async () => {
+  const db = await baseVide();
+  await creerFormation(db, { titre: 'Formation test', prixCfa: 1000 });
+  const [formation] = await listerFormations(db);
+  await ajouterModule(db, formation.id, 'Premier');
+  await ajouterModule(db, formation.id, 'Deuxième');
+  let structure = await lireStructure(db, formation.id);
+  assert.deepEqual(modulesDe(structure).map((module) => module.title), ['Premier', 'Deuxième']);
+
+  const { deplacerModule } = await import('../lib/server/direction.ts');
+  await deplacerModule(db, modulesDe(structure)[1].id, 'haut');
+  structure = await lireStructure(db, formation.id);
+  assert.deepEqual(modulesDe(structure).map((module) => module.title), ['Deuxième', 'Premier']);
+  assert.deepEqual(modulesDe(structure).map((module) => module.position), [1, 2], 'les positions restent 1..n');
+
+  await ajouterLecon(db, modulesDe(structure)[0].id, 'Leçon A', 'video', 5, '');
+  await ajouterLecon(db, modulesDe(structure)[0].id, 'Leçon B', 'text', 3, '');
+  let lecons = modulesDe(await lireStructure(db, formation.id))[0].lecons;
+  assert.deepEqual(lecons.map((lecon) => lecon.title), ['Leçon A', 'Leçon B']);
+  await deplacerLecon(db, lecons[1].id, 'haut');
+  lecons = modulesDe(await lireStructure(db, formation.id))[0].lecons;
+  assert.deepEqual(lecons.map((lecon) => lecon.title), ['Leçon B', 'Leçon A']);
+  await db.close();
+});
+
+test('seules les adresses https sont acceptées pour une ressource ou un lien', async () => {
+  const db = await baseVide();
+  await creerFormation(db, { titre: 'Formation test', prixCfa: 0 });
+  const [formation] = await listerFormations(db);
+  await ajouterModule(db, formation.id, 'Module');
+  const structure = await lireStructure(db, formation.id);
+
+  const insecurise = await ajouterLecon(db, modulesDe(structure)[0].id, 'Vidéo', 'video', 5, 'http://exemple.test/video.mp4');
+  assert.equal(insecurise.ok, false);
+  assert.equal(insecurise.erreur, 'ressource_non_https');
+
+  const lienInsecure = await creerFormation(db, { titre: 'Autre formation', prixCfa: 0, buyUrl: 'http://exemple.test/acheter' });
+  assert.equal(lienInsecure.ok, false);
+  assert.equal(lienInsecure.erreur, 'lien_non_https');
+  await db.close();
+});
+
+test('la progression d’un étudiant protège sa leçon et son module', async () => {
+  const db = await baseVide();
+  await creerEtudiant(db);
+  await creerFormation(db, { titre: 'Formation test', prixCfa: 1000 });
+  const [formation] = await listerFormations(db);
+  await ajouterModule(db, formation.id, 'Module protégé');
+  const structure = await lireStructure(db, formation.id);
+  await ajouterLecon(db, modulesDe(structure)[0].id, 'Leçon terminée', 'video', 10, '');
+  const lecon = modulesDe(await lireStructure(db, formation.id))[0].lecons[0];
+  await db.execute({
+    sql: 'INSERT INTO lesson_completions(user_id,lesson_id,completed_at_ms) VALUES (?,?,?)',
+    args: ['usr_etudiant', lecon.id, Date.now()],
+  });
+
+  const suppressionLecon = await supprimerLecon(db, lecon.id);
+  assert.equal(suppressionLecon.ok, false);
+  assert.match(suppressionLecon.erreur, /progression_protegee/);
+
+  const suppressionModule = await supprimerModule(db, modulesDe(structure)[0].id);
+  assert.equal(suppressionModule.ok, false);
+  assert.match(suppressionModule.erreur, /progression_protegee/);
+
+  // Enrichir reste toujours permis : c'est la règle de l'enrichissement silencieux.
+  const renommage = await modifierLecon(db, lecon.id, 'Leçon enrichie', 'video', 12, 'https://exemple.test/video.mp4');
+  assert.equal(renommage.ok, true);
+  assert.equal(modulesDe(await lireStructure(db, formation.id))[0].lecons[0].terminees, 1);
+  await db.close();
+});
+
+test('une formation achetée ne se supprime pas, elle se ferme', async () => {
+  const db = await baseVide();
+  await creerEtudiant(db);
+  await creerFormation(db, { titre: 'Formation vendue', prixCfa: 45000 });
+  const [formation] = await listerFormations(db);
+  await db.execute({
+    sql: `INSERT INTO verified_purchases(sale_id,buyer_email_normalized,training_id,amount_value_text,currency,verified_at_ms)
+          VALUES ('sale_test','etudiant@davar.test',?,'45000','XOF',?)`,
+    args: [formation.id, Date.now()],
+  });
+  await db.execute({
+    sql: `INSERT INTO enrollments(user_id,training_id,source,sale_id,acquired_at_ms)
+          VALUES ('usr_etudiant',?,'verified_purchase','sale_test',?)`,
+    args: [formation.id, Date.now()],
+  });
+
+  const suppression = await supprimerFormation(db, formation.id);
+  assert.equal(suppression.ok, false);
+  assert.match(suppression.erreur, /suppression_refusee/);
+
+  const retrait = await retirerAcces(db, 'etudiant@davar.test', formation.id);
+  assert.equal(retrait.ok, false);
+  assert.match(retrait.erreur, /achat_verifie/);
+
+  const purge = await purgerContenu(db, 'VIDER');
+  assert.equal(purge.ok, false);
+  assert.match(purge.erreur, /ventes_reelles/);
+  await db.close();
+});
+
+test('un accès accordé à la main se retire, et exige une adresse confirmée', async () => {
+  const db = await baseVide();
+  await creerEtudiant(db, 'confirme@davar.test', true, 'usr_confirme');
+  await creerEtudiant(db, 'non-confirme@davar.test', false, 'usr_non_confirme');
+  await creerFormation(db, { titre: 'Formation offerte', prixCfa: 0 });
+  const [formation] = await listerFormations(db);
+
+  const refus = await accorderAcces(db, 'non-confirme@davar.test', formation.id);
+  assert.equal(refus.ok, false);
+  assert.match(refus.erreur, /email_non_confirme/);
+
+  const octroi = await accorderAcces(db, 'confirme@davar.test', formation.id);
+  assert.equal(octroi.ok, true);
+  const lireEtudiant = async (email) => (await listerEtudiants(db, email)).find((item) => item.email === email);
+  const etudiant = await lireEtudiant('confirme@davar.test');
+  assert.equal(etudiant.acces.length, 1);
+  assert.equal(etudiant.acces[0].source, 'staff_grant');
+
+  const retrait = await retirerAcces(db, 'confirme@davar.test', formation.id);
+  assert.equal(retrait.ok, true);
+  assert.equal((await lireEtudiant('confirme@davar.test')).acces.length, 0);
+  await db.close();
+});
+
+test('le propriétaire est unique, et le dernier ne peut pas être rétrogradé', async () => {
+  const db = await baseVide();
+  await creerProprietaire(db);
+  await creerEtudiant(db, 'aide@davar.test', true, 'usr_aide');
+
+  const deuxieme = await definirRole(db, 'aide@davar.test', 'admin');
+  assert.equal(deuxieme.ok, false);
+  assert.match(deuxieme.erreur, /proprietaire_unique/);
+
+  const staff = await definirRole(db, 'aide@davar.test', 'staff');
+  assert.equal(staff.ok, true);
+
+  const demission = await definirRole(db, 'proprietaire@davar.test', 'student');
+  assert.equal(demission.ok, false);
+  assert.match(demission.erreur, /dernier_proprietaire/);
+  await db.close();
+});
+
+test('la purge vide le contenu mais garde les formations', async () => {
+  const db = await baseVide();
+  await creerEtudiant(db);
+  await creerFormation(db, { titre: 'Formation à vider', prixCfa: 1000 });
+  const [formation] = await listerFormations(db);
+  await ajouterModule(db, formation.id, 'Module');
+  const structure = await lireStructure(db, formation.id);
+  await ajouterLecon(db, structure[0].id, 'Leçon', 'video', 5, '');
+  await accorderAcces(db, 'etudiant@davar.test', formation.id);
+  await publierFormation(db, formation.id, true);
+
+  const mauvaiseConfirmation = await purgerContenu(db, 'vider');
+  assert.equal(mauvaiseConfirmation.ok, false);
+  assert.match(mauvaiseConfirmation.erreur, /confirmation_absente/);
+
+  const purge = await purgerContenu(db, 'VIDER');
+  assert.equal(purge.ok, true);
+  const vue = await vueEnsemble(db);
+  assert.equal(vue.modules, 0);
+  assert.equal(vue.lecons, 0);
+  assert.equal(vue.acces, 0);
+  assert.equal(vue.formations, 1, 'les formations sont conservées : c’est le catalogue du propriétaire');
+  await db.close();
+});
+
+test('les comptes de test sont marqués et exclus des chiffres réels', async () => {
+  const db = await baseVide();
+  await creerEtudiant(db, 'reel@davar.test', true, 'usr_reel');
+  await creerEtudiant(db, 'test@davar.test', true, 'usr_test');
+
+  const avant = await vueEnsemble(db);
+  assert.equal(avant.etudiants, 2);
+  assert.equal(avant.comptesTest, 0);
+
+  const bascule = await basculerCompteTest(db, 'test@davar.test', true);
+  assert.equal(bascule.ok, true);
+
+  const apres = await vueEnsemble(db);
+  assert.equal(apres.etudiants, 1, 'un compte de test ne doit pas gonfler le chiffre des étudiants');
+  assert.equal(apres.comptesTest, 1);
+
+  /* La liste ordinaire ne montre QUE de vraies personnes : les comptes de test
+     n'apparaissent que dans l'espace « Vue test », réservé au propriétaire. */
+  const liste = await listerEtudiants(db);
+  assert.equal(liste.find((etudiant) => etudiant.email === 'test@davar.test'), undefined);
+  assert.equal(liste.find((etudiant) => etudiant.email === 'reel@davar.test').estTest, false);
+
+  const listeVueTest = await listerEtudiants(db, '', 100, true);
+  assert.equal(listeVueTest.find((etudiant) => etudiant.email === 'test@davar.test').estTest, true);
+
+  const retour = await basculerCompteTest(db, 'test@davar.test', false);
+  assert.equal(retour.ok, true);
+  assert.equal((await vueEnsemble(db)).comptesTest, 0);
+  assert.equal((await vueEnsemble(db)).etudiants, 2);
+
+  const inconnu = await basculerCompteTest(db, 'personne@davar.test', true);
+  assert.equal(inconnu.ok, false);
+  await db.close();
+});
+
+test('la carte du catalogue : référence, durée et note sont enregistrées telles quelles', async () => {
+  const db = await baseVide();
+  await creerFormation(db, { titre: 'Devenir un excellent orateur', description: '', prixCfa: 39900, chariowProductId: '', buyUrl: '' });
+  const liste = await listerFormations(db);
+  const formation = liste[0];
+  // Une formation créée reçoit une référence, mais ni durée ni note : la carte
+  // n'affiche alors que ce qui est réellement renseigné.
+  assert.ok(formation.code);
+  assert.equal(formation.hours, 0);
+  assert.equal(formation.rating, null);
+
+  const resultat = await modifierFormation(db, formation.id, {
+    titre: 'Devenir un excellent orateur',
+    description: '',
+    prixCfa: 39900,
+    chariowProductId: '',
+    buyUrl: '',
+    code: 'or-101',
+    hours: 12,
+    rating: 4.9,
+  });
+  assert.equal(resultat.ok, true);
+  const apres = (await listerFormations(db))[0];
+  assert.equal(apres.code, 'OR-101');
+  assert.equal(apres.hours, 12);
+  assert.equal(apres.rating, 4.9);
+  await db.close();
+});
+
+test('la carte du catalogue : une durée ou une note absurde est refusée', async () => {
+  const db = await baseVide();
+  await creerFormation(db, { titre: 'Devenir un excellent orateur', description: '', prixCfa: 39900, chariowProductId: '', buyUrl: '' });
+  const id = (await listerFormations(db))[0].id;
+  const base = { titre: 'Devenir un excellent orateur', description: '', prixCfa: 39900, chariowProductId: '', buyUrl: '', code: 'OR-101' };
+
+  assert.equal((await modifierFormation(db, id, { ...base, hours: -3, rating: null })).erreur, 'duree_invalide');
+  assert.equal((await modifierFormation(db, id, { ...base, hours: 5000, rating: null })).erreur, 'duree_invalide');
+  assert.equal((await modifierFormation(db, id, { ...base, hours: 12, rating: 9 })).erreur, 'note_invalide');
+
+  const apres = (await listerFormations(db))[0];
+  assert.equal(apres.hours, 0);
+  assert.equal(apres.rating, null);
+  await db.close();
+});
+
+/**
+ * LE PARCOURS — le propriétaire l'a redit : une formation contient des
+ * chapitres, un chapitre contient des modules, et rien ne s'ouvre deux crans
+ * à la fois. Ces tests protègent exactement cette règle.
+ */
+test('le parcours se débloque chapitre par chapitre, puis module par module', async () => {
+  const { calculerDeblocage } = await import('../lib/server/campus.ts');
+  const parcours = (fait) => [
+    {
+      id: 'ch1',
+      position: 1,
+      title: 'Chapitre 1',
+      summary: null,
+      modules: [
+        { id: 'm1', lessons: [{ completed: fait.m1 }] },
+        { id: 'm2', lessons: [{ completed: fait.m2 }] },
+      ],
+    },
+    {
+      id: 'ch2',
+      position: 2,
+      title: 'Chapitre 2',
+      summary: null,
+      modules: [{ id: 'm3', lessons: [{ completed: fait.m3 }] }],
+    },
+  ];
+
+  // Au départ : seul le chapitre 1 paraît, et seul son premier module s'ouvre.
+  let etat = calculerDeblocage(parcours({ m1: false, m2: false, m3: false }));
+  assert.deepEqual(etat.map((c) => c.visible), [true, false], 'le chapitre 2 ne paraît pas encore');
+  assert.deepEqual(etat[0].modules.map((m) => m.ouvrable), [true, false], 'le module 2 reste verrouillé');
+  assert.equal(etat[0].termine, false);
+
+  // Module 1 fini : le module 2 s'ouvre, mais le chapitre 2 ne paraît toujours pas.
+  etat = calculerDeblocage(parcours({ m1: true, m2: false, m3: false }));
+  assert.deepEqual(etat[0].modules.map((m) => m.ouvrable), [true, true]);
+  assert.deepEqual(etat.map((c) => c.visible), [true, false], 'le chapitre 2 attend la fin du chapitre 1');
+
+  // Tous les modules du chapitre 1 finis : le chapitre 2 entre dans la liste.
+  etat = calculerDeblocage(parcours({ m1: true, m2: true, m3: false }));
+  assert.equal(etat[0].termine, true, 'le chapitre 1 est terminé');
+  assert.deepEqual(etat.map((c) => c.visible), [true, true], 'le chapitre 2 apparaît');
+  assert.deepEqual(etat[1].modules.map((m) => m.ouvrable), [true], 'son premier module est ouvert');
+});
+
+test('une formation se construit en chapitres, et chaque module reste dans le sien', async () => {
+  const db = await baseVide();
+  const { ajouterChapitre, ajouterModule } = await import('../lib/server/direction.ts');
+  await creerFormation(db, { titre: 'Parcours', prixCfa: 0 });
+  const [formation] = await listerFormations(db);
+
+  const un = await ajouterChapitre(db, formation.id, 'Chapitre 1');
+  assert.equal(un.ok, true);
+  assert.equal((await ajouterChapitre(db, formation.id, 'Chapitre 2')).ok, true);
+
+  let structure = await lireStructure(db, formation.id);
+  assert.deepEqual(structure.map((c) => c.title), ['Chapitre 1', 'Chapitre 2']);
+
+  await ajouterModule(db, formation.id, 'Module 1.1', '', structure[0].id);
+  await ajouterModule(db, formation.id, 'Module 1.2', '', structure[0].id);
+  await ajouterModule(db, formation.id, 'Module 2.1', '', structure[1].id);
+
+  structure = await lireStructure(db, formation.id);
+  assert.deepEqual(structure[0].modules.map((m) => m.title), ['Module 1.1', 'Module 1.2']);
+  assert.deepEqual(
+    structure[1].modules.map((m) => m.title),
+    ['Module 2.1'],
+    'un module ne fuit jamais dans un autre chapitre'
+  );
+  assert.deepEqual(structure[0].modules.map((m) => m.position), [1, 2]);
+  assert.deepEqual(
+    structure[1].modules.map((m) => m.position),
+    [1],
+    'les positions repartent de 1 dans chaque chapitre'
+  );
+  await db.close();
+});
+
+/**
+ * CE QUE PORTE UN COURS — une vidéo principale, des vidéos d'illustration, et
+ * des ressources (documents, audio, images). C'est la lecture du prototype.
+ */
+test('un cours porte une vidéo, des illustrations et des ressources', async () => {
+  const db = await baseVide();
+  const { ajouterChapitre, ajouterLecon, ajouterModule, ajouterRessource } = await import(
+    '../lib/server/direction.ts'
+  );
+  await creerFormation(db, { titre: 'Ressources', prixCfa: 0 });
+  const [formation] = await listerFormations(db);
+  await ajouterChapitre(db, formation.id, 'Chapitre 1');
+  let structure = await lireStructure(db, formation.id);
+  await ajouterModule(db, formation.id, 'Module', '', structure[0].id);
+  structure = await lireStructure(db, formation.id);
+  const cours0 = modulesDe(structure)[0];
+
+  const cree = await ajouterLecon(
+    db,
+    cours0.id,
+    'Le cours',
+    'video',
+    12,
+    'https://exemple.test/v.mp4',
+    '',
+    '9:16'
+  );
+  assert.equal(cree.ok, true);
+
+  structure = await lireStructure(db, formation.id);
+  const cours = modulesDe(structure)[0].lecons[0];
+  assert.equal(cours.ratio, '9:16', 'le format d’image de la vidéo est enregistré');
+
+  assert.equal(
+    (
+      await ajouterRessource(db, cours.id, {
+        kind: 'illustration',
+        title: 'La posture',
+        type: 'video',
+        url: 'https://exemple.test/p.mp4',
+        duration: '6:00',
+        ratio: '16:9',
+      })
+    ).ok,
+    true
+  );
+  assert.equal(
+    (
+      await ajouterRessource(db, cours.id, {
+        kind: 'ressource',
+        title: 'Fiche (PDF)',
+        type: 'pdf',
+        size: '1,1 Mo',
+        url: 'https://exemple.test/f.pdf',
+      })
+    ).ok,
+    true
+  );
+  assert.equal(
+    (
+      await ajouterRessource(db, cours.id, {
+        kind: 'ressource',
+        title: 'Échauffement',
+        type: 'audio',
+        url: 'https://exemple.test/a.mp3',
+      })
+    ).ok,
+    true
+  );
+
+  // Rien de ce que l'élève ouvre ne voyage en clair.
+  const insecure = await ajouterRessource(db, cours.id, {
+    kind: 'ressource',
+    title: 'Insecure',
+    url: 'http://exemple.test/x.pdf',
+  });
+  assert.equal(insecure.ok, false);
+  assert.equal(insecure.erreur, 'ressource_non_https');
+
+  structure = await lireStructure(db, formation.id);
+  const relu = modulesDe(structure)[0].lecons[0];
+  assert.deepEqual(
+    relu.assets.filter((a) => a.kind === 'illustration').map((a) => a.title),
+    ['La posture'],
+    'l’illustration est rattachée au cours'
+  );
+  assert.deepEqual(
+    relu.assets.filter((a) => a.kind === 'ressource').map((a) => a.title),
+    ['Fiche (PDF)', 'Échauffement']
+  );
+  assert.deepEqual(
+    relu.assets.filter((a) => a.kind === 'ressource').map((a) => a.position),
+    [1, 2],
+    'chaque genre garde sa propre numérotation'
+  );
+  await db.close();
+});
