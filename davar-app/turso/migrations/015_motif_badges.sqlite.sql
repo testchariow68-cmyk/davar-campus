@@ -1,0 +1,12 @@
+-- 015 — Motif d'une distinction : pourquoi ce badge a été donné à la main.
+--
+-- Pourquoi maintenant : le prototype écrit noir sur blanc, dans l'écran
+-- « Récompenses », que l'attribution manuelle est réservée aux situations
+-- exceptionnelles et que son motif est « consigné dans l'historique ». La table
+-- `badge_awards` savait déjà QUI avait attribué (`awarded_by`) et si c'était
+-- automatique ou manuel (`source`) — il lui manquait le POURQUOI.
+--
+-- La colonne reste vide pour tout ce qui est automatique : une règle n'a pas de
+-- motif à écrire, et une attribution automatique n'a jamais à en inventer un.
+-- Additif : aucune table n'est créée, aucune donnée n'est modifiée.
+ALTER TABLE badge_awards ADD COLUMN note TEXT;

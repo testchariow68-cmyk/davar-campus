@@ -1,0 +1,145 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Propositions de logo — microphone — Davar Académie Campus</title>
+  <style>
+    :root {
+      --fond: #0d0a14;
+      --surface: #171321;
+      --surface-2: #211a31;
+      --bord: #382c50;
+      --texte: #f4f0fa;
+      --doux: #b2a9c6;
+      --or: #d4af37;
+      --or-clair: #f0d98a;
+      --violet: #8b5cf6;
+      --vert: #42d39a;
+    }
+    * { box-sizing: border-box; }
+    html { color-scheme: dark; }
+    body {
+      margin: 0;
+      min-width: 0;
+      background:
+        radial-gradient(900px 500px at 10% -10%, rgba(109,40,217,.28), transparent 68%),
+        radial-gradient(700px 420px at 100% 12%, rgba(212,175,55,.10), transparent 66%),
+        var(--fond);
+      color: var(--texte);
+      font: 16px/1.55 Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+    }
+    .wrap { width: min(1180px, 100% - 40px); margin-inline: auto; }
+    header { padding: clamp(32px, 7vw, 78px) 0 34px; }
+    .kicker {
+      display: inline-flex; align-items: center; gap: 9px; color: var(--or-clair);
+      font-size: 11px; font-weight: 800; letter-spacing: .18em; text-transform: uppercase;
+    }
+    .kicker::before { content: ""; width: 28px; height: 1px; background: var(--or); }
+    h1 { max-width: 850px; margin: 14px 0 12px; font: 700 clamp(30px, 5vw, 58px)/1.05 Georgia, "Times New Roman", serif; letter-spacing: -.025em; }
+    .lead { max-width: 730px; margin: 0; color: var(--doux); font-size: clamp(15px, 2vw, 18px); }
+    .notice {
+      display: flex; gap: 12px; align-items: flex-start; margin-top: 25px; padding: 15px 17px;
+      border: 1px solid rgba(66,211,154,.28); border-radius: 12px; background: rgba(66,211,154,.08); color: #c9f5e3;
+      font-size: 14px;
+    }
+    .notice strong { color: #fff; }
+    .section-head { display: flex; gap: 18px; align-items: end; justify-content: space-between; margin: 28px 0 14px; }
+    .section-head h2 { margin: 0; font: 700 clamp(22px, 3vw, 30px)/1.1 Georgia, serif; }
+    .section-head p { margin: 0; color: var(--doux); font-size: 13px; }
+    .current {
+      display: grid; grid-template-columns: minmax(150px, 220px) 1fr; gap: 24px; align-items: center;
+      padding: 20px; border: 1px solid var(--bord); border-radius: 18px; background: rgba(23,19,33,.76);
+    }
+    .current .visual { display: grid; place-items: center; min-height: 160px; border-radius: 13px; background: #150e24; }
+    .current img { display: block; width: min(160px, 70%); height: auto; }
+    .tag {
+      display: inline-flex; align-items: center; border: 1px solid rgba(212,175,55,.4); border-radius: 999px;
+      padding: 5px 9px; color: var(--or-clair); font-size: 10px; font-weight: 800; letter-spacing: .12em; text-transform: uppercase;
+    }
+    .current h3 { margin: 10px 0 5px; font-size: 20px; }
+    .current p { margin: 0; color: var(--doux); font-size: 14px; }
+    .proposals { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 18px; margin: 0 0 44px; }
+    .proposal {
+      display: flex; min-width: 0; flex-direction: column; overflow: hidden; border: 1px solid var(--bord);
+      border-radius: 18px; background: linear-gradient(180deg, rgba(33,26,49,.96), rgba(23,19,33,.96));
+      box-shadow: 0 18px 50px rgba(0,0,0,.18);
+    }
+    .art { display: grid; place-items: center; min-height: 218px; padding: 17px; background: #f5f3f8; }
+    .art.dark { background: #100b1b; }
+    .art img { display: block; width: 100%; height: auto; max-height: 240px; object-fit: contain; }
+    .proposal-body { display: flex; flex: 1; flex-direction: column; padding: 18px 19px 20px; }
+    .number {
+      display: inline-grid; place-items: center; width: 32px; height: 32px; border-radius: 10px;
+      background: linear-gradient(135deg, var(--or-clair), var(--or)); color: #211705; font-weight: 900;
+    }
+    .proposal h3 { margin: 14px 0 7px; font: 700 24px/1.1 Georgia, serif; }
+    .proposal p { margin: 0; color: var(--doux); font-size: 14px; }
+    .details { display: flex; flex-wrap: wrap; gap: 7px; margin-top: 16px; }
+    .details span { padding: 5px 8px; border: 1px solid var(--bord); border-radius: 999px; color: #d5cde1; font-size: 11px; }
+    .choose { margin-top: auto; padding-top: 18px; color: var(--or-clair); font-size: 12px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; }
+    footer { padding: 23px 0 54px; border-top: 1px solid var(--bord); color: #817893; font-size: 13px; }
+    footer code { color: #bfb4d2; }
+    @media (max-width: 900px) {
+      .proposals { grid-template-columns: 1fr; }
+      .proposal { display: grid; grid-template-columns: minmax(260px, 1.1fr) 1fr; }
+      .art { min-height: 100%; }
+    }
+    @media (max-width: 620px) {
+      .wrap { width: min(100% - 28px, 560px); }
+      .current { grid-template-columns: 1fr; gap: 15px; }
+      .current .visual { min-height: 132px; }
+      .proposal { display: flex; }
+      .art { min-height: 176px; padding: 13px; }
+      .art img { max-height: 190px; }
+      .section-head { display: block; }
+      .section-head p { margin-top: 6px; }
+    }
+    @media (prefers-reduced-motion: no-preference) {
+      .proposal { transition: transform .18s ease, border-color .18s ease, box-shadow .18s ease; }
+      .proposal:hover { transform: translateY(-3px); border-color: rgba(212,175,55,.55); box-shadow: 0 24px 60px rgba(0,0,0,.28); }
+    }
+  </style>
+</head>
+<body>
+  <header class="wrap">
+    <div class="kicker">Davar Académie Campus · revue de marque</div>
+    <h1>Trois propositions avec un microphone orienté vers le bas.</h1>
+    <p class="lead">Le mortier, l’or et le violet restent dans le même esprit. Le cordon et le pompon sont remplacés par une capsule de microphone fine, reliée naturellement à la pointe du mortier et dessinée pour rester lisible à petite taille.</p>
+    <div class="notice" role="note">
+      <span aria-hidden="true">✓</span>
+      <div><strong>Le logo actuel n’a pas été remplacé.</strong> Cette page présente uniquement trois fichiers SVG de proposition. Le choix 1, 2 ou 3 pourra être appliqué après votre validation.</div>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <section aria-labelledby="actuel">
+      <div class="section-head"><h2 id="actuel">Référence conservée</h2><p>Production actuelle · aucune modification</p></div>
+      <div class="current">
+        <div class="visual"><img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjIwIDIwIDIwMCAyMDAiIHdpZHRoPSIyMDAiIGhlaWdodD0iMjAwIiByb2xlPSJpbWciIGFyaWEtbGFiZWw9IkRBVkFSIEFDQURFTUlFIENBTVBVUyI+CiAgPHRpdGxlPkRBVkFSIEFDQUTDiU1JRSBDQU1QVVMg4oCUIGwnYW5uZWF1IHNldWwsIHNhbnMgbGVzIMOpY3JpdHVyZXM8L3RpdGxlPgogIDxkZWZzPgogICAgPCEtLSBFeGFjdGVtZW50IGxlIHZpb2xldCBzb21icmUgZHUgZmF2aWNvbiAoY2FtcHVzLWljb24uc3ZnKSA6ICMyNDE2NDAgYXUKICAgICAgICAgY2VudHJlLCAjMTUwRTI0IGF1IGJvcmQuIENlbnRyZSBldCByYXlvbiBzb250IGNldXggZHUgbG9nbyBkZQogICAgICAgICBsJ2FuaW1hdGlvbiBkJ291dmVydHVyZSwgZGUgc29ydGUgcXVlIGwnYW5uZWF1IGxhaXNzZSB2b2lyIGxhIG3Dqm1lCiAgICAgICAgIHBvcnRpb24gZGUgZMOpZ3JhZMOpIHF1ZSBsZSBmYXZpY29uLiAtLT4KICAgIDxyYWRpYWxHcmFkaWVudCBpZD0iZm9uZC1hbm5lYXUiIGdyYWRpZW50VW5pdHM9InVzZXJTcGFjZU9uVXNlIgogICAgICAgICAgICAgICAgICAgIGN4PSIxMjAiIGN5PSI5Mi43IiByPSIyNDUuOCI+CiAgICAgIDxzdG9wIG9mZnNldD0iMCUiIHN0b3AtY29sb3I9IiMyNDE2NDAiLz4KICAgICAgPHN0b3Agb2Zmc2V0PSIxMDAlIiBzdG9wLWNvbG9yPSIjMTUwRTI0Ii8+CiAgICA8L3JhZGlhbEdyYWRpZW50PgogIDwvZGVmcz4KCiAgPCEtLSBMZSBmb25kIGRlIGwnYW5uZWF1LCBwdWlzIGxlIHRyYWl0IGQnb3IsIHB1aXMgbGEgbWFycXVlLiBSaWVuIGQnYXV0cmUgOgogICAgICAgbmkgbm9tLCBuaSBzbG9nYW4uIEMnZXN0IGxlIG3Dqm1lIGRlc3NpbiBxdWUgbCdhbmltYXRpb24gZCdvdXZlcnR1cmUsCiAgICAgICBhdXF1ZWwgb24gYSBzZXVsZW1lbnQgcmV0aXLDqSBsZXMgw6ljcml0dXJlcy4gLS0+CiAgPGNpcmNsZSBjeD0iMTIwIiBjeT0iMTIwIiByPSI5NiIgZmlsbD0idXJsKCNmb25kLWFubmVhdSkiLz4KICA8Y2lyY2xlIGN4PSIxMjAiIGN5PSIxMjAiIHI9Ijk2IiBmaWxsPSJub25lIiBzdHJva2U9IiNENEFGMzciIHN0cm9rZS13aWR0aD0iNS4zIi8+CiAgPGcgc3Ryb2tlPSIjRDRBRjM3IiBzdHJva2Utd2lkdGg9IjYuNyIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIiBmaWxsPSJub25lIj48cGF0aCBkPSJNNDguMCAxMTUuOSBMMTIwLjAgOTIuNCBMMTkyLjAgMTE1LjkgTDEyMC4wIDE0MC43IFoiIGZpbGw9IiNENEFGMzciIGZpbGwtb3BhY2l0eT0iLjE2Ii8+PHBhdGggZD0iTTgyLjYgMTM5LjkgTDgyLjYgMTYxLjQgUTEyMC4wIDE3Ni42IDE1Ny40IDE2MS40IEwxNTcuNCAxMzkuOSIvPjxwYXRoIGQ9Ik0xOTAuNiAxMTUuOSBMMTkwLjYgMTQ5LjAiLz48Y2lyY2xlIGN4PSIxOTAuNiIgY3k9IjE1NS45IiByPSI2LjciIGZpbGw9IiNENEFGMzciIHN0cm9rZT0ibm9uZSIvPjwvZz4KPC9zdmc+Cg==" alt="Logo actuel Davar Académie Campus"></div>
+        <div><span class="tag">Logo actuel</span><h3>Le logo validé reste le fallback</h3><p>Le fichier <code>campus-anneau.svg</code> et les autres actifs de production restent inchangés pendant la revue.</p></div>
+      </div>
+    </section>
+
+    <section aria-labelledby="propositions">
+      <div class="section-head"><h2 id="propositions">Propositions numérotées</h2><p>Choisissez simplement un numéro</p></div>
+      <div class="proposals">
+        <article class="proposal">
+          <div class="art dark"><img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA3NjAgMjYwIiB3aWR0aD0iNzYwIiBoZWlnaHQ9IjI2MCIgcm9sZT0iaW1nIiBhcmlhLWxhYmVsbGVkYnk9InRpdHJlIGRlc2MiPgogIDx0aXRsZSBpZD0idGl0cmUiPlByb3Bvc2l0aW9uIDEg4oCUIExhIFRyaWJ1bmUg4oCUIERhdmFyIEFjYWTDqW1pZSBDYW1wdXM8L3RpdGxlPgogIDxkZXNjIGlkPSJkZXNjIj5VbiBtb3J0aWVyIGTigJlvciBkYW5zIHVuIHBhdsOpIHZpb2xldCwgcHJvbG9uZ8OpIHBhciB1biBtaWNyb3Bob25lIGZpbiBvcmllbnTDqSB2ZXJzIGxlIGJhcy48L2Rlc2M+CiAgPGRlZnM+CiAgICA8cmFkaWFsR3JhZGllbnQgaWQ9InRyaWJ1bmUtZm9uZCIgY3g9IjM2JSIgY3k9IjMwJSIgcj0iOTIlIj4KICAgICAgPHN0b3Agb2Zmc2V0PSIwIiBzdG9wLWNvbG9yPSIjMkQxQjREIi8+CiAgICAgIDxzdG9wIG9mZnNldD0iMSIgc3RvcC1jb2xvcj0iIzE1MEUyNCIvPgogICAgPC9yYWRpYWxHcmFkaWVudD4KICAgIDxsaW5lYXJHcmFkaWVudCBpZD0idHJpYnVuZS1vciIgeDE9IjAiIHkxPSIwIiB4Mj0iMSIgeTI9IjEiPgogICAgICA8c3RvcCBvZmZzZXQ9IjAiIHN0b3AtY29sb3I9IiNGNEUyQTAiLz4KICAgICAgPHN0b3Agb2Zmc2V0PSIuNSIgc3RvcC1jb2xvcj0iI0Q0QUYzNyIvPgogICAgICA8c3RvcCBvZmZzZXQ9IjEiIHN0b3AtY29sb3I9IiNBODg0MkEiLz4KICAgIDwvbGluZWFyR3JhZGllbnQ+CiAgICA8ZmlsdGVyIGlkPSJ0cmlidW5lLW9tYnJlIiB4PSItNDAlIiB5PSItNDAlIiB3aWR0aD0iMTgwJSIgaGVpZ2h0PSIxODAlIj4KICAgICAgPGZlRHJvcFNoYWRvdyBkeD0iMCIgZHk9IjkiIHN0ZERldmlhdGlvbj0iOSIgZmxvb2QtY29sb3I9IiMwODA1MTAiIGZsb29kLW9wYWNpdHk9Ii4zOCIvPgogICAgPC9maWx0ZXI+CiAgICA8ZyBpZD0idHJpYnVuZS1tYXJxdWUiIHN0cm9rZT0idXJsKCN0cmlidW5lLW9yKSIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIj4KICAgICAgPGNpcmNsZSBjeD0iMTIwIiBjeT0iMTIwIiByPSI5NiIgZmlsbD0ibm9uZSIgc3Ryb2tlLXdpZHRoPSI1LjQiLz4KICAgICAgPHBhdGggZD0iTTQ4IDExNS45IDEyMCA5Mi40bDcyIDIzLjUtNzIgMjQuOC03Mi0yNC44WiIgZmlsbD0iI0Q0QUYzNyIgZmlsbC1vcGFjaXR5PSIuMiIgc3Ryb2tlLXdpZHRoPSI2LjgiLz4KICAgICAgPHBhdGggZD0iTTgyLjYgMTM5Ljl2MjEuNVExMjAgMTc2LjYgMTU3LjQgMTYxLjR2LTIxLjUiIGZpbGw9Im5vbmUiIHN0cm9rZS13aWR0aD0iNi44Ii8+CiAgICAgIDwhLS0gTWljcm9waG9uZSBmaW4gOiBzYSBjYXBzdWxlIGV0IHNhIGdyaWxsZSBkZXNjZW5kZW50IGRlcHVpcyBsYSBwb2ludGUgZHUgbW9ydGllci4gLS0+CiAgICAgIDxwYXRoIGQ9Ik0xOTAuNyAxMTUuOWM3LjIgMS45IDExLjkgNi44IDEyLjkgMTMuNSIgZmlsbD0ibm9uZSIgc3Ryb2tlLXdpZHRoPSI1LjQiLz4KICAgICAgPHBhdGggZD0iTTIwMy44IDEyNy4xdjI1LjRhOC4yIDguMiAwIDAgMCAxNi40IDB2LTI1LjRhOC4yIDguMiAwIDAgMC0xNi40IDBaIiBmaWxsPSIjMjQxNjQwIiBzdHJva2Utd2lkdGg9IjUuNCIvPgogICAgICA8cGF0aCBkPSJNMjA0LjggMTQ3LjVoMTQuNE0yMDQuOCAxNTMuNWgxNC40TTIwNyAxNTguNWgxMCIgZmlsbD0ibm9uZSIgc3Ryb2tlLXdpZHRoPSIyLjgiLz4KICAgICAgPHBhdGggZD0iTTIxMiAxMTguOHYtNy4yIiBmaWxsPSJub25lIiBzdHJva2Utd2lkdGg9IjUuNCIvPgogICAgPC9nPgogIDwvZGVmcz4KCiAgPHJlY3QgeD0iMTgiIHk9IjE4IiB3aWR0aD0iMjI0IiBoZWlnaHQ9IjIyNCIgcng9IjQ4IiBmaWxsPSJ1cmwoI3RyaWJ1bmUtZm9uZCkiIHN0cm9rZT0iI0Q0QUYzNyIgc3Ryb2tlLW9wYWNpdHk9Ii4yNCIgc3Ryb2tlLXdpZHRoPSIxLjUiIGZpbHRlcj0idXJsKCN0cmlidW5lLW9tYnJlKSIvPgogIDx1c2UgaHJlZj0iI3RyaWJ1bmUtbWFycXVlIiB0cmFuc2Zvcm09InRyYW5zbGF0ZSgxOSAxOSkgc2NhbGUoLjg1KSIvPgoKICA8ZyB0cmFuc2Zvcm09InRyYW5zbGF0ZSgyODYgMCkiPgogICAgPHRleHQgeD0iMCIgeT0iMTAxIiBmb250LWZhbWlseT0iR2VvcmdpYSwgJ1RpbWVzIE5ldyBSb21hbicsIHNlcmlmIiBmb250LXNpemU9IjY2IiBmb250LXdlaWdodD0iNzAwIiBsZXR0ZXItc3BhY2luZz0iNiIgZmlsbD0idXJsKCN0cmlidW5lLW9yKSI+REFWQVI8L3RleHQ+CiAgICA8dGV4dCB4PSIzIiB5PSIxNDgiIGZvbnQtZmFtaWx5PSJHZW9yZ2lhLCAnVGltZXMgTmV3IFJvbWFuJywgc2VyaWYiIGZvbnQtc2l6ZT0iMzEiIGZvbnQtd2VpZ2h0PSI0MDAiIGxldHRlci1zcGFjaW5nPSIxMiIgZmlsbD0iI0YzRTlEMiI+QUNBRMOJTUlFPC90ZXh0PgogICAgPGxpbmUgeDE9IjQiIHkxPSIxNjkiIHgyPSIzODIiIHkyPSIxNjkiIHN0cm9rZT0iI0Q0QUYzNyIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2Utb3BhY2l0eT0iLjQ4Ii8+CiAgICA8dGV4dCB4PSI0IiB5PSIyMDQiIGZvbnQtZmFtaWx5PSJJbnRlciwgc3lzdGVtLXVpLCAtYXBwbGUtc3lzdGVtLCAnU2Vnb2UgVUknLCBzYW5zLXNlcmlmIiBmb250LXNpemU9IjIyIiBmb250LXdlaWdodD0iNzAwIiBsZXR0ZXItc3BhY2luZz0iMTQiIGZpbGw9IiM4QjVDRjYiPkNBTVBVUzwvdGV4dD4KICAgIDx0ZXh0IHg9IjQiIHk9IjIzMiIgZm9udC1mYW1pbHk9IkludGVyLCBzeXN0ZW0tdWksIC1hcHBsZS1zeXN0ZW0sICdTZWdvZSBVSScsIHNhbnMtc2VyaWYiIGZvbnQtc2l6ZT0iMTEiIGZvbnQtd2VpZ2h0PSI2MDAiIGxldHRlci1zcGFjaW5nPSIzLjUiIGZpbGw9IiNBNzlGQzAiPkxBIFBBUk9MRSBQUkVORCBGT1JNRTwvdGV4dD4KICA8L2c+Cjwvc3ZnPgo=" alt="Proposition 1, La Tribune"></div>
+          <div class="proposal-body"><span class="number" aria-label="Numéro 1">1</span><h3>La Tribune</h3><p>La plus proche du langage actuel : un pavé violet protecteur, une signature horizontale et un filet d’or très lisible.</p><div class="details"><span>sobre</span><span>pavé sombre</span><span>marque principale</span></div><div class="choose">Proposition 1</div></div>
+        </article>
+        <article class="proposal">
+          <div class="art"><img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA3NjAgMjYwIiB3aWR0aD0iNzYwIiBoZWlnaHQ9IjI2MCIgcm9sZT0iaW1nIiBhcmlhLWxhYmVsbGVkYnk9InRpdHJlIGRlc2MiPgogIDx0aXRsZSBpZD0idGl0cmUiPlByb3Bvc2l0aW9uIDIg4oCUIExhIFNpZ25hdHVyZSDigJQgRGF2YXIgQWNhZMOpbWllIENhbXB1czwvdGl0bGU+CiAgPGRlc2MgaWQ9ImRlc2MiPlVuZSBtYXJxdWUgYcOpcsOpZSBldCBzYW5zIHBhdsOpLCBhdmVjIHVuIG1pY3JvcGhvbmUgZG9yw6kgb3JpZW50w6kgdmVycyBsZSBiYXMgZGFucyBsYSBjb250aW51aXTDqSBkdSBtb3J0aWVyLjwvZGVzYz4KICA8ZGVmcz4KICAgIDxsaW5lYXJHcmFkaWVudCBpZD0ic2lnbmF0dXJlLW9yIiB4MT0iMCIgeTE9IjAiIHgyPSIxIiB5Mj0iMSI+CiAgICAgIDxzdG9wIG9mZnNldD0iMCIgc3RvcC1jb2xvcj0iI0Y0RTJBMCIvPgogICAgICA8c3RvcCBvZmZzZXQ9Ii41IiBzdG9wLWNvbG9yPSIjRDRBRjM3Ii8+CiAgICAgIDxzdG9wIG9mZnNldD0iMSIgc3RvcC1jb2xvcj0iI0E4ODQyQSIvPgogICAgPC9saW5lYXJHcmFkaWVudD4KICAgIDxsaW5lYXJHcmFkaWVudCBpZD0ic2lnbmF0dXJlLXZpb2xldCIgeDE9IjAiIHkxPSIwIiB4Mj0iMSIgeTI9IjEiPgogICAgICA8c3RvcCBvZmZzZXQ9IjAiIHN0b3AtY29sb3I9IiM4QjVDRjYiLz4KICAgICAgPHN0b3Agb2Zmc2V0PSIxIiBzdG9wLWNvbG9yPSIjNUIyMUI2Ii8+CiAgICA8L2xpbmVhckdyYWRpZW50PgogICAgPGZpbHRlciBpZD0ic2lnbmF0dXJlLW9tYnJlIiB4PSItMzAlIiB5PSItMzAlIiB3aWR0aD0iMTYwJSIgaGVpZ2h0PSIxNzAlIj4KICAgICAgPGZlRHJvcFNoYWRvdyBkeD0iMCIgZHk9IjciIHN0ZERldmlhdGlvbj0iOCIgZmxvb2QtY29sb3I9IiMxMzBDMjAiIGZsb29kLW9wYWNpdHk9Ii4yIi8+CiAgICA8L2ZpbHRlcj4KICAgIDxnIGlkPSJzaWduYXR1cmUtbWFycXVlIiBzdHJva2U9InVybCgjc2lnbmF0dXJlLW9yKSIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIj4KICAgICAgPGNpcmNsZSBjeD0iMTIwIiBjeT0iMTIwIiByPSI5NiIgZmlsbD0ibm9uZSIgc3Ryb2tlLXdpZHRoPSI0LjgiLz4KICAgICAgPHBhdGggZD0iTTQ4IDExNS45IDEyMCA5Mi40bDcyIDIzLjUtNzIgMjQuOC03Mi0yNC44WiIgZmlsbD0iI0Q0QUYzNyIgZmlsbC1vcGFjaXR5PSIuMTQiIHN0cm9rZS13aWR0aD0iNi40Ii8+CiAgICAgIDxwYXRoIGQ9Ik04Mi42IDEzOS45djIxLjVRMTIwIDE3Ni42IDE1Ny40IDE2MS40di0yMS41IiBmaWxsPSJub25lIiBzdHJva2Utd2lkdGg9IjYuNCIvPgogICAgICA8IS0tIFRyYWl0IGRlIGxpYWlzb24gdm9sb250YWlyZW1lbnQgY291cnQgOiBsZSBtaWNyb3Bob25lIHBhcmHDrnQgc3VzcGVuZHUgw6AgbGEgbWFycXVlLiAtLT4KICAgICAgPHBhdGggZD0iTTE5MC43IDExNS45YzcuMiAxLjkgMTEuOSA2LjggMTIuOSAxMy41IiBmaWxsPSJub25lIiBzdHJva2Utd2lkdGg9IjUuMSIvPgogICAgICA8cGF0aCBkPSJNMjAzLjggMTI3LjF2MjUuNGE4LjIgOC4yIDAgMCAwIDE2LjQgMHYtMjUuNGE4LjIgOC4yIDAgMCAwLTE2LjQgMFoiIGZpbGw9IiMyNDE2NDAiIHN0cm9rZS13aWR0aD0iNS4xIi8+CiAgICAgIDxwYXRoIGQ9Ik0yMDQuOCAxNDcuNWgxNC40TTIwNC44IDE1My41aDE0LjRNMjA3IDE1OC41aDEwIiBmaWxsPSJub25lIiBzdHJva2Utd2lkdGg9IjIuNyIvPgogICAgICA8cGF0aCBkPSJNMjEyIDExOC44di03LjIiIGZpbGw9Im5vbmUiIHN0cm9rZS13aWR0aD0iNS4xIi8+CiAgICA8L2c+CiAgPC9kZWZzPgoKICA8ZyB0cmFuc2Zvcm09InRyYW5zbGF0ZSgxNSAyMCkgc2NhbGUoLjg3KSIgZmlsdGVyPSJ1cmwoI3NpZ25hdHVyZS1vbWJyZSkiPgogICAgPHVzZSBocmVmPSIjc2lnbmF0dXJlLW1hcnF1ZSIvPgogIDwvZz4KICA8cGF0aCBkPSJNMzYgMjI2YzYwIDE4IDE1MSAxOCAyMTQgMCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSJ1cmwoI3NpZ25hdHVyZS12aW9sZXQpIiBzdHJva2Utd2lkdGg9IjMiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIvPgogIDxjaXJjbGUgY3g9IjMwIiBjeT0iMjI2IiByPSIzLjUiIGZpbGw9IiNENEFGMzciLz4KICA8Y2lyY2xlIGN4PSIyNTYiIGN5PSIyMjYiIHI9IjMuNSIgZmlsbD0iI0Q0QUYzNyIvPgoKICA8ZyB0cmFuc2Zvcm09InRyYW5zbGF0ZSgzMjIgMCkiPgogICAgPHRleHQgeD0iMCIgeT0iOTEiIGZvbnQtZmFtaWx5PSJHZW9yZ2lhLCAnVGltZXMgTmV3IFJvbWFuJywgc2VyaWYiIGZvbnQtc2l6ZT0iNjUiIGZvbnQtd2VpZ2h0PSI3MDAiIGxldHRlci1zcGFjaW5nPSI2IiBmaWxsPSJ1cmwoI3NpZ25hdHVyZS1vcikiPkRBVkFSPC90ZXh0PgogICAgPHRleHQgeD0iMyIgeT0iMTM3IiBmb250LWZhbWlseT0iR2VvcmdpYSwgJ1RpbWVzIE5ldyBSb21hbicsIHNlcmlmIiBmb250LXNpemU9IjMwIiBmb250LXdlaWdodD0iNDAwIiBsZXR0ZXItc3BhY2luZz0iMTEiIGZpbGw9IiMyNDE2NDAiPkFDQUTDiU1JRTwvdGV4dD4KICAgIDx0ZXh0IHg9IjQiIHk9IjE4MCIgZm9udC1mYW1pbHk9IkludGVyLCBzeXN0ZW0tdWksIC1hcHBsZS1zeXN0ZW0sICdTZWdvZSBVSScsIHNhbnMtc2VyaWYiIGZvbnQtc2l6ZT0iMjQiIGZvbnQtd2VpZ2h0PSI3MDAiIGxldHRlci1zcGFjaW5nPSIxMyIgZmlsbD0idXJsKCNzaWduYXR1cmUtdmlvbGV0KSI+Q0FNUFVTPC90ZXh0PgogICAgPGxpbmUgeDE9IjQiIHkxPSIyMDIiIHgyPSIzOTQiIHkyPSIyMDIiIHN0cm9rZT0iI0Q0QUYzNyIgc3Ryb2tlLXdpZHRoPSIxLjYiIHN0cm9rZS1vcGFjaXR5PSIuNjgiLz4KICAgIDx0ZXh0IHg9IjQiIHk9IjIyNyIgZm9udC1mYW1pbHk9IkludGVyLCBzeXN0ZW0tdWksIC1hcHBsZS1zeXN0ZW0sICdTZWdvZSBVSScsIHNhbnMtc2VyaWYiIGZvbnQtc2l6ZT0iMTEiIGZvbnQtd2VpZ2h0PSI3MDAiIGxldHRlci1zcGFjaW5nPSIzLjEiIGZpbGw9IiM2RjZBODAiPkzigJlBUlQgREUgTEEgUEFST0xFPC90ZXh0PgogIDwvZz4KPC9zdmc+Cg==" alt="Proposition 2, La Signature"></div>
+          <div class="proposal-body"><span class="number" aria-label="Numéro 2">2</span><h3>La Signature</h3><p>La version la plus aérée : la marque respire sans pavé et s’adapte bien aux fonds clairs, aux documents et aux en-têtes.</p><div class="details"><span>fine</span><span>sans pavé</span><span>polyvalente</span></div><div class="choose">Proposition 2</div></div>
+        </article>
+        <article class="proposal">
+          <div class="art dark"><img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA3NjAgMjYwIiB3aWR0aD0iNzYwIiBoZWlnaHQ9IjI2MCIgcm9sZT0iaW1nIiBhcmlhLWxhYmVsbGVkYnk9InRpdHJlIGRlc2MiPgogIDx0aXRsZSBpZD0idGl0cmUiPlByb3Bvc2l0aW9uIDMg4oCUIExlIFNjZWF1IOKAlCBEYXZhciBBY2Fkw6ltaWUgQ2FtcHVzPC90aXRsZT4KICA8ZGVzYyBpZD0iZGVzYyI+VW4gc2NlYXUgZOKAmWFjYWTDqW1pZSB2aW9sZXQgZXQgb3IgcXVpIHLDqXVuaXQgbGUgbW9ydGllciBldCB1biBtaWNyb3Bob25lIGZpbiBvcmllbnTDqSB2ZXJzIGxlIGJhcy48L2Rlc2M+CiAgPGRlZnM+CiAgICA8cmFkaWFsR3JhZGllbnQgaWQ9InNjZWF1LWZvbmQiIGN4PSI1MCUiIGN5PSI0MiUiIHI9IjcyJSI+CiAgICAgIDxzdG9wIG9mZnNldD0iMCIgc3RvcC1jb2xvcj0iIzJEMUI0RCIvPgogICAgICA8c3RvcCBvZmZzZXQ9IjEiIHN0b3AtY29sb3I9IiMxNTBFMjQiLz4KICAgIDwvcmFkaWFsR3JhZGllbnQ+CiAgICA8bGluZWFyR3JhZGllbnQgaWQ9InNjZWF1LW9yIiB4MT0iMCIgeTE9IjAiIHgyPSIxIiB5Mj0iMSI+CiAgICAgIDxzdG9wIG9mZnNldD0iMCIgc3RvcC1jb2xvcj0iI0Y0RTJBMCIvPgogICAgICA8c3RvcCBvZmZzZXQ9Ii41IiBzdG9wLWNvbG9yPSIjRDRBRjM3Ii8+CiAgICAgIDxzdG9wIG9mZnNldD0iMSIgc3RvcC1jb2xvcj0iIzlFN0IyNSIvPgogICAgPC9saW5lYXJHcmFkaWVudD4KICAgIDxmaWx0ZXIgaWQ9InNjZWF1LW9tYnJlIiB4PSItMzAlIiB5PSItMzAlIiB3aWR0aD0iMTYwJSIgaGVpZ2h0PSIxNzAlIj4KICAgICAgPGZlRHJvcFNoYWRvdyBkeD0iMCIgZHk9IjkiIHN0ZERldmlhdGlvbj0iOSIgZmxvb2QtY29sb3I9IiMwODA1MTAiIGZsb29kLW9wYWNpdHk9Ii4zNCIvPgogICAgPC9maWx0ZXI+CiAgICA8cGF0aCBpZD0ic2NlYXUtaGF1dCIgZD0iTTcyIDEyMGE3NCA3NCAwIDAgMSAxNDggMCIvPgogICAgPHBhdGggaWQ9InNjZWF1LWJhcyIgZD0iTTIyMCAxMjBhNzQgNzQgMCAwIDEtMTQ4IDAiLz4KICAgIDxnIGlkPSJzY2VhdS1tYXJxdWUiIHN0cm9rZT0idXJsKCNzY2VhdS1vcikiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCI+CiAgICAgIDxjaXJjbGUgY3g9IjE0NiIgY3k9IjEyMCIgcj0iMTAxIiBmaWxsPSJ1cmwoI3NjZWF1LWZvbmQpIiBzdHJva2Utd2lkdGg9IjMuNiIvPgogICAgICA8Y2lyY2xlIGN4PSIxNDYiIGN5PSIxMjAiIHI9IjkxIiBmaWxsPSJub25lIiBzdHJva2Utd2lkdGg9IjEuMyIgc3Ryb2tlLW9wYWNpdHk9Ii41NSIvPgogICAgICA8cGF0aCBkPSJNODAgMTE1LjkgMTQ2IDk0LjRsNjYgMjEuNS02NiAyMi44LTY2LTIyLjhaIiBmaWxsPSIjRDRBRjM3IiBmaWxsLW9wYWNpdHk9Ii4yIiBzdHJva2Utd2lkdGg9IjYiLz4KICAgICAgPHBhdGggZD0iTTExMiAxMzguNnYyMC4zcTM0IDE0LjIgNjggMHYtMjAuMyIgZmlsbD0ibm9uZSIgc3Ryb2tlLXdpZHRoPSI2Ii8+CiAgICAgIDwhLS0gTGUgbWljcm9waG9uZSBkZXNjZW5kIGRlcHVpcyBsYSBwb2ludGUgZHJvaXRlLCBjb21tZSB1biBub3V2ZWF1IGNvcmRvbiBkZSBwYXJvbGUuIC0tPgogICAgICA8cGF0aCBkPSJNMjEyIDExNS45YzYuNSAxLjcgMTAuNSA2IDExLjYgMTEuOCIgZmlsbD0ibm9uZSIgc3Ryb2tlLXdpZHRoPSI0LjgiLz4KICAgICAgPHBhdGggZD0iTTIyMy4xIDEyNi44djI0LjJhNy43IDcuNyAwIDAgMCAxNS40IDB2LTI0LjJhNy43IDcuNyAwIDAgMC0xNS40IDBaIiBmaWxsPSIjMjQxNjQwIiBzdHJva2Utd2lkdGg9IjQuOCIvPgogICAgICA8cGF0aCBkPSJNMjI0LjEgMTQ2aDEzLjRNMjI0LjEgMTUxLjZoMTMuNE0yMjYuMiAxNTYuNWg5LjIiIGZpbGw9Im5vbmUiIHN0cm9rZS13aWR0aD0iMi41Ii8+CiAgICAgIDxwYXRoIGQ9Ik0yMzAuOCAxMTl2LTYuOCIgZmlsbD0ibm9uZSIgc3Ryb2tlLXdpZHRoPSI0LjgiLz4KICAgIDwvZz4KICA8L2RlZnM+CgogIDxnIHRyYW5zZm9ybT0idHJhbnNsYXRlKDE4IDApIiBmaWx0ZXI9InVybCgjc2NlYXUtb21icmUpIj4KICAgIDx1c2UgaHJlZj0iI3NjZWF1LW1hcnF1ZSIvPgogICAgPHRleHQgZm9udC1mYW1pbHk9IkludGVyLCBzeXN0ZW0tdWksIC1hcHBsZS1zeXN0ZW0sICdTZWdvZSBVSScsIHNhbnMtc2VyaWYiIGZvbnQtc2l6ZT0iMTAuNSIgZm9udC13ZWlnaHQ9IjgwMCIgbGV0dGVyLXNwYWNpbmc9IjMuNSIgZmlsbD0iI0YzRTlEMiI+CiAgICAgIDx0ZXh0UGF0aCBocmVmPSIjc2NlYXUtaGF1dCIgc3RhcnRPZmZzZXQ9IjUwJSIgdGV4dC1hbmNob3I9Im1pZGRsZSI+REFWQVIgQUNBRMOJTUlFPC90ZXh0UGF0aD4KICAgIDwvdGV4dD4KICAgIDx0ZXh0IGZvbnQtZmFtaWx5PSJJbnRlciwgc3lzdGVtLXVpLCAtYXBwbGUtc3lzdGVtLCAnU2Vnb2UgVUknLCBzYW5zLXNlcmlmIiBmb250LXNpemU9IjEwIiBmb250LXdlaWdodD0iNzAwIiBsZXR0ZXItc3BhY2luZz0iNCIgZmlsbD0iIzhCNUNGNiI+CiAgICAgIDx0ZXh0UGF0aCBocmVmPSIjc2NlYXUtYmFzIiBzdGFydE9mZnNldD0iNTAlIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIj5DQU1QVVMgwrcgT1JBVE9JUkU8L3RleHRQYXRoPgogICAgPC90ZXh0PgogIDwvZz4KCiAgPGcgdHJhbnNmb3JtPSJ0cmFuc2xhdGUoMzAwIDApIj4KICAgIDx0ZXh0IHg9IjAiIHk9Ijk2IiBmb250LWZhbWlseT0iR2VvcmdpYSwgJ1RpbWVzIE5ldyBSb21hbicsIHNlcmlmIiBmb250LXNpemU9IjY0IiBmb250LXdlaWdodD0iNzAwIiBsZXR0ZXItc3BhY2luZz0iNiIgZmlsbD0idXJsKCNzY2VhdS1vcikiPkRBVkFSPC90ZXh0PgogICAgPHRleHQgeD0iMyIgeT0iMTQyIiBmb250LWZhbWlseT0iR2VvcmdpYSwgJ1RpbWVzIE5ldyBSb21hbicsIHNlcmlmIiBmb250LXNpemU9IjMwIiBmb250LXdlaWdodD0iNDAwIiBsZXR0ZXItc3BhY2luZz0iMTEiIGZpbGw9IiNGM0U5RDIiPkFDQUTDiU1JRTwvdGV4dD4KICAgIDxyZWN0IHg9IjMiIHk9IjE2NiIgd2lkdGg9IjI4MCIgaGVpZ2h0PSIzMSIgcng9IjE1LjUiIGZpbGw9InVybCgjc2NlYXUtb3IpIi8+CiAgICA8dGV4dCB4PSIxNDMiIHk9IjE4NyIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZm9udC1mYW1pbHk9IkludGVyLCBzeXN0ZW0tdWksIC1hcHBsZS1zeXN0ZW0sICdTZWdvZSBVSScsIHNhbnMtc2VyaWYiIGZvbnQtc2l6ZT0iMTYiIGZvbnQtd2VpZ2h0PSI4MDAiIGxldHRlci1zcGFjaW5nPSI3IiBmaWxsPSIjMTUwRTI0Ij5DQU1QVVM8L3RleHQ+CiAgICA8dGV4dCB4PSI0IiB5PSIyMjUiIGZvbnQtZmFtaWx5PSJJbnRlciwgc3lzdGVtLXVpLCAtYXBwbGUtc3lzdGVtLCAnU2Vnb2UgVUknLCBzYW5zLXNlcmlmIiBmb250LXNpemU9IjExIiBmb250LXdlaWdodD0iNjAwIiBsZXR0ZXItc3BhY2luZz0iMy4zIiBmaWxsPSIjQTc5RkMwIj5MQSBWT0lYLCBBVkVDIMOJTMOJR0FOQ0U8L3RleHQ+CiAgPC9nPgo8L3N2Zz4K" alt="Proposition 3, Le Sceau"></div>
+          <div class="proposal-body"><span class="number" aria-label="Numéro 3">3</span><h3>Le Sceau</h3><p>La plus institutionnelle : le mortier et le microphone vivent dans un sceau d’académie, conçu pour les certificats et distinctions.</p><div class="details"><span>solennelle</span><span>sceau</span><span>certificats</span></div><div class="choose">Proposition 3</div></div>
+        </article>
+      </div>
+    </section>
+  </main>
+
+  <footer><div class="wrap">Fichiers examinés : <code>1-microphone-la-tribune.svg</code> · <code>2-microphone-la-signature.svg</code> · <code>3-microphone-le-sceau.svg</code>. Rien n’est injecté dans le logo de production avant votre choix.</div></footer>
+</body>
+</html>
