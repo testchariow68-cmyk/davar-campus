@@ -1,0 +1,36 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 660 180" width="660" height="180" role="img" aria-label="Davar Académie Campus — modèle La Tribune">
+  <title>Modèle 1 — La Tribune</title>
+  <defs>
+    <radialGradient id="t-fond" cx="50%" cy="42%" r="72%">
+      <stop offset="0%" stop-color="#241640"/>
+      <stop offset="100%" stop-color="#150E24"/>
+    </radialGradient>
+    <linearGradient id="t-or" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#F0D98A"/>
+      <stop offset="52%" stop-color="#D4AF37"/>
+      <stop offset="100%" stop-color="#A8842A"/>
+    </linearGradient>
+    <g id="t-marque">
+      <circle cx="120" cy="120" r="96" fill="none" stroke="url(#t-or)" stroke-width="5.3"/>
+      <g stroke="url(#t-or)" stroke-width="6.7" stroke-linecap="round" stroke-linejoin="round" fill="none">
+        <path d="M48 115.9 L120 92.4 L192 115.9 L120 140.7 Z" fill="#D4AF37" fill-opacity=".18"/>
+        <path d="M82.6 139.9 L82.6 161.4 Q120 176.6 157.4 161.4 L157.4 139.9"/>
+        <path d="M190.6 115.9 L190.6 149"/>
+        <circle cx="190.6" cy="155.9" r="6.7" fill="url(#t-or)" stroke="none"/>
+      </g>
+    </g>
+  </defs>
+
+  <!-- Le pavé : la marque posée sur un fond sombre, comme aujourd'hui -->
+  <rect x="10" y="10" width="160" height="160" rx="38" fill="url(#t-fond)"/>
+  <use href="#t-marque" transform="translate(26 26) scale(0.533)"/>
+
+  <!-- Le nom -->
+  <text x="200" y="74" font-family="Georgia, 'Times New Roman', serif" font-size="50" font-weight="700"
+        letter-spacing="4" fill="url(#t-or)">DAVAR</text>
+  <text x="200" y="112" font-family="Georgia, 'Times New Roman', serif" font-size="27" font-weight="400"
+        letter-spacing="9" fill="#F3E9D2">ACADÉMIE</text>
+  <line x1="202" y1="128" x2="474" y2="128" stroke="#D4AF37" stroke-width="2" stroke-opacity=".5"/>
+  <text x="200" y="153" font-family="Inter, system-ui, -apple-system, 'Segoe UI', sans-serif" font-size="19"
+        font-weight="600" letter-spacing="12" fill="#8B5CF6">CAMPUS</text>
+</svg>

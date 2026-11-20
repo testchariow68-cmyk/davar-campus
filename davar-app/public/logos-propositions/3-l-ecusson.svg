@@ -1,0 +1,40 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 660 180" width="660" height="180" role="img" aria-label="Davar Académie Campus — modèle L'Écusson">
+  <title>Modèle 3 — L'Écusson</title>
+  <defs>
+    <linearGradient id="e-champ" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#241640"/>
+      <stop offset="100%" stop-color="#150E24"/>
+    </linearGradient>
+    <linearGradient id="e-or" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#F0D98A"/>
+      <stop offset="52%" stop-color="#D4AF37"/>
+      <stop offset="100%" stop-color="#9E7B25"/>
+    </linearGradient>
+    <g id="e-marque">
+      <circle cx="120" cy="120" r="96" fill="none" stroke="#D4AF37" stroke-width="5.3"/>
+      <g stroke="#D4AF37" stroke-width="6.7" stroke-linecap="round" stroke-linejoin="round" fill="none">
+        <path d="M48 115.9 L120 92.4 L192 115.9 L120 140.7 Z" fill="#D4AF37" fill-opacity=".2"/>
+        <path d="M82.6 139.9 L82.6 161.4 Q120 176.6 157.4 161.4 L157.4 139.9"/>
+        <path d="M190.6 115.9 L190.6 149"/>
+        <circle cx="190.6" cy="155.9" r="6.7" fill="#D4AF37" stroke="none"/>
+      </g>
+    </g>
+  </defs>
+
+  <!-- Un écu d'académie : la marque y est posée comme sur un blason. -->
+  <path d="M90 12 L160 42 V100 Q160 148 90 172 Q20 148 20 100 V42 Z"
+        fill="url(#e-champ)" stroke="url(#e-or)" stroke-width="3.5" stroke-linejoin="round"/>
+  <path d="M90 22 L150 48 V100 Q150 141 90 162 Q30 141 30 100 V48 Z"
+        fill="none" stroke="url(#e-or)" stroke-width="1.2" stroke-opacity=".45"/>
+  <use href="#e-marque" transform="translate(38 42) scale(0.36)"/>
+
+  <text x="196" y="72" font-family="Georgia, 'Times New Roman', serif" font-size="44" font-weight="700"
+        letter-spacing="5" fill="url(#e-or)">DAVAR</text>
+  <text x="198" y="106" font-family="Georgia, 'Times New Roman', serif" font-size="24" font-weight="400"
+        letter-spacing="10" fill="#F3E9D2">ACADÉMIE</text>
+  <g>
+    <rect x="198" y="120" width="252" height="27" rx="13.5" fill="url(#e-or)"/>
+    <text x="324" y="139" text-anchor="middle" font-family="Inter, system-ui, -apple-system, 'Segoe UI', sans-serif"
+          font-size="14" font-weight="700" letter-spacing="7" fill="#150E24">CAMPUS</text>
+  </g>
+</svg>
