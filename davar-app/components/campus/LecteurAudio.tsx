@@ -53,13 +53,6 @@ export function LecteurAudio({
   }
 
   useEffect(() => {
-    // L'ouverture de l'audio est une activité réelle, même si l'étudiant
-    // n'a pas encore appuyé sur lecture.
-    if (!lectureSeule) void enregistrer(positionInitiale);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [resourceId, lectureSeule, positionInitiale]);
-
-  useEffect(() => {
     const element = audio.current;
     if (!element) return;
     let dernier = 0;
@@ -75,11 +68,15 @@ export function LecteurAudio({
       if (element) void enregistrer(element.currentTime);
     }
     function surReprise() {
-      // La reprise se fait une seule fois, au premier démarrage.
-      if (!repriseFaite && demarrage.current > 3 && element) {
+      // La reprise se fait une seule fois, au premier démarrage. Le démarrage
+      // lui-même est aussi mémorisé : une simple visite de la page ne suffit
+      // pas, mais un vrai appui sur lecture constitue bien un début d'écoute.
+      if (!element) return;
+      if (!repriseFaite && demarrage.current > 3) {
         element.currentTime = demarrage.current;
         setRepriseFaite(true);
       }
+      void enregistrer(Math.max(element.currentTime, demarrage.current));
     }
     element.addEventListener('timeupdate', surTemps);
     element.addEventListener('pause', surPause);

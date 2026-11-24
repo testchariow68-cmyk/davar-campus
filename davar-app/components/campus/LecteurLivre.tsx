@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import Link from 'next/link';
 import { Icon } from './Icon';
 
@@ -48,15 +48,6 @@ export function LecteurLivre({
       /* la position se réenregistrera au geste suivant */
     }
   }
-
-  useEffect(() => {
-    // Ouvrir un livre est déjà une activité réelle : elle doit pouvoir devenir
-    // la prochaine action, même avant le premier changement de page.
-    if (!lectureSeule) void enregistrer(pageInitiale > 0 ? pageInitiale : 0);
-    // Le lecteur est monté une fois par ressource ; les changements de page
-    // passent par `aller` et `sauter`.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [resourceId, lectureSeule, pageInitiale]);
 
   function aller(direction: number) {
     const suivante = Math.min(Math.max(1, page + direction), total);

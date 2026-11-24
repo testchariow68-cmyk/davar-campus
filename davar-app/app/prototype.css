@@ -429,8 +429,10 @@ body{font-family:"Inter",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Aria
   --shadow:0 1px 2px rgba(0,0,0,.4),0 6px 20px rgba(0,0,0,.35);
   --shadow-lg:0 10px 40px rgba(0,0,0,.55);
 }
-[data-theme="dark"] body{background:var(--bg)}
-[data-theme="dark"] .topbar{background:rgba(13,11,20,.9)}
+[data-theme="dark"] body{background:#000}
+[data-theme="dark"] .cp-app,
+[data-theme="dark"] .cp-main{background:#000}
+[data-theme="dark"] .topbar{background:rgba(0,0,0,.9)}
 [data-theme="dark"] .card,[data-theme="dark"] .modal,[data-theme="dark"] .dd-menu{background:var(--card)}
 [data-theme="dark"] .inp,[data-theme="dark"] select.inp,[data-theme="dark"] textarea.inp{background:#1D1929;border-color:var(--line2);color:var(--txt)}
 [data-theme="dark"] .btn{background:#201B2E;border-color:var(--line2);color:var(--txt)}
@@ -600,6 +602,9 @@ img.avatar{object-fit:cover}
   .cp-next .row{width:100%;align-items:flex-start;}
   .cp-next .s-ico{width:36px !important;height:36px !important;border-radius:10px !important;}
   .cp-next .btn{padding:6px 10px;font-size:11.5px;}
+  .cp-resume-line { align-items: flex-start; flex-wrap: wrap; }
+  .cp-resume-line .wrap { flex: 1 1 calc(100% - 66px); }
+  .cp-resume-line .btn { margin-left: 54px; }
   .rd-strip{gap:8px;align-items:flex-start;}
   .rd-strip .bk-thumb{width:50px;height:69px;}
 }
@@ -784,7 +789,8 @@ button.rw-card:hover{border-color:var(--gold-line);box-shadow:var(--shadow);tran
 .tk-ico svg{display:block;border-radius:6px}
 .fab-home{position:fixed;right:18px;bottom:58px;width:44px;height:44px;border-radius:14px;display:flex;align-items:center;justify-content:center;
   background:rgba(22,19,32,.55);color:var(--muted);border:1px solid var(--line);backdrop-filter:blur(6px);z-index:64;text-decoration:none}
-[data-theme="light"] .fab-home{background:rgba(255,255,255,.75)}
+[data-theme="light"] .fab-home{background:rgba(255,255,255,.92);color:var(--violet);border-color:var(--violet-line)}
+[data-theme="light"] .fab-home:hover{color:var(--violet-deep);border-color:var(--violet)}
 .fab-home:hover{color:var(--gold);border-color:var(--gold-line)}
 .fab-sup{bottom:112px}
 .cert-vis.has-img{padding:16px}
@@ -1791,6 +1797,33 @@ img, video, iframe, object { max-width: 100%; }
   .cp-next .btn { margin-left: auto; padding: 6px 10px; font-size: 11.5px; border-radius: 8px; }
 }
 
+.cp-resume {
+  margin: -4px 0 20px;
+  padding: 14px 16px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--card);
+}
+.cp-resume .cp-sec-h { margin-bottom: 12px; }
+.cp-resume-line { display: flex; align-items: center; gap: 12px; min-width: 0; }
+.cp-resume-line > .wrap { flex: 1 1 auto; min-width: 0; }
+.cp-resume-line .btn { flex: none; }
+.cp-resume-cover {
+  width: 42px;
+  height: 52px;
+  flex: none;
+  overflow: hidden;
+  border-radius: 8px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--violet-soft);
+  color: var(--violet);
+}
+.cp-resume-cover > img,
+.cp-resume-cover .bk-gen { width: 100%; height: 100%; object-fit: cover; }
+.cp-resume-cover .bk-gen { padding: 4px; font-size: 8px; line-height: 1.1; }
+
 .next-action-cover {
   width: 42px;
   height: 42px;
@@ -1831,18 +1864,17 @@ img, video, iframe, object { max-width: 100%; }
 .formation-active-action .xs { color: var(--red); }
 .formation-active-state { display: inline-flex; align-items: center; gap: 6px; color: var(--green); font-size: 12px; font-weight: 700; }
 
-/* Auth : logo plus discret sur ordinateur et téléphone, mais réellement
-   présent sur tablette. Le bloc et la carte restent centrés ensemble. */
-.lg-anneau { width: 112px; margin-inline: auto; }
-.gcard { width: min(100%, 480px); }
-@media (min-width: 768px) and (max-width: 1020px) {
-  .lg-anneau { width: 150px; }
-  .gcard { width: min(calc(100vw - 64px), 520px); }
-  .login-glass { padding-top: 24px; }
+/* Auth : logo très discret et formulaire fluide. La largeur dépend de l'espace
+   disponible, pas d'une dimension de tablette figée. */
+.lg-anneau { width: clamp(76px, 8vw, 112px); margin-inline: auto; }
+.gcard { width: min(100%, 560px); }
+@media (min-width: 768px) {
+  .login-glass { padding-inline: clamp(20px, 5vw, 72px); }
+  .gcard { width: min(100%, 62vw, 680px); }
 }
 @media (max-width: 767px) {
-  .lg-anneau { width: 88px; }
-  .gcard { width: min(calc(100vw - 32px), 360px); padding: 22px 20px; }
+  .lg-anneau { width: clamp(72px, 23vw, 96px); }
+  .gcard { width: min(100%, calc(100vw - 24px)); padding: 22px 20px; }
   .lg-bloc, .gcard, .lg-pied { margin-inline: auto; }
 }
 
@@ -1910,6 +1942,13 @@ img, video, iframe, object { max-width: 100%; }
 @media (max-width: 900px) {
   .admin-shell .admin-content { padding-bottom: 72px; }
 }
+
+/* Le sombre de la lecture reste réellement noir ; les surfaces de contenu
+   gardent seulement leurs cartes et leurs accents. */
+[data-theme="dark"] .cp-app,
+[data-theme="dark"] .cp-app .cp-main,
+[data-theme="dark"] .cp-app .cp-content { background: #000; }
+[data-theme="dark"] .cp-app .cp-top { background: rgba(0, 0, 0, .92); }
 
 /* Le clair reste la référence du campus ; le rail violet sombre est conservé
    quand la personne choisit le thème sombre. */

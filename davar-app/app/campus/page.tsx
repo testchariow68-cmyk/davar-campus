@@ -61,54 +61,61 @@ export default async function CampusDashboard() {
   const estRecente = distinction ? maintenant - distinction.obtenuLeMs < 7 * 24 * 60 * 60 * 1000 : false;
 
   const detailActif = active && !session.vueTest ? await getTrainingForUser(db, user.id, active.formation.id) : null;
+  /**
+   * La prochaine action est toujours pédagogique : elle ne devient jamais un
+   * livre ou un audio. Sans activité de cours, on prend la première leçon
+   * réellement ouvrable de la formation active — le premier cours du premier
+   * chapitre est donc proposé naturellement à l'arrivée.
+   */
   const derniereFormation = [...avecProgression]
     .filter(({ formation }) => formation.derniereActiviteMs !== null)
     .sort((a, b) => (b.formation.derniereActiviteMs ?? 0) - (a.formation.derniereActiviteMs ?? 0))[0] ?? null;
-  const derniereRessourceAvecActivite = [...ressources]
-    .map((ressource) => ({
-      ressource,
-      atMs:
-        ressource.kind === 'book' || ressource.kind === 'audio'
-          ? ressource.positionLectureAtMs
-          : ressource.fileKey
-            ? ressource.activiteAtMs
-            : null,
-    }))
-    .filter(({ atMs }) => atMs !== null)
-    .sort((a, b) => (b.atMs ?? 0) - (a.atMs ?? 0))[0] ?? null;
-  const derniereRessource = derniereRessourceAvecActivite?.ressource ?? null;
-  const derniereRessourceAtMs = derniereRessourceAvecActivite?.atMs ?? null;
-
-  // La comparaison des horodatages est la règle de priorité : une ouverture de
-  // média postérieure à la leçon devient la prochaine action, même si la
-  // formation active affichée dans la salutation est différente.
-  const ressourceEstDerniere = Boolean(
-    derniereRessource &&
-      derniereRessourceAtMs !== null &&
-      (!derniereFormation || derniereRessourceAtMs >= (derniereFormation.formation.derniereActiviteMs ?? 0))
-  );
-  const formationDeLaProchaineAction = ressourceEstDerniere ? null : derniereFormation ?? active;
+  const formationDeLaProchaineAction = derniereFormation ?? active;
   const detailProchaineAction =
     formationDeLaProchaineAction && !session.vueTest && formationDeLaProchaineAction.formation.id !== active?.formation.id
       ? await getTrainingForUser(db, user.id, formationDeLaProchaineAction.formation.id)
       : detailActif;
   const prochaineLeconModule =
-    detailProchaineAction?.modules.find((module) => module.lessons.some((lecon) => !lecon.completed)) ?? null;
+    detailProchaineAction?.modules.find((module, index) => {
+      const moduleOuvert =
+        index === 0 ||
+        detailProchaineAction.modules
+          .slice(0, index)
+          .every((precedent) => precedent.lessons.every((lecon) => lecon.completed));
+      return moduleOuvert && module.lessons.some((lecon) => !lecon.completed);
+    }) ?? null;
   const prochaineLecon = prochaineLeconModule?.lessons.find((lecon) => !lecon.completed) ?? null;
-  const couvertureProchaine =
-    ressourceEstDerniere && derniereRessource?.coverKey ? await urlLecture(derniereRessource.coverKey, 600) : null;
-  const descriptionProchaineAction = ressourceEstDerniere && derniereRessource
-    ? derniereRessource.description?.trim() ||
-      (derniereRessource.kind === 'file'
-        ? 'Ouvrez la ressource multimédia.'
-        : derniereRessource.positionLecture && derniereRessource.positionLecture > 0
-          ? 'Reprenez là où vous vous êtes arrêté(e).'
-          : 'Commencez votre lecture.')
-    : prochaineLecon?.kind === 'exercise'
-      ? 'Envoyez votre travail, votre coach le corrigera.'
-      : prochaineLecon?.kind === 'live'
-        ? 'Accédez à cette séance depuis votre formation.'
-        : prochaineLeconModule?.summary?.trim() || 'Reprenez là où vous vous êtes arrêté(e).';
+  const chapitreDeLaProchaineAction =
+    detailProchaineAction?.chapitres.find((chapitre) => chapitre.modules.some((module) => module.id === prochaineLeconModule?.id)) ?? null;
+  const prochaineActionHref =
+    prochaineLecon && prochaineLeconModule && chapitreDeLaProchaineAction && formationDeLaProchaineAction
+      ? `/campus/formation/${formationDeLaProchaineAction.formation.id}?chapitre=${encodeURIComponent(chapitreDeLaProchaineAction.id)}&module=${encodeURIComponent(prochaineLeconModule.id)}&cours=${encodeURIComponent(prochaineLecon.id)}`
+      : null;
+
+  /**
+   * La reprise est une proposition séparée, réservée aux livres et audios
+   * réellement commencés. Une ressource simplement publiée — ou seulement
+   * ouverte sans geste de lecture — ne doit rien afficher sur le tableau de bord.
+   */
+  const derniereLectureAvecActivite = [...ressources]
+    .map((ressource) => ({
+      ressource,
+      atMs:
+        (ressource.kind === 'book' || ressource.kind === 'audio') &&
+        ressource.positionLecture !== null &&
+        ressource.positionLecture > 0
+          ? ressource.positionLectureAtMs
+          : null,
+    }))
+    .filter(({ atMs }) => atMs !== null)
+    .sort((a, b) => (b.atMs ?? 0) - (a.atMs ?? 0))[0] ?? null;
+  const derniereLecture = derniereLectureAvecActivite?.ressource ?? null;
+  const couvertureReprise = derniereLecture?.coverKey ? await urlLecture(derniereLecture.coverKey, 600) : null;
+  const descriptionProchaineAction = prochaineLecon?.kind === 'exercise'
+    ? 'Envoyez votre travail, votre coach le corrigera.'
+    : prochaineLecon?.kind === 'live'
+      ? 'Accédez à cette séance depuis votre formation.'
+      : prochaineLeconModule?.summary?.trim() || 'Ouvrez le prochain cours de votre parcours.';
 
   const dateLongue = new Date().toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' });
   const heure = new Date().toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
@@ -134,7 +141,10 @@ export default async function CampusDashboard() {
           </h1>
           <p>{phrase}</p>
           {active ? (
-            <Link className="btn btn-primary" href={`/campus/formation/${active.formation.id}`}>
+            <Link
+              className="btn btn-primary"
+              href={active.terminee ? `/campus/formation/${active.formation.id}` : prochaineActionHref ?? `/campus/formation/${active.formation.id}`}
+            >
               <Icon nom="play" taille={15} />{' '}
               {active.pct === 0 ? 'Commencer' : active.terminee ? 'Voir ma formation' : 'Continuer'}
             </Link>
@@ -164,85 +174,89 @@ export default async function CampusDashboard() {
         )}
       </div>
 
-      {((ressourceEstDerniere && derniereRessource) || (!ressourceEstDerniere && prochaineLecon && formationDeLaProchaineAction)) && (
+      {prochaineLecon && formationDeLaProchaineAction && (
         <div className="cp-next">
           <div className="row">
-            {ressourceEstDerniere && derniereRessource ? (
-              derniereRessource.kind === 'book' ? (
-                <span className="next-action-cover bk-thumb" aria-hidden="true">
-                  {couvertureProchaine ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img src={couvertureProchaine} alt="" />
-                  ) : (
-                    <span className="bk-gen">{derniereRessource.title}</span>
-                  )}
-                </span>
-              ) : derniereRessource.kind === 'audio' ? (
-                <span className="next-action-cover au-cover" aria-hidden="true">
-                  {couvertureProchaine ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img src={couvertureProchaine} alt="" />
-                  ) : null}
-                  <span className="au-next-icon"><Icon nom="headset" taille={19} /></span>
-                </span>
-              ) : couvertureProchaine ? (
-                <span className="next-action-cover resource-file-next" aria-hidden="true">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={couvertureProchaine} alt="" />
-                </span>
-              ) : (
-                <span className="s-ico next-action-file" aria-hidden="true">
-                  <Icon nom="doc" taille={19} />
-                </span>
-              )
+            <span
+              className="s-ico"
+              style={{
+                width: 42,
+                height: 42,
+                borderRadius: 12,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                background: 'var(--violet)',
+                color: '#fff',
+                flex: 'none',
+              }}
+            >
+              <Icon nom={prochaineLecon.kind === 'exercise' ? 'edit' : 'play'} taille={19} />
+            </span>
+            <div className="wrap">
+              <div className="eyebrow">Prochaine action · cours</div>
+              <b style={{ fontSize: 14.5 }}>{prochaineLecon.title}</b>
+              <div className="xs muted">{descriptionProchaineAction}</div>
+            </div>
+            <Link
+              className="btn btn-primary btn-sm"
+              href={prochaineActionHref ?? `/campus/formation/${formationDeLaProchaineAction.formation.id}`}
+            >
+              J’y vais <Icon nom="arrowR" taille={13} />
+            </Link>
+          </div>
+        </div>
+      )}
+
+      {derniereLecture && (
+        <section className="cp-resume">
+          <div className="cp-sec-h">
+            <div>
+              <span className="eyebrow">Reprendre ma lecture</span>
+              <p className="small muted mt4">Un raccourci vers votre dernière lecture commencée.</p>
+            </div>
+            <Link className="xs link" href="/campus/ressources">Mes ressources →</Link>
+          </div>
+          <div className="cp-resume-line">
+            {derniereLecture.kind === 'book' ? (
+              <span className="cp-resume-cover bk-thumb" aria-hidden="true">
+                {couvertureReprise ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={couvertureReprise} alt="" />
+                ) : (
+                  <span className="bk-gen">{derniereLecture.title}</span>
+                )}
+              </span>
             ) : (
-              <span
-                className="s-ico"
-                style={{
-                  width: 42,
-                  height: 42,
-                  borderRadius: 12,
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  background: 'var(--violet)',
-                  color: '#fff',
-                  flex: 'none',
-                }}
-              >
-                <Icon nom={prochaineLecon?.kind === 'exercise' ? 'edit' : 'play'} taille={19} />
+              <span className="cp-resume-cover au-cover" aria-hidden="true">
+                {couvertureReprise ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={couvertureReprise} alt="" />
+                ) : null}
+                <span className="au-next-icon"><Icon nom="headset" taille={18} /></span>
               </span>
             )}
             <div className="wrap">
-              <div className="eyebrow">Prochaine action</div>
-              <b style={{ fontSize: 14.5 }}>
-                {ressourceEstDerniere && derniereRessource ? derniereRessource.title : prochaineLecon?.title}
-              </b>
-              <div className="xs muted">{descriptionProchaineAction}</div>
+              <b>{derniereLecture.title}</b>
+              <div className="xs muted">
+                {derniereLecture.kind === 'book'
+                  ? `Vous vous êtes arrêté(e) à la page ${derniereLecture.positionLecture}.`
+                  : 'Reprenez votre écoute là où vous vous êtes arrêté(e).'}
+              </div>
             </div>
-            {ressourceEstDerniere && derniereRessource ? (
-              <Link
-                className="btn btn-primary btn-sm"
-                href={
-                  derniereRessource.kind === 'audio'
-                    ? `/campus/ressources/audio/${derniereRessource.id}`
-                    : derniereRessource.kind === 'book'
-                      ? `/campus/ressources/livre/${derniereRessource.id}`
-                      : `/api/campus/ressource/${derniereRessource.id}`
-                }
-              >
-                J’y vais <Icon nom="arrowR" taille={13} />
-              </Link>
-            ) : (
-              <Link
-                className="btn btn-primary btn-sm"
-                href={`/campus/formation/${formationDeLaProchaineAction?.formation.id}`}
-              >
-                J’y vais <Icon nom="arrowR" taille={13} />
-              </Link>
-            )}
+            <Link
+              className="btn btn-sm"
+              href={
+                derniereLecture.kind === 'audio'
+                  ? `/campus/ressources/audio/${derniereLecture.id}`
+                  : `/campus/ressources/livre/${derniereLecture.id}`
+              }
+            >
+              {derniereLecture.kind === 'audio' ? 'Reprendre l’écoute' : 'Continuer la lecture'}
+              <Icon nom="arrowR" taille={13} />
+            </Link>
           </div>
-        </div>
+        </section>
       )}
 
       {distinction && (
