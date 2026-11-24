@@ -1,0 +1,34 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 250" width="760" height="250" role="img" aria-label="DAVAR ACADEMIE CAMPUS">
+  <defs>
+    <!-- Exactement le violet sombre du favicon (campus-icon.svg), le même,
+         partout : #241640 au centre, #150E24 au bord.
+
+         Le dégradé du favicon couvre son pavé de 512, dont l'anneau
+         (r = 144) n'occupe que le milieu. On reproduit ici le même
+         rapport : centre (120 ; 92,7), rayon 245,8, soit exactement la
+         portion de dégradé que l'anneau du favicon laisse voir. Le violet
+         est ainsi le même au pixel, et pas seulement au nuancier. -->
+    <radialGradient id="fond-anneau" gradientUnits="userSpaceOnUse"
+                    cx="120" cy="92.7" r="245.8">
+      <stop offset="0%" stop-color="#241640"/>
+      <stop offset="100%" stop-color="#150E24"/>
+    </radialGradient>
+  </defs>
+  <g transform="translate(15 15) scale(0.917)">
+    <!-- Le fond de l'anneau, et lui seul. L'or reste la couleur du trait. -->
+    <circle cx="120.0" cy="120.0" r="96.0" fill="url(#fond-anneau)"/>
+    <circle cx="120.0" cy="120.0" r="96.0" fill="none" stroke="#D4AF37" stroke-width="5.3"/>
+  <g stroke="#D4AF37" stroke-width="6.7" stroke-linecap="round" stroke-linejoin="round" fill="none"><path d="M48.0 115.9 L120.0 92.4 L192.0 115.9 L120.0 140.7 Z" fill="#D4AF37" fill-opacity=".16"/><path d="M82.6 139.9 L82.6 161.4 Q120.0 176.6 157.4 161.4 L157.4 139.9"/><path d="M190.6 115.9 L190.6 149.0"/><circle cx="190.6" cy="155.9" r="6.7" fill="#D4AF37" stroke="none"/></g>
+  </g>
+  <g transform="translate(268 0)">
+    <!-- Les trois mots à la MÊME taille : « DAVAR ACADÉMIE CAMPUS » se lit
+         d'un seul tenant, sans qu'un mot écrase l'autre. Seules la couleur et
+         la graisse distinguent encore les rangs. -->
+    <text x="0" y="100" font-family="Georgia, 'Times New Roman', serif" font-size="56" font-weight="700"
+          letter-spacing="8" fill="#D4AF37">DAVAR</text>
+    <text x="0" y="162" font-family="Georgia, 'Times New Roman', serif" font-size="56" font-weight="400"
+          letter-spacing="13" fill="#F3E9D2">ACADÉMIE</text>
+    <text x="0" y="224" font-family="Georgia, 'Times New Roman', serif" font-size="56" font-weight="400"
+          letter-spacing="13" fill="#8B5CF6">CAMPUS</text>
+  </g>
+</svg>
