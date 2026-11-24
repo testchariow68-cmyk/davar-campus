@@ -6,7 +6,7 @@ import { urlLecture } from '@/lib/server/stockage';
 
 export const dynamic = 'force-dynamic';
 
-/** LECTURE D'UN LIVRE — la page est mémorisée, comme dans le prototype. */
+/** LECTURE D'UN LIVRE — la position est reprise si une navigation a réellement été commencée. */
 export default async function LivrePage({ params }: { params: Promise<{ id: string }> }) {
   const session = await currentSession();
   if (!session) redirect('/connexion');
