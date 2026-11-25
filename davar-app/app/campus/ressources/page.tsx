@@ -6,7 +6,7 @@ import { ressourcesDeEtudiant } from '@/lib/server/ressources';
 import { urlLecture } from '@/lib/server/stockage';
 
 export const dynamic = 'force-dynamic';
-export const metadata = { title: 'Ma bibliothèque — Davar Académie Campus' };
+export const metadata = { title: 'Bibliothèque — Davar Académie Campus' };
 
 type Categorie = 'all' | 'book' | 'audio' | 'file';
 

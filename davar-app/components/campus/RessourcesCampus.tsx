@@ -21,10 +21,10 @@ type PropsRessourcesCampus = {
 };
 
 const CATEGORIES: Array<{ id: Categorie; libelle: string; description: string; icone: NomIcone }> = [
-  { id: 'all', libelle: 'Toute la bibliothèque', description: 'Livres, audios et fichiers disponibles', icone: 'layers' },
+  { id: 'all', libelle: 'Bibliothèque', description: 'Livres, audios et fichiers disponibles', icone: 'layers' },
   { id: 'book', libelle: 'Livres', description: 'Lecture paginée dans la plateforme', icone: 'book' },
   { id: 'audio', libelle: 'Audios', description: 'Écoute avec reprise automatique', icone: 'headset' },
-  { id: 'file', libelle: 'Ressources multimédias', description: 'Documents, images et autres fichiers', icone: 'doc' },
+  { id: 'file', libelle: 'Multimédia', description: 'Documents, images et autres fichiers', icone: 'doc' },
 ];
 
 function minutes(secondes: number): string {
@@ -35,7 +35,7 @@ function minutes(secondes: number): string {
 function libelleCategorie(kind: Ressource['kind']): string {
   if (kind === 'book') return 'Livre';
   if (kind === 'audio') return 'Audio';
-  return 'Ressource multimédia';
+  return 'Multimédia';
 }
 
 function CarteRessource({
@@ -98,7 +98,7 @@ function CarteRessource({
           {ressource.durationMin ? <span>{ressource.durationMin} min</span> : null}
           {estLivre && contenance.pages > 0 ? <span>{contenance.pages} pages</span> : null}
           {estAudio && contenance.pistes > 0 ? <span>{contenance.pistes} piste(s)</span> : null}
-          {!estLivre && !estAudio ? <span>Ressource multimédia</span> : null}
+          {!estLivre && !estAudio ? <span>Multimédia</span> : null}
         </div>
 
         {position > 0 && (
@@ -119,7 +119,7 @@ function CarteRessource({
               {estLivre ? (position > 0 ? 'Continuer la lecture' : 'Commencer la lecture') : estAudio ? (position > 0 ? 'Reprendre l’écoute' : 'Écouter') : 'Ouvrir'}
             </a>
           ) : (
-            <span className="xs faint">Cette ressource sera ouverte dès sa mise en ligne.</span>
+            <span className="xs faint">Ce contenu sera ouvert dès sa mise en ligne.</span>
           )}
         </div>
       </div>
@@ -132,15 +132,15 @@ export function RessourcesCampus({ ressources, contenance, categorie, couverture
   const groupes: Array<{ kind: Ressource['kind']; titre: string; sousTitre: string }> = [
     { kind: 'book', titre: 'Livres', sousTitre: 'Lisez directement dans la plateforme, votre page est mémorisée.' },
     { kind: 'audio', titre: 'Audios', sousTitre: 'Écoutez vos pistes avec reprise automatique.' },
-    { kind: 'file', titre: 'Ressources multimédias', sousTitre: 'Documents et fichiers complémentaires de votre campus.' },
+    { kind: 'file', titre: 'Multimédia', sousTitre: 'Documents et fichiers disponibles dans votre campus.' },
   ];
 
   return (
     <>
       <div className="page-head resource-page-head">
         <div>
-          <h1>Ma bibliothèque</h1>
-          <p>Choisissez une catégorie pour retrouver vos livres, audios et ressources multimédias.</p>
+          <h1>Bibliothèque</h1>
+          <p>Choisissez une catégorie pour retrouver vos livres, audios et fichiers multimédias.</p>
         </div>
       </div>
 
@@ -168,16 +168,16 @@ export function RessourcesCampus({ ressources, contenance, categorie, couverture
       {ressources.length === 0 ? (
         <div className="card card-pad resource-empty">
           <span className="resource-empty-icon"><Icon nom="layers" taille={25} /></span>
-          <h2>Aucune ressource pour l’instant</h2>
+          <h2>Aucun contenu pour l’instant</h2>
           <p className="small muted mt8">
-            Vos livres, audios et ressources multimédias apparaîtront ici dès que votre équipe pédagogique les aura publiés.
+            Vos livres, audios et fichiers multimédias apparaîtront ici dès que votre équipe pédagogique les aura publiés.
           </p>
         </div>
       ) : choisies.length === 0 ? (
         <div className="card card-pad resource-empty">
           <span className="resource-empty-icon"><Icon nom="layers" taille={25} /></span>
-          <h2>Aucune ressource pour l’instant dans cette catégorie</h2>
-          <p className="small muted mt8">Choisissez une autre catégorie pour consulter vos ressources disponibles.</p>
+          <h2>Aucun contenu pour l’instant dans cette catégorie</h2>
+          <p className="small muted mt8">Choisissez une autre catégorie pour consulter les éléments disponibles.</p>
         </div>
       ) : categorie === 'all' ? (
         <div className="resource-groups">

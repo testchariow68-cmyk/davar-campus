@@ -40,7 +40,7 @@ const GROUPES: GroupDefinition[] = [
     'PÉDAGOGIE',
     [
       ['formations', 'Formations', '/direction/formations', 'book'],
-      ['ressources', 'Ressources', '/direction/ressources', 'doc'],
+      ['ressources', 'Bibliothèque', '/direction/ressources', 'doc'],
       ['exercices', 'Exercices', '/direction/exercices', 'clipboard'],
       ['devoirs', 'Évaluations', '/direction/devoirs', 'target'],
     ],

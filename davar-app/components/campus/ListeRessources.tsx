@@ -54,7 +54,7 @@ export function ListeRessources({
           <p>{sousTitre}</p>
         </div>
         <Link className="btn btn-sm" href={retour}>
-          <Icon nom="layers" taille={13} /> Ma bibliothèque
+          <Icon nom="layers" taille={13} /> Bibliothèque
         </Link>
       </div>
 
@@ -62,7 +62,7 @@ export function ListeRessources({
         <div className="banner info">
           <Icon nom={icone} taille={14} />
           <span className="small">
-            Aucune ressource pour l’instant. Elles apparaîtront ici dès que la direction les publiera.
+            Aucun contenu pour l’instant. Il apparaîtra ici dès que la direction le publiera.
           </span>
         </div>
       ) : (
@@ -119,7 +119,7 @@ export function ListeRessources({
               !((contenance[ressource.id]?.pages ?? 0) > 0) &&
               !((contenance[ressource.id]?.pistes ?? 0) > 0) ? (
                 <p className="xs faint mt16">
-                  Le fichier n’est pas encore déposé : cette ressource vous sera ouverte dès sa mise en ligne.
+                  Le fichier n’est pas encore déposé : ce contenu vous sera ouvert dès sa mise en ligne.
                 </p>
               ) : null}
             </div>

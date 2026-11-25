@@ -10,7 +10,7 @@ const TITRES: Record<string, string> = {
   '/direction/badges': 'Badges & distinctions',
   '/direction/activite': 'Activité étudiants',
   '/direction/formations': 'Formations',
-  '/direction/ressources': 'Ressources',
+  '/direction/ressources': 'Bibliothèque',
   '/direction/exercices': 'Exercices',
   '/direction/devoirs': 'Évaluations',
   '/direction/etudiants': 'Étudiants',

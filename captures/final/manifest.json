@@ -208,14 +208,11 @@
       "status": 200,
       "errors": [],
       "checks": {
-        "url": "/campus",
-        "hasAssistantIA": false,
-        "hasOldPlayerCopy": false,
-        "hasProgram": false,
-        "programOpen": false,
-        "images": [
-          "/emojis/1f44b-1f3fd.svg"
-        ]
+        "oldLibrary": false,
+        "oldGlobalResources": false,
+        "menuOpen": false,
+        "menuBottom": false,
+        "heading": "Bonne nuit, Awa"
       }
     },
     {
@@ -225,14 +222,11 @@
       "status": 200,
       "errors": [],
       "checks": {
-        "url": "/campus",
-        "hasAssistantIA": false,
-        "hasOldPlayerCopy": false,
-        "hasProgram": false,
-        "programOpen": false,
-        "images": [
-          "/emojis/1f44b-1f3fd.svg"
-        ]
+        "oldLibrary": false,
+        "oldGlobalResources": false,
+        "menuOpen": false,
+        "menuBottom": false,
+        "heading": "Bonne nuit, Awa"
       }
     },
     {
@@ -242,14 +236,11 @@
       "status": 200,
       "errors": [],
       "checks": {
-        "url": "/campus",
-        "hasAssistantIA": false,
-        "hasOldPlayerCopy": false,
-        "hasProgram": false,
-        "programOpen": false,
-        "images": [
-          "/emojis/1f44b-1f3fd.svg"
-        ]
+        "oldLibrary": false,
+        "oldGlobalResources": false,
+        "menuOpen": false,
+        "menuBottom": false,
+        "heading": "Bonne nuit, Awa"
       }
     },
     {
@@ -259,14 +250,11 @@
       "status": 200,
       "errors": [],
       "checks": {
-        "url": "/campus",
-        "hasAssistantIA": false,
-        "hasOldPlayerCopy": false,
-        "hasProgram": false,
-        "programOpen": false,
-        "images": [
-          "/emojis/1f44b-1f3fd.svg"
-        ]
+        "oldLibrary": false,
+        "oldGlobalResources": false,
+        "menuOpen": false,
+        "menuBottom": false,
+        "heading": "Bonne nuit, Awa"
       }
     },
     {
@@ -276,14 +264,11 @@
       "status": 200,
       "errors": [],
       "checks": {
-        "url": "/campus",
-        "hasAssistantIA": false,
-        "hasOldPlayerCopy": false,
-        "hasProgram": false,
-        "programOpen": false,
-        "images": [
-          "/emojis/1f44b-1f3fd.svg"
-        ]
+        "oldLibrary": false,
+        "oldGlobalResources": false,
+        "menuOpen": false,
+        "menuBottom": false,
+        "heading": "Bonne nuit, Awa"
       }
     },
     {
@@ -293,14 +278,11 @@
       "status": 200,
       "errors": [],
       "checks": {
-        "url": "/campus/formations",
-        "hasAssistantIA": false,
-        "hasOldPlayerCopy": false,
-        "hasProgram": false,
-        "programOpen": false,
-        "images": [
-          "/emojis/1f44b-1f3fd.svg"
-        ]
+        "oldLibrary": false,
+        "oldGlobalResources": false,
+        "menuOpen": false,
+        "menuBottom": false,
+        "heading": "Mes formations"
       }
     },
     {
@@ -310,14 +292,11 @@
       "status": 200,
       "errors": [],
       "checks": {
-        "url": "/campus/formations",
-        "hasAssistantIA": false,
-        "hasOldPlayerCopy": false,
-        "hasProgram": false,
-        "programOpen": false,
-        "images": [
-          "/emojis/1f44b-1f3fd.svg"
-        ]
+        "oldLibrary": false,
+        "oldGlobalResources": false,
+        "menuOpen": false,
+        "menuBottom": false,
+        "heading": "Mes formations"
       }
     },
     {
@@ -327,14 +306,11 @@
       "status": 200,
       "errors": [],
       "checks": {
-        "url": "/campus/formations",
-        "hasAssistantIA": false,
-        "hasOldPlayerCopy": false,
-        "hasProgram": false,
-        "programOpen": false,
-        "images": [
-          "/emojis/1f44b-1f3fd.svg"
-        ]
+        "oldLibrary": false,
+        "oldGlobalResources": false,
+        "menuOpen": false,
+        "menuBottom": false,
+        "heading": "Mes formations"
       }
     },
     {
@@ -344,14 +320,11 @@
       "status": 200,
       "errors": [],
       "checks": {
-        "url": "/campus/formations",
-        "hasAssistantIA": false,
-        "hasOldPlayerCopy": false,
-        "hasProgram": false,
-        "programOpen": false,
-        "images": [
-          "/emojis/1f44b-1f3fd.svg"
-        ]
+        "oldLibrary": false,
+        "oldGlobalResources": false,
+        "menuOpen": false,
+        "menuBottom": false,
+        "heading": "Mes formations"
       }
     },
     {
@@ -361,14 +334,11 @@
       "status": 200,
       "errors": [],
       "checks": {
-        "url": "/campus/formations",
-        "hasAssistantIA": false,
-        "hasOldPlayerCopy": false,
-        "hasProgram": false,
-        "programOpen": false,
-        "images": [
-          "/emojis/1f44b-1f3fd.svg"
-        ]
+        "oldLibrary": false,
+        "oldGlobalResources": false,
+        "menuOpen": false,
+        "menuBottom": false,
+        "heading": "Mes formations"
       }
     },
     {
@@ -628,87 +598,72 @@
     },
     {
       "file": "06-bibliotheque-tablette-paysage.png",
-      "label": "Ma bibliothèque",
+      "label": "Bibliothèque",
       "device": "Tablette paysage",
       "status": 200,
       "errors": [],
       "checks": {
-        "url": "/campus/ressources",
-        "hasAssistantIA": false,
-        "hasOldPlayerCopy": false,
-        "hasProgram": false,
-        "programOpen": false,
-        "images": [
-          "/emojis/1f44b-1f3fd.svg"
-        ]
+        "oldLibrary": false,
+        "oldGlobalResources": false,
+        "menuOpen": false,
+        "menuBottom": false,
+        "heading": "Bibliothèque"
       }
     },
     {
       "file": "06-bibliotheque-telephone.png",
-      "label": "Ma bibliothèque",
+      "label": "Bibliothèque",
       "device": "Téléphone portrait",
       "status": 200,
       "errors": [],
       "checks": {
-        "url": "/campus/ressources",
-        "hasAssistantIA": false,
-        "hasOldPlayerCopy": false,
-        "hasProgram": false,
-        "programOpen": false,
-        "images": [
-          "/emojis/1f44b-1f3fd.svg"
-        ]
+        "oldLibrary": false,
+        "oldGlobalResources": false,
+        "menuOpen": false,
+        "menuBottom": false,
+        "heading": "Bibliothèque"
       }
     },
     {
       "file": "06-bibliotheque-telephone-paysage.png",
-      "label": "Ma bibliothèque",
+      "label": "Bibliothèque",
       "device": "Téléphone paysage",
       "status": 200,
       "errors": [],
       "checks": {
-        "url": "/campus/ressources",
-        "hasAssistantIA": false,
-        "hasOldPlayerCopy": false,
-        "hasProgram": false,
-        "programOpen": false,
-        "images": [
-          "/emojis/1f44b-1f3fd.svg"
-        ]
+        "oldLibrary": false,
+        "oldGlobalResources": false,
+        "menuOpen": false,
+        "menuBottom": false,
+        "heading": "Bibliothèque"
       }
     },
     {
       "file": "06-bibliotheque-tablette.png",
-      "label": "Ma bibliothèque",
+      "label": "Bibliothèque",
       "device": "Tablette portrait",
       "status": 200,
       "errors": [],
       "checks": {
-        "url": "/campus/ressources",
-        "hasAssistantIA": false,
-        "hasOldPlayerCopy": false,
-        "hasProgram": false,
-        "programOpen": false,
-        "images": [
-          "/emojis/1f44b-1f3fd.svg"
-        ]
+        "oldLibrary": false,
+        "oldGlobalResources": false,
+        "menuOpen": false,
+        "menuBottom": false,
+        "heading": "Bibliothèque"
       }
     },
     {
       "file": "06-bibliotheque-ordinateur.png",
-      "label": "Ma bibliothèque",
+      "label": "Bibliothèque",
       "device": "Ordinateur",
       "status": 200,
       "errors": [],
       "checks": {
-        "url": "/campus/ressources",
-        "hasAssistantIA": false,
-        "hasOldPlayerCopy": false,
-        "hasProgram": false,
-        "programOpen": false,
-        "images": [
-          "/emojis/1f44b-1f3fd.svg"
-        ]
+        "oldLibrary": false,
+        "oldGlobalResources": false,
+        "menuOpen": false,
+        "menuBottom": false,
+        "heading": "Bibliothèque"
       }
     },
     {
@@ -718,14 +673,11 @@
       "status": 200,
       "errors": [],
       "checks": {
-        "url": "/campus/ressources/livre",
-        "hasAssistantIA": false,
-        "hasOldPlayerCopy": false,
-        "hasProgram": false,
-        "programOpen": false,
-        "images": [
-          "/emojis/1f44b-1f3fd.svg"
-        ]
+        "oldLibrary": false,
+        "oldGlobalResources": false,
+        "menuOpen": false,
+        "menuBottom": false,
+        "heading": "Mes livres"
       }
     },
     {
@@ -735,14 +687,11 @@
       "status": 200,
       "errors": [],
       "checks": {
-        "url": "/campus/ressources/livre",
-        "hasAssistantIA": false,
-        "hasOldPlayerCopy": false,
-        "hasProgram": false,
-        "programOpen": false,
-        "images": [
-          "/emojis/1f44b-1f3fd.svg"
-        ]
+        "oldLibrary": false,
+        "oldGlobalResources": false,
+        "menuOpen": false,
+        "menuBottom": false,
+        "heading": "Mes livres"
       }
     },
     {
@@ -752,14 +701,11 @@
       "status": 200,
       "errors": [],
       "checks": {
-        "url": "/campus/ressources/livre",
-        "hasAssistantIA": false,
-        "hasOldPlayerCopy": false,
-        "hasProgram": false,
-        "programOpen": false,
-        "images": [
-          "/emojis/1f44b-1f3fd.svg"
-        ]
+        "oldLibrary": false,
+        "oldGlobalResources": false,
+        "menuOpen": false,
+        "menuBottom": false,
+        "heading": "Mes livres"
       }
     },
     {
@@ -769,14 +715,11 @@
       "status": 200,
       "errors": [],
       "checks": {
-        "url": "/campus/ressources/livre",
-        "hasAssistantIA": false,
-        "hasOldPlayerCopy": false,
-        "hasProgram": false,
-        "programOpen": false,
-        "images": [
-          "/emojis/1f44b-1f3fd.svg"
-        ]
+        "oldLibrary": false,
+        "oldGlobalResources": false,
+        "menuOpen": false,
+        "menuBottom": false,
+        "heading": "Mes livres"
       }
     },
     {
@@ -786,14 +729,11 @@
       "status": 200,
       "errors": [],
       "checks": {
-        "url": "/campus/ressources/livre",
-        "hasAssistantIA": false,
-        "hasOldPlayerCopy": false,
-        "hasProgram": false,
-        "programOpen": false,
-        "images": [
-          "/emojis/1f44b-1f3fd.svg"
-        ]
+        "oldLibrary": false,
+        "oldGlobalResources": false,
+        "menuOpen": false,
+        "menuBottom": false,
+        "heading": "Mes livres"
       }
     },
     {
@@ -803,14 +743,11 @@
       "status": 200,
       "errors": [],
       "checks": {
-        "url": "/campus/ressources/audio",
-        "hasAssistantIA": false,
-        "hasOldPlayerCopy": false,
-        "hasProgram": false,
-        "programOpen": false,
-        "images": [
-          "/emojis/1f44b-1f3fd.svg"
-        ]
+        "oldLibrary": false,
+        "oldGlobalResources": false,
+        "menuOpen": false,
+        "menuBottom": false,
+        "heading": "Mes audios"
       }
     },
     {
@@ -820,14 +757,11 @@
       "status": 200,
       "errors": [],
       "checks": {
-        "url": "/campus/ressources/audio",
-        "hasAssistantIA": false,
-        "hasOldPlayerCopy": false,
-        "hasProgram": false,
-        "programOpen": false,
-        "images": [
-          "/emojis/1f44b-1f3fd.svg"
-        ]
+        "oldLibrary": false,
+        "oldGlobalResources": false,
+        "menuOpen": false,
+        "menuBottom": false,
+        "heading": "Mes audios"
       }
     },
     {
@@ -837,14 +771,11 @@
       "status": 200,
       "errors": [],
       "checks": {
-        "url": "/campus/ressources/audio",
-        "hasAssistantIA": false,
-        "hasOldPlayerCopy": false,
-        "hasProgram": false,
-        "programOpen": false,
-        "images": [
-          "/emojis/1f44b-1f3fd.svg"
-        ]
+        "oldLibrary": false,
+        "oldGlobalResources": false,
+        "menuOpen": false,
+        "menuBottom": false,
+        "heading": "Mes audios"
       }
     },
     {
@@ -854,14 +785,11 @@
       "status": 200,
       "errors": [],
       "checks": {
-        "url": "/campus/ressources/audio",
-        "hasAssistantIA": false,
-        "hasOldPlayerCopy": false,
-        "hasProgram": false,
-        "programOpen": false,
-        "images": [
-          "/emojis/1f44b-1f3fd.svg"
-        ]
+        "oldLibrary": false,
+        "oldGlobalResources": false,
+        "menuOpen": false,
+        "menuBottom": false,
+        "heading": "Mes audios"
       }
     },
     {
@@ -871,14 +799,11 @@
       "status": 200,
       "errors": [],
       "checks": {
-        "url": "/campus/ressources/audio",
-        "hasAssistantIA": false,
-        "hasOldPlayerCopy": false,
-        "hasProgram": false,
-        "programOpen": false,
-        "images": [
-          "/emojis/1f44b-1f3fd.svg"
-        ]
+        "oldLibrary": false,
+        "oldGlobalResources": false,
+        "menuOpen": false,
+        "menuBottom": false,
+        "heading": "Mes audios"
       }
     },
     {
@@ -1483,87 +1408,72 @@
     },
     {
       "file": "16-menu-campus-ouvert-tablette.png",
-      "label": "Menu campus ouvert",
+      "label": "Menu campus · ouvert",
       "device": "Tablette portrait",
       "status": 200,
       "errors": [],
       "checks": {
-        "url": "/campus",
-        "hasAssistantIA": false,
-        "hasOldPlayerCopy": false,
-        "hasProgram": false,
-        "programOpen": false,
-        "images": [
-          "/emojis/1f44b-1f3fd.svg"
-        ]
+        "oldLibrary": false,
+        "oldGlobalResources": false,
+        "menuOpen": true,
+        "menuBottom": true,
+        "heading": "Bonne nuit, Awa"
       }
     },
     {
       "file": "16-menu-campus-ouvert-telephone-paysage.png",
-      "label": "Menu campus ouvert",
+      "label": "Menu campus · ouvert",
       "device": "Téléphone paysage",
       "status": 200,
       "errors": [],
       "checks": {
-        "url": "/campus",
-        "hasAssistantIA": false,
-        "hasOldPlayerCopy": false,
-        "hasProgram": false,
-        "programOpen": false,
-        "images": [
-          "/emojis/1f44b-1f3fd.svg"
-        ]
+        "oldLibrary": false,
+        "oldGlobalResources": false,
+        "menuOpen": true,
+        "menuBottom": false,
+        "heading": "Bonne nuit, Awa"
       }
     },
     {
       "file": "16-menu-campus-ouvert-ordinateur.png",
-      "label": "Menu campus ouvert",
+      "label": "Menu campus · ouvert",
       "device": "Ordinateur",
       "status": 200,
       "errors": [],
       "checks": {
-        "url": "/campus",
-        "hasAssistantIA": false,
-        "hasOldPlayerCopy": false,
-        "hasProgram": false,
-        "programOpen": false,
-        "images": [
-          "/emojis/1f44b-1f3fd.svg"
-        ]
+        "oldLibrary": false,
+        "oldGlobalResources": false,
+        "menuOpen": true,
+        "menuBottom": false,
+        "heading": "Bonne nuit, Awa"
       }
     },
     {
       "file": "16-menu-campus-ouvert-telephone.png",
-      "label": "Menu campus ouvert",
+      "label": "Menu campus · ouvert",
       "device": "Téléphone portrait",
       "status": 200,
       "errors": [],
       "checks": {
-        "url": "/campus",
-        "hasAssistantIA": false,
-        "hasOldPlayerCopy": false,
-        "hasProgram": false,
-        "programOpen": false,
-        "images": [
-          "/emojis/1f44b-1f3fd.svg"
-        ]
+        "oldLibrary": false,
+        "oldGlobalResources": false,
+        "menuOpen": true,
+        "menuBottom": false,
+        "heading": "Bonne nuit, Awa"
       }
     },
     {
       "file": "16-menu-campus-ouvert-tablette-paysage.png",
-      "label": "Menu campus ouvert",
+      "label": "Menu campus · ouvert",
       "device": "Tablette paysage",
       "status": 200,
       "errors": [],
       "checks": {
-        "url": "/campus",
-        "hasAssistantIA": false,
-        "hasOldPlayerCopy": false,
-        "hasProgram": false,
-        "programOpen": false,
-        "images": [
-          "/emojis/1f44b-1f3fd.svg"
-        ]
+        "oldLibrary": false,
+        "oldGlobalResources": false,
+        "menuOpen": true,
+        "menuBottom": false,
+        "heading": "Bonne nuit, Awa"
       }
     },
     {
@@ -2403,87 +2313,72 @@
     },
     {
       "file": "D08-ressources-telephone-paysage.png",
-      "label": "Direction · Ressources",
+      "label": "Direction · Bibliothèque",
       "device": "Téléphone paysage",
       "status": 200,
       "errors": [],
       "checks": {
-        "url": "/direction/ressources",
-        "hasAssistantIA": false,
-        "hasOldPlayerCopy": false,
-        "hasProgram": false,
-        "programOpen": false,
-        "images": [
-          "/emojis/1f44b-1f3fd.svg"
-        ]
+        "oldLibrary": false,
+        "oldGlobalResources": false,
+        "menuOpen": false,
+        "menuBottom": false,
+        "heading": "BibliothèqueSuper Admin"
       }
     },
     {
       "file": "D08-ressources-telephone.png",
-      "label": "Direction · Ressources",
+      "label": "Direction · Bibliothèque",
       "device": "Téléphone portrait",
       "status": 200,
       "errors": [],
       "checks": {
-        "url": "/direction/ressources",
-        "hasAssistantIA": false,
-        "hasOldPlayerCopy": false,
-        "hasProgram": false,
-        "programOpen": false,
-        "images": [
-          "/emojis/1f44b-1f3fd.svg"
-        ]
+        "oldLibrary": false,
+        "oldGlobalResources": false,
+        "menuOpen": false,
+        "menuBottom": false,
+        "heading": "BibliothèqueSuper Admin"
       }
     },
     {
       "file": "D08-ressources-tablette.png",
-      "label": "Direction · Ressources",
+      "label": "Direction · Bibliothèque",
       "device": "Tablette portrait",
       "status": 200,
       "errors": [],
       "checks": {
-        "url": "/direction/ressources",
-        "hasAssistantIA": false,
-        "hasOldPlayerCopy": false,
-        "hasProgram": false,
-        "programOpen": false,
-        "images": [
-          "/emojis/1f44b-1f3fd.svg"
-        ]
+        "oldLibrary": false,
+        "oldGlobalResources": false,
+        "menuOpen": false,
+        "menuBottom": false,
+        "heading": "BibliothèqueSuper Admin"
       }
     },
     {
       "file": "D08-ressources-tablette-paysage.png",
-      "label": "Direction · Ressources",
+      "label": "Direction · Bibliothèque",
       "device": "Tablette paysage",
       "status": 200,
       "errors": [],
       "checks": {
-        "url": "/direction/ressources",
-        "hasAssistantIA": false,
-        "hasOldPlayerCopy": false,
-        "hasProgram": false,
-        "programOpen": false,
-        "images": [
-          "/emojis/1f44b-1f3fd.svg"
-        ]
+        "oldLibrary": false,
+        "oldGlobalResources": false,
+        "menuOpen": false,
+        "menuBottom": false,
+        "heading": "BibliothèqueSuper Admin"
       }
     },
     {
       "file": "D08-ressources-ordinateur.png",
-      "label": "Direction · Ressources",
+      "label": "Direction · Bibliothèque",
       "device": "Ordinateur",
       "status": 200,
       "errors": [],
       "checks": {
-        "url": "/direction/ressources",
-        "hasAssistantIA": false,
-        "hasOldPlayerCopy": false,
-        "hasProgram": false,
-        "programOpen": false,
-        "images": [
-          "/emojis/1f44b-1f3fd.svg"
-        ]
+        "oldLibrary": false,
+        "oldGlobalResources": false,
+        "menuOpen": false,
+        "menuBottom": false,
+        "heading": "BibliothèqueSuper Admin"
       }
     },
     {
@@ -3763,67 +3658,72 @@
     },
     {
       "file": "16-menu-campus-ouvert-bas-telephone.png",
-      "label": "Menu campus ouvert · bas",
+      "label": "Menu campus · bas",
       "device": "Téléphone portrait",
       "status": 200,
       "errors": [],
       "checks": {
+        "oldLibrary": false,
+        "oldGlobalResources": false,
         "menuOpen": true,
-        "menuScrollBottom": true,
-        "hasLibrary": false,
-        "hasAccount": false
+        "menuBottom": true,
+        "heading": "Bonne nuit, Awa"
       }
     },
     {
       "file": "16-menu-campus-ouvert-bas-telephone-paysage.png",
-      "label": "Menu campus ouvert · bas",
+      "label": "Menu campus · bas",
       "device": "Téléphone paysage",
       "status": 200,
       "errors": [],
       "checks": {
+        "oldLibrary": false,
+        "oldGlobalResources": false,
         "menuOpen": true,
-        "menuScrollBottom": true,
-        "hasLibrary": false,
-        "hasAccount": false
+        "menuBottom": true,
+        "heading": "Bonne nuit, Awa"
       }
     },
     {
       "file": "16-menu-campus-ouvert-bas-tablette.png",
-      "label": "Menu campus ouvert · bas",
+      "label": "Menu campus · bas",
       "device": "Tablette portrait",
       "status": 200,
       "errors": [],
       "checks": {
+        "oldLibrary": false,
+        "oldGlobalResources": false,
         "menuOpen": true,
-        "menuScrollBottom": true,
-        "hasLibrary": false,
-        "hasAccount": false
+        "menuBottom": true,
+        "heading": "Bonne nuit, Awa"
       }
     },
     {
       "file": "16-menu-campus-ouvert-bas-tablette-paysage.png",
-      "label": "Menu campus ouvert · bas",
+      "label": "Menu campus · bas",
       "device": "Tablette paysage",
       "status": 200,
       "errors": [],
       "checks": {
+        "oldLibrary": false,
+        "oldGlobalResources": false,
         "menuOpen": true,
-        "menuScrollBottom": true,
-        "hasLibrary": false,
-        "hasAccount": false
+        "menuBottom": true,
+        "heading": "Bonne nuit, Awa"
       }
     },
     {
       "file": "16-menu-campus-ouvert-bas-ordinateur.png",
-      "label": "Menu campus ouvert · bas",
+      "label": "Menu campus · bas",
       "device": "Ordinateur",
       "status": 200,
       "errors": [],
       "checks": {
+        "oldLibrary": false,
+        "oldGlobalResources": false,
         "menuOpen": true,
-        "menuScrollBottom": true,
-        "hasLibrary": false,
-        "hasAccount": false
+        "menuBottom": true,
+        "heading": "Bonne nuit, Awa"
       }
     }
   ],

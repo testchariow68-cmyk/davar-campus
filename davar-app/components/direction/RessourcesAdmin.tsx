@@ -57,7 +57,7 @@ export function RessourcesAdmin({
 
   async function creer() {
     if (nouvelle.title.trim().length < 2) {
-      setNote('Donnez un titre à la ressource.');
+      setNote('Donnez un titre au contenu.');
       return;
     }
     setEnCours('creer');
@@ -164,7 +164,7 @@ export function RessourcesAdmin({
       )}
 
       <div className="card card-pad mb16">
-        <h3 className="mb8">Nouvelle ressource</h3>
+        <h3 className="mb8">Nouveau contenu</h3>
         <div className="grid" style={{ gridTemplateColumns: '1fr 1.4fr 1.4fr 1fr', gap: 10 }}>
           <div className="field" style={{ margin: 0 }}>
             <label>Type</label>
@@ -206,7 +206,7 @@ export function RessourcesAdmin({
         </p>
       </div>
 
-      {ressources.length === 0 && <div className="xs muted">Aucune ressource pour l’instant.</div>}
+      {ressources.length === 0 && <div className="xs muted">Aucun contenu pour l’instant.</div>}
 
       <div className="col" style={{ gap: 10 }}>
         {ressources.map((ressource) => (

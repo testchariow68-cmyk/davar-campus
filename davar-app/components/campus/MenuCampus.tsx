@@ -27,9 +27,9 @@ const ENTREES: Array<{ titre: string; lignes: Entree[] }> = [
     ],
   },
   {
-    titre: 'Ma bibliothèque',
+    titre: 'Bibliothèque',
     lignes: [
-      { href: '/campus/ressources', icone: 'layers', libelle: 'Toute ma bibliothèque', description: 'Choisir livres, audios ou multimédia' },
+      { href: '/campus/ressources', icone: 'layers', libelle: 'Bibliothèque', description: 'Choisir livres, audios ou multimédia' },
       { href: '/campus/ressources/livre', icone: 'book', libelle: 'Mes livres', description: 'Lecture dans la plateforme' },
       { href: '/campus/ressources/audio', icone: 'headset', libelle: 'Mes audios', description: 'Écoute avec reprise automatique' },
     ],
