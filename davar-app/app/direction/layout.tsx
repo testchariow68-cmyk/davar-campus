@@ -9,14 +9,13 @@ import { VueTestMenu } from '@/components/campus/VueTestMenu';
 import { Icon, type NomIcone } from '@/components/campus/Icon';
 import { SidebarDirection, type SidebarGroup, type SidebarItem } from '@/components/direction/SidebarDirection';
 import { DirectionHeading } from '@/components/direction/DirectionHeading';
-import { PlatformGreeting } from '@/components/campus/PlatformGreeting';
-import { salutation } from '@/lib/server/campus-recents';
 import { currentSession } from '@/lib/server/auth';
 import { lireRoles, sectionsPour } from '@/lib/server/equipe';
 import { listerComptesTest, peutTesterUneVue } from '@/lib/server/vue-test';
 import { compterNonLues, listerNotifications } from '@/lib/server/notifications';
 import { vuePilotage } from '@/lib/server/direction';
-import { plateformesNonSuivies } from '@/lib/server/social';
+import { annoncesDepuisReglages, annonceViseLUtilisateur, plateformesNonSuivies } from '@/lib/server/social';
+import { lireReglages } from '@/lib/server/settings';
 
 export const dynamic = 'force-dynamic';
 
@@ -132,6 +131,9 @@ export default async function DirectionLayout({ children }: { children: React.Re
   // Le prototype fait défiler les réseaux pour chaque membre de l'équipe,
   // mais jamais pour le Super Admin.
   const reseaux = estProprietaire ? [] : await plateformesNonSuivies(session.db, affiche.id);
+  const annonces = estProprietaire
+    ? []
+    : annoncesDepuisReglages(await lireReglages(session.db)).filter((annonce) => annonceViseLUtilisateur(annonce, affiche.role));
   const couleur = estProprietaire ? 'var(--ava-sa)' : 'var(--violet2)';
 
   return (
@@ -162,10 +164,8 @@ export default async function DirectionLayout({ children }: { children: React.Re
             </div>
           </header>
 
-          <PlatformGreeting nom={affiche.displayName} texte={salutation()} />
-
           <main className="admin-content">{children}</main>
-          {!estProprietaire && <BandeauDefilant annonce={null} reseaux={reseaux} />}
+          {!estProprietaire && <BandeauDefilant annonces={annonces} reseaux={reseaux} />}
         </div>
 
         <a

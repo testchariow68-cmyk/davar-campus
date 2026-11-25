@@ -53,9 +53,9 @@ export default async function MesFormationsPage() {
                     {terminee ? (
                       <span className="badge b-green">terminée</span>
                     ) : pourcent > 0 ? (
-                      <span className="badge b-violet">en cours</span>
+                      <span className="badge b-violet">Continuer</span>
                     ) : (
-                      <span className="badge b-grey">à commencer</span>
+                      <span className="badge b-grey">Commencer</span>
                     )}
                   </div>
                   {formation.description && <p className="muted small mt8">{formation.description}</p>}

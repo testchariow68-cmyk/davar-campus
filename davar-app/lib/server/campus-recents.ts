@@ -39,6 +39,20 @@ export async function modulesConsultes(db: Db, userId: string, limite = 3): Prom
   }));
 }
 
+/**
+ * L’emoji de salutation suit le même découpage horaire que le texte : nuit,
+ * matin, après-midi puis soirée. La valeur reste un vrai emoji pour les
+ * appareils qui le dessinent nativement ; `Emoji` lui associe un visuel local
+ * quand la police emoji du navigateur n’est pas disponible.
+ */
+export function emojiSalutation(maintenantMs = Date.now()): string {
+  const heure = new Date(maintenantMs).getHours();
+  if (heure < 5) return '🌙';
+  if (heure < 12) return '☀️';
+  if (heure < 18) return '🌤️';
+  return '🌇';
+}
+
 /** « il y a 3 jours », comme le prototype — sans dépendance externe. */
 export function depuis(quandMs: number, maintenantMs = Date.now()): string {
   const secondes = Math.max(0, Math.round((maintenantMs - quandMs) / 1000));

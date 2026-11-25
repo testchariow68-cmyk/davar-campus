@@ -1,7 +1,6 @@
 'use client';
 
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
 import { Icon } from './Icon';
 import { MenuCampus } from './MenuCampus';
 import { ThemeButton } from './ThemeButton';
@@ -9,9 +8,9 @@ import { ThemeButton } from './ThemeButton';
 /**
  * LE RAIL DE GAUCHE — `aside.rail` du prototype.
  *
- * Cinq entrées, et rien d'autre : la marque, l'accueil, le menu plein écran,
- * puis en bas le thème et le profil. Le prototype ne met ni recherche, ni
- * raccourci supplémentaire dans ce rail ; on n'en ajoute aucun.
+ * Le rail garde uniquement la marque et l'ouverture du menu, puis le thème en
+ * bas. L'accueil reste accessible par le bouton flottant et le menu, mais ne
+ * devient pas une troisième entrée visuelle du rail sur tablette/ordinateur.
  */
 export function RailCampus({
   nom,
@@ -24,7 +23,6 @@ export function RailCampus({
   formation: string | null;
   pourcent: number;
 }) {
-  const chemin = usePathname() ?? '/campus';
   const initiale = nom.trim().split(/\s+/).filter(Boolean).slice(0, 2).map((morceau) => morceau[0]).join('').toUpperCase() || '?';
 
   return (
@@ -33,17 +31,9 @@ export function RailCampus({
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img className="brand-img" src="/logo-structure.png" alt="Davar Académie" />
         <div className="brand-txt">
-          DAVAR<span>Académie</span>
+          <strong>DAVAR</strong>
+          <span>ACADÉMIE</span>
         </div>
-      </Link>
-
-      <Link
-        className={`rail-ico rail-home ${chemin === '/campus' ? 'on' : ''}`}
-        href="/campus"
-        title="Accueil"
-      >
-        <Icon nom="home" taille={18} />
-        <span>Accueil</span>
       </Link>
 
       <MenuCampus

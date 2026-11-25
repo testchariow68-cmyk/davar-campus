@@ -16,8 +16,8 @@ const RESERVATION_COACHING = REGLAGES_DEFAUT['paiement.coaching'];
 /**
  * DÉCOUVRIR PLUS DE FORMATIONS — `vDiscover()` du prototype.
  *
- * Deux étagères : ce que l'étudiant ne possède pas encore, puis ce qu'il
- * possède. Une formation non publiée n'existe pas ici.
+ * Une seule étagère : ce que l'étudiant ne possède pas encore. Une formation
+ * déjà acquise reste dans « Mes formations » et ne revient pas dans ce catalogue.
  */
 export default async function CataloguePage() {
   const session = await currentSession();
@@ -56,19 +56,6 @@ export default async function CataloguePage() {
         </div>
       )}
 
-      <h3 className="mt32 mb16" style={{ fontSize: 15 }}>
-        Toutes les formations publiées
-      </h3>
-      {catalogue.possedees.length > 0 ? (
-        <div className="grid g3">
-          {catalogue.possedees.map((formation) => (
-            <CarteFormation key={formation.id} formation={formation} possedee />
-          ))}
-        </div>
-      ) : (
-        <div className="empty small">Aucune formation acquise pour le moment.</div>
-      )}
-
       {temoignages.length > 0 && (
         <>
           <div className="page-head" style={{ marginTop: 30 }}>
@@ -102,31 +89,24 @@ export default async function CataloguePage() {
       )}
 
       {reservation && (
-        <>
-          <h3 className="mt32 mb16" style={{ fontSize: 15 }}>
-            Aller plus loin
-          </h3>
-          <div
-            className="card card-pad"
-            style={{ borderColor: 'var(--gold-line)', background: 'linear-gradient(135deg,var(--gold-soft),var(--card))' }}
-          >
-            <div className="row" style={{ flexWrap: 'wrap', gap: 14 }}>
-              <span className="step-ico s-gold" style={{ width: 46, height: 46 }}>
-                <Icon nom="target" taille={20} />
-              </span>
-              <div className="wrap">
-                <b style={{ fontSize: 15 }}>Coaching personnel avec le coach principal</b>
-                <div className="small muted mt4">
-                  Une séance individuelle pour préparer un discours, un entretien ou un événement.
-                  Réservation et paiement sécurisés.
-                </div>
-              </div>
-              <a className="btn btn-gold" href={reservation} target="_blank" rel="noopener noreferrer">
-                <Icon nom="external" taille={14} /> Réserver une séance
-              </a>
+        <section className="coaching-offer" aria-labelledby="coaching-title">
+          <h3 id="coaching-title">Besoin d’un accompagnement personnalisé&nbsp;?</h3>
+          <div className="card card-pad coaching-card">
+            <span className="step-ico s-gold coaching-icon" aria-hidden="true">
+              <Icon nom="target" taille={20} />
+            </span>
+            <div className="coaching-copy">
+              <b>Préparez votre prochaine prise de parole avec le coach principal</b>
+              <p className="small muted">
+                Un rendez-vous individuel pour clarifier votre message, travailler votre discours ou préparer un entretien.
+                Choisissez votre créneau et repartez avec un plan concret.
+              </p>
             </div>
+            <a className="btn btn-gold coaching-cta" href={reservation} target="_blank" rel="noopener noreferrer">
+              <Icon nom="external" taille={14} /> Réserver mon coaching
+            </a>
           </div>
-        </>
+        </section>
       )}
     </>
   );

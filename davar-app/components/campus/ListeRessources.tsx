@@ -2,10 +2,9 @@ import Link from 'next/link';
 import { Icon, type NomIcone } from './Icon';
 
 /**
- * UNE FAMILLE DE RESSOURCES — les livres d'un côté, les audios de l'autre.
- *
- * Le prototype donne deux lignes de menu séparées : « Mes livres » et
- * « Mes audios ». Ce sont donc deux écrans, pas un seul avec des onglets.
+ * UNE FAMILLE DE RESSOURCES — les lecteurs historiques restent accessibles
+ * lorsqu'une ressource Livre ou Audio est ouverte depuis la Bibliothèque.
+ * La navigation globale, elle, garde les deux types comme filtres internes.
  */
 export type Ressource = {
   id: string;

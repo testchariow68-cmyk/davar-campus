@@ -23,6 +23,10 @@ export const REGLAGES_DEFAUT = {
   'paiement.flutterwave.actif': '0',
   'paiement.flutterwave.cle': '',
   'paiement.flutterwave.webhook': '',
+  // Liste JSON additive : elle permet plusieurs messages, un type et une
+  // expiration par message. Les trois anciens réglages restent supportés pour
+  // les bases qui n’ont pas encore été migrées vers la liste.
+  'announce.items': '',
   'announce.text': '',
   'announce.active': '0',
 } as const;
@@ -67,7 +71,8 @@ export async function ecrireReglages(db: Db, entrees: Record<string, string>, ma
   let ecrites = 0;
   for (const [cle, valeur] of Object.entries(entrees)) {
     if (typeof cle !== 'string' || cle.length === 0 || cle.length > 60) continue;
-    if (typeof valeur !== 'string' || valeur.length > 600) continue;
+    const plafond = cle === 'announce.items' ? 12_000 : 600;
+    if (typeof valeur !== 'string' || valeur.length > plafond) continue;
     await db.execute({
       sql: `INSERT INTO app_settings(key, value, updated_at_ms) VALUES (?, ?, ?)
             ON CONFLICT(key) DO UPDATE SET value = excluded.value, updated_at_ms = excluded.updated_at_ms`,

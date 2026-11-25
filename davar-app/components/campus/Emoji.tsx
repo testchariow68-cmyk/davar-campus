@@ -17,6 +17,10 @@ const ASSETS: Record<string, string> = {
   '👏': '1f44f-1f3fd.svg',
   '😂': '1f602.svg',
   '🤩': '1f929.svg',
+  '🌙': '1f319.svg',
+  '☀️': '2600-fe0f.svg',
+  '🌤️': '1f324-fe0f.svg',
+  '🌇': '1f307.svg',
 };
 
 export function Emoji({

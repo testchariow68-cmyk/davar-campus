@@ -20,6 +20,7 @@ import {
   PLATEFORMES,
   abonnements,
   annonceDepuisReglages,
+  annoncesDepuisReglages,
   annonceViseLUtilisateur,
   confirmerAbonnement,
   plateformes,
@@ -124,4 +125,41 @@ test('l’annonce respecte son audience — tout le monde, les étudiants, ou l�
   assert.equal(eteinte, null, 'une annonce éteinte n’apparaît pas, même si son texte reste enregistré');
   assert.equal(annonceViseLUtilisateur(null, 'student'), false);
   await db.close();
+});
+
+test('le bandeau accepte plusieurs types et retire les messages expirés', () => {
+  const annonces = annoncesDepuisReglages(
+    {
+      'announce.items': JSON.stringify([
+        { id: 'info-1', type: 'nouveaute', texte: 'Nouveau cours', audience: 'students', active: true, expirationMs: MAINTENANT + 60_000 },
+        { id: 'event-1', type: 'evenement', texte: 'Atelier passé', audience: 'all', active: true, expirationMs: MAINTENANT - 1 },
+        { id: 'rappel-1', type: 'rappel', texte: 'Rappel désactivé', audience: 'staff', active: false },
+        { id: 'bad-date', type: 'inconnu', texte: 'Date invalide', expiresAt: 'pas une date' },
+        { id: 'empty', type: 'info', texte: '   ' },
+      ]),
+      'announce.text': 'Ancienne annonce',
+      'announce.active': '1',
+    },
+    MAINTENANT
+  );
+
+  assert.deepEqual(annonces, [
+    {
+      id: 'info-1',
+      type: 'nouveaute',
+      texte: 'Nouveau cours',
+      audience: 'students',
+      active: true,
+      expirationMs: MAINTENANT + 60_000,
+    },
+    {
+      id: 'bad-date',
+      type: 'info',
+      texte: 'Date invalide',
+      audience: 'all',
+      active: true,
+      expirationMs: null,
+    },
+  ]);
+  assert.deepEqual(annoncesDepuisReglages({ 'announce.items': '[]', 'announce.text': 'Ne doit pas revenir', 'announce.active': '1' }), []);
 });

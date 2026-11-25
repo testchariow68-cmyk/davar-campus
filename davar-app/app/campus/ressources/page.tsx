@@ -2,22 +2,22 @@ import { redirect } from 'next/navigation';
 import { RessourcesCampus, type RessourceCampus } from '@/components/campus/RessourcesCampus';
 import { currentSession } from '@/lib/server/auth';
 import { contenanceRessources, positionsDeLEtudiant } from '@/lib/server/medias';
-import { ressourcesDeEtudiant } from '@/lib/server/ressources';
+import { ressourcesDeEtudiant, type Ressource } from '@/lib/server/ressources';
 import { urlLecture } from '@/lib/server/stockage';
 
 export const dynamic = 'force-dynamic';
 export const metadata = { title: 'Bibliothèque — Davar Académie Campus' };
 
-type Categorie = 'all' | 'book' | 'audio' | 'file';
+type Categorie = 'all' | 'book' | 'audio';
 
 function categorieValide(value: string | undefined): Categorie {
-  return value === 'book' || value === 'audio' || value === 'file' ? value : 'all';
+  return value === 'book' || value === 'audio' ? value : 'all';
 }
 
 /**
  * BIBLIOTHÈQUE GLOBALE — le point d'entrée de « Ouvrir le lecteur ».
- * Les raccourcis Mes livres et Mes audios restent disponibles dans le menu,
- * mais cette page permet de choisir une catégorie sans imposer un lecteur.
+ * Livres et Audios restent des filtres internes ; cette page permet de choisir
+ * une catégorie sans imposer un lecteur global.
  */
 export default async function RessourcesPage({
   searchParams,
@@ -27,7 +27,12 @@ export default async function RessourcesPage({
   const session = await currentSession();
   if (!session) redirect('/connexion');
 
-  const ressources = await ressourcesDeEtudiant(session.db, session.user.id);
+  // La Bibliothèque est réservée aux livres et aux audios. Les fichiers
+  // multimédias restent des ressources pédagogiques attachées à leurs cours,
+  // mais ne deviennent pas une troisième étagère globale.
+  const ressources = (await ressourcesDeEtudiant(session.db, session.user.id)).filter(
+    (ressource): ressource is Ressource & { kind: 'book' | 'audio' } => ressource.kind === 'book' || ressource.kind === 'audio'
+  );
   const [contenance, positions] = await Promise.all([
     contenanceRessources(session.db, ressources.map((ressource) => ressource.id)),
     session.vueTest ? Promise.resolve({} as Record<string, number>) : positionsDeLEtudiant(session.db, session.user.id),
@@ -45,10 +50,9 @@ export default async function RessourcesPage({
     })
   );
 
-  const ressourcesAffichees: RessourceCampus[] = ressources.map(({ coverKey: _coverKey, fileKey, ...ressource }) => ({
+  const ressourcesAffichees: RessourceCampus[] = ressources.map(({ coverKey: _coverKey, fileKey: _fileKey, ...ressource }) => ({
     ...ressource,
     positionLecture: positions[ressource.id] ?? ressource.positionLecture,
-    fileDisponible: Boolean(fileKey),
   }));
 
   return (

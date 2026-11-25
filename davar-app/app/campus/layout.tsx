@@ -15,13 +15,11 @@ import { compterNonLues, listerNotifications } from '@/lib/server/notifications'
 import { lirePreferences } from '@/lib/server/profil';
 import { EchelleAffichage } from '@/components/campus/EchelleAffichage';
 import { lireReglages } from '@/lib/server/settings';
-import { annonceDepuisReglages, annonceViseLUtilisateur, plateformesNonSuivies } from '@/lib/server/social';
+import { annoncesDepuisReglages, annonceViseLUtilisateur, plateformesNonSuivies } from '@/lib/server/social';
 import { demandeEnCours } from '@/lib/server/avis';
 import { lireConfig as lireConfigAssistant } from '@/lib/server/assistant';
 import { moteurTranscription } from '@/lib/server/transcription';
 import { PortailAvis } from '@/components/campus/PortailAvis';
-import { PlatformGreeting } from '@/components/campus/PlatformGreeting';
-import { salutation } from '@/lib/server/campus-recents';
 
 export const dynamic = 'force-dynamic';
 
@@ -92,8 +90,7 @@ export default async function CampusLayout({ children }: { children: React.React
   const active = formationActivePour(formations, preferences.formationActiveId);
   const pourcentActive = active ? progressionFormation(active).pct : 0;
 
-  const annonceBrute = annonceDepuisReglages(reglages);
-  const annonce = annonceViseLUtilisateur(annonceBrute, reel.role) ? annonceBrute : null;
+  const annonces = annoncesDepuisReglages(reglages).filter((annonce) => annonceViseLUtilisateur(annonce, reel.role));
   // Règle du prototype : le Super Admin ne voit jamais le bandeau social.
   const reseaux = reel.role === 'admin' ? [] : await plateformesNonSuivies(session.db, user.id);
 
@@ -146,13 +143,11 @@ export default async function CampusLayout({ children }: { children: React.React
             </div>
           </header>
 
-          <PlatformGreeting nom={user.displayName} texte={salutation()} />
-
           <main className="cp-content" id="cpPage">
             {children}
           </main>
 
-          <BandeauDefilant annonce={annonce} reseaux={reseaux} />
+          <BandeauDefilant annonces={annonces} reseaux={reseaux} />
         </div>
 
         {/* Le bouton d'accueil flottant : un tap revient en arrière, deux taps

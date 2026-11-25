@@ -2,15 +2,15 @@ import Link from 'next/link';
 import { Icon, type NomIcone } from './Icon';
 import type { Ressource } from '@/lib/server/ressources';
 
-type Categorie = 'all' | 'book' | 'audio' | 'file';
+type Categorie = 'all' | 'book' | 'audio';
 
 /**
  * Projection destinée à la liste affichée : les clés internes R2 et les clés
  * de couverture restent côté serveur. Le navigateur n'a besoin que de savoir
  * si l'ouverture est possible ; l'URL signée est produite par la route dédiée.
  */
-export type RessourceCampus = Omit<Ressource, 'coverKey' | 'fileKey'> & {
-  fileDisponible: boolean;
+export type RessourceCampus = Omit<Ressource, 'kind' | 'coverKey' | 'fileKey'> & {
+  kind: 'book' | 'audio';
 };
 
 type PropsRessourcesCampus = {
@@ -21,10 +21,9 @@ type PropsRessourcesCampus = {
 };
 
 const CATEGORIES: Array<{ id: Categorie; libelle: string; description: string; icone: NomIcone }> = [
-  { id: 'all', libelle: 'Bibliothèque', description: 'Livres, audios et fichiers disponibles', icone: 'layers' },
+  { id: 'all', libelle: 'Tout', description: 'Livres et audios disponibles', icone: 'layers' },
   { id: 'book', libelle: 'Livres', description: 'Lecture paginée dans la plateforme', icone: 'book' },
   { id: 'audio', libelle: 'Audios', description: 'Écoute avec reprise automatique', icone: 'headset' },
-  { id: 'file', libelle: 'Multimédia', description: 'Documents, images et autres fichiers', icone: 'doc' },
 ];
 
 function minutes(secondes: number): string {
@@ -32,10 +31,8 @@ function minutes(secondes: number): string {
   return `${Math.floor(total / 60)}:${String(total % 60).padStart(2, '0')}`;
 }
 
-function libelleCategorie(kind: Ressource['kind']): string {
-  if (kind === 'book') return 'Livre';
-  if (kind === 'audio') return 'Audio';
-  return 'Multimédia';
+function libelleCategorie(kind: RessourceCampus['kind']): string {
+  return kind === 'book' ? 'Livre' : 'Audio';
 }
 
 function CarteRessource({
@@ -51,11 +48,7 @@ function CarteRessource({
   const estAudio = ressource.kind === 'audio';
   const href = estLivre
     ? `/campus/ressources/livre/${ressource.id}`
-    : estAudio
-      ? `/campus/ressources/audio/${ressource.id}`
-      : ressource.fileDisponible
-        ? `/api/campus/ressource/${ressource.id}`
-        : null;
+    : `/campus/ressources/audio/${ressource.id}`;
   const position = ressource.positionLecture ?? 0;
 
   return (
@@ -69,22 +62,13 @@ function CarteRessource({
             <span className="bk-gen">{ressource.title}</span>
           )}
         </div>
-      ) : estAudio ? (
+      ) : (
         <div className="resource-audio-cover au-cover" aria-hidden="true">
           {couverture ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img className="resource-cover-image" src={couverture} alt="" />
           ) : null}
           <span className="resource-audio-icon"><Icon nom="headset" taille={24} /></span>
-        </div>
-      ) : couverture ? (
-        <div className="resource-cover resource-file-cover" aria-hidden="true">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img className="resource-cover-image" src={couverture} alt="" />
-        </div>
-      ) : (
-        <div className="resource-file-icon res-ico doc" aria-hidden="true">
-          <Icon nom="doc" taille={22} />
         </div>
       )}
 
@@ -98,7 +82,6 @@ function CarteRessource({
           {ressource.durationMin ? <span>{ressource.durationMin} min</span> : null}
           {estLivre && contenance.pages > 0 ? <span>{contenance.pages} pages</span> : null}
           {estAudio && contenance.pistes > 0 ? <span>{contenance.pistes} piste(s)</span> : null}
-          {!estLivre && !estAudio ? <span>Multimédia</span> : null}
         </div>
 
         {position > 0 && (
@@ -108,15 +91,10 @@ function CarteRessource({
         )}
 
         <div className="resource-card-actions mt16">
-          {href && (estLivre || (estAudio && contenance.pistes > 0) || !estLivre && !estAudio) ? (
-            <a
-              className="btn btn-primary btn-sm"
-              href={href}
-              target={!estLivre && !estAudio ? '_blank' : undefined}
-              rel={!estLivre && !estAudio ? 'noopener noreferrer' : undefined}
-            >
-              <Icon nom={estLivre ? 'book' : estAudio ? 'headset' : 'external'} taille={14} />{' '}
-              {estLivre ? (position > 0 ? 'Continuer la lecture' : 'Commencer la lecture') : estAudio ? (position > 0 ? 'Reprendre l’écoute' : 'Écouter') : 'Ouvrir'}
+          {href && (estLivre || contenance.pistes > 0) ? (
+            <a className="btn btn-primary btn-sm" href={href}>
+              <Icon nom={estLivre ? 'book' : 'headset'} taille={14} />{' '}
+              {estLivre ? (position > 0 ? 'Continuer la lecture' : 'Commencer la lecture') : position > 0 ? 'Reprendre l’écoute' : 'Écouter'}
             </a>
           ) : (
             <span className="xs faint">Ce contenu sera ouvert dès sa mise en ligne.</span>
@@ -129,10 +107,9 @@ function CarteRessource({
 
 export function RessourcesCampus({ ressources, contenance, categorie, couvertures }: PropsRessourcesCampus) {
   const choisies = categorie === 'all' ? ressources : ressources.filter((ressource) => ressource.kind === categorie);
-  const groupes: Array<{ kind: Ressource['kind']; titre: string; sousTitre: string }> = [
+  const groupes: Array<{ kind: Extract<Ressource['kind'], 'book' | 'audio'>; titre: string; sousTitre: string }> = [
     { kind: 'book', titre: 'Livres', sousTitre: 'Lisez directement dans la plateforme, votre page est mémorisée.' },
     { kind: 'audio', titre: 'Audios', sousTitre: 'Écoutez vos pistes avec reprise automatique.' },
-    { kind: 'file', titre: 'Multimédia', sousTitre: 'Documents et fichiers disponibles dans votre campus.' },
   ];
 
   return (
@@ -140,7 +117,7 @@ export function RessourcesCampus({ ressources, contenance, categorie, couverture
       <div className="page-head resource-page-head">
         <div>
           <h1>Bibliothèque</h1>
-          <p>Choisissez une catégorie pour retrouver vos livres, audios et fichiers multimédias.</p>
+          <p>Retrouvez ici vos livres et vos audios, avec une reprise de lecture automatique.</p>
         </div>
       </div>
 
@@ -170,7 +147,7 @@ export function RessourcesCampus({ ressources, contenance, categorie, couverture
           <span className="resource-empty-icon"><Icon nom="layers" taille={25} /></span>
           <h2>Aucun contenu pour l’instant</h2>
           <p className="small muted mt8">
-            Vos livres, audios et fichiers multimédias apparaîtront ici dès que votre équipe pédagogique les aura publiés.
+            Vos livres et vos audios apparaîtront ici dès que votre équipe pédagogique les aura publiés.
           </p>
         </div>
       ) : choisies.length === 0 ? (

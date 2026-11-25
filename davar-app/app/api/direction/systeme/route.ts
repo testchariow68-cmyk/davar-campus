@@ -22,6 +22,7 @@ const CLES_REGLAGES = new Set([
   'social.instagram',
   'social.tiktok',
   'social.facebook',
+  'announce.items',
   'announce.text',
   'announce.active',
   'announce.audience',
@@ -54,7 +55,7 @@ export async function POST(request: Request) {
       for (const [cle, valeur] of Object.entries(recues)) {
         if (!CLES_REGLAGES.has(cle)) continue;
         if (typeof valeur !== 'string') continue;
-        const propre = valeur.trim().slice(0, 600);
+        const propre = valeur.trim().slice(0, cle === 'announce.items' ? 12_000 : 600);
         if (cle.startsWith('social.') && propre.length > 0 && !lienSocialValide(propre)) {
           return jsonNoStore({ error: 'lien_social_invalide', message: `Le lien ${cle.replace('social.', '')} doit être une adresse https:// valide.` }, 400);
         }

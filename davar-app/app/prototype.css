@@ -1620,13 +1620,14 @@ img, video, iframe, object { max-width: 100%; }
 
 /* En clair, la marque sous le logo du rail ne doit plus disparaître sur fond blanc. */
 .rail .brand-txt {
-  font-size: 8px;
-  letter-spacing: .03em;
+  font-size: 10px;
+  letter-spacing: .04em;
   white-space: nowrap;
 }
+.rail .brand-txt strong { font-size: 10px; }
 .rail .brand-txt span {
-  font-size: 7px;
-  letter-spacing: .11em;
+  font-size: 8.5px;
+  letter-spacing: .09em;
   margin-top: 2px;
 }
 [data-theme="light"] .rail .brand-txt { color: var(--txt); }
@@ -1731,7 +1732,7 @@ img, video, iframe, object { max-width: 100%; }
 }
 .resource-category b { display: block; font-size: 12.5px; line-height: 1.2; }
 .resource-category small { display: block; color: var(--muted); font-size: 10.5px; line-height: 1.3; margin-top: 3px; }
-.resource-category strong { margin-left: auto; color: var(--violet); font-size: 15px; flex: none; }
+.resource-category strong { margin-left: auto; padding-left: 4px; color: var(--violet); font-size: 15px; flex: none; }
 .resource-groups { display: flex; flex-direction: column; gap: 30px; }
 .resource-group h2 { font-size: 17px; }
 .resource-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
@@ -2310,5 +2311,207 @@ img, video, iframe, object { max-width: 100%; }
 }
 .cp-app .rail .menu-campus-trigger:hover,
 .cp-app .rail .menu-campus-trigger:focus-visible {
-  color: #D4C2FF;
+  color: #fff;
+  background: transparent;
+}
+
+/* ============================================================
+   Revue responsive — rail, ticker, bibliothèque et conversion
+   ============================================================ */
+
+/* Le bandeau reste fixé au bas de la fenêtre, comme dans le prototype. Le
+   contenu conserve seulement la réserve nécessaire pour qu'une action ne soit
+   pas cachée derrière sa hauteur. */
+.cp-main { padding-bottom: 52px; }
+.admin-shell .admin-content { padding-bottom: 52px; }
+
+/* Le rail du campus garde le logo et le Menu : Accueil est le raccourci
+   flottant et reste aussi disponible dans le menu plein écran. */
+.rail .brand-txt strong {
+  display: block;
+  color: inherit;
+  font-weight: 900;
+  letter-spacing: .08em;
+  line-height: 1;
+}
+.rail .brand-txt span { display: block; }
+
+/* Le fond et la bordure du FAB restent ceux du prototype. Seul le symbole
+   de maison reçoit l'accent doré demandé : le bouton lui-même ne change pas. */
+.fab-home,
+[data-theme="light"] .fab-home,
+[data-theme="dark"] .fab-home {
+  color: #E8D9B4;
+}
+.fab-home:hover,
+[data-theme="light"] .fab-home:hover,
+[data-theme="dark"] .fab-home:hover {
+  color: #F7D77A;
+}
+
+/* Le Menu reprend sa couleur neutre antérieure ; le violet reste réservé
+   aux états actifs du menu ouvert, jamais au bouton ni à son symbole. */
+.cp-top .menu-campus-trigger,
+[data-theme="light"] .cp-top .menu-campus-trigger,
+[data-theme="dark"] .cp-top .menu-campus-trigger {
+  color: var(--muted);
+  background: transparent;
+}
+.cp-top .menu-campus-trigger:hover,
+[data-theme="light"] .cp-top .menu-campus-trigger:hover,
+[data-theme="dark"] .cp-top .menu-campus-trigger:hover {
+  color: var(--txt);
+  background: var(--line);
+}
+.cp-app .rail .menu-campus-trigger,
+[data-theme="light"] .cp-app .rail .menu-campus-trigger,
+[data-theme="dark"] .cp-app .rail .menu-campus-trigger {
+  color: #D0CAD8;
+  background: transparent;
+}
+.cp-app .rail .menu-campus-trigger:hover,
+.cp-app .rail .menu-campus-trigger:focus-visible {
+  color: #fff;
+  background: rgba(255,255,255,.08);
+}
+
+/* Trois onglets compacts, comme l'ancienne page « Toutes les ressources ».
+   Les fichiers multimédias ne sont pas une catégorie de cette bibliothèque. */
+.resource-categories {
+  display: flex;
+  align-items: stretch;
+  gap: 8px;
+  overflow-x: auto;
+  padding: 2px 1px 5px;
+  margin-bottom: 22px;
+  scrollbar-width: none;
+}
+.resource-categories::-webkit-scrollbar { display: none; }
+.resource-category {
+  flex: 1 0 150px;
+  min-height: 58px;
+  padding: 10px 13px;
+}
+.resource-category small { white-space: nowrap; }
+.resource-category b { white-space: nowrap; }
+@media (max-width: 560px) {
+  .resource-category { flex: 1 1 0; min-width: 108px; padding-inline: 8px; gap: 6px; }
+  .resource-category-icon { width: 30px; height: 30px; border-radius: 9px; }
+  .resource-category strong { padding-left: 6px; }
+  .resource-category small { display: none; }
+}
+
+/* Offre coaching : grille stable sur toutes les orientations, CTA toujours
+   lisible et texte réellement orienté vers le bénéfice de la réservation. */
+.coaching-offer { margin-top: 32px; }
+.coaching-offer > h3 { margin: 0 0 14px; font-size: 15px; }
+.coaching-card {
+  display: grid;
+  grid-template-columns: 46px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 14px;
+  border-color: var(--gold-line);
+  background: linear-gradient(135deg,var(--gold-soft),var(--card));
+}
+.coaching-icon { width: 46px; height: 46px; flex: none; }
+.coaching-copy { min-width: 0; }
+.coaching-copy b { display: block; font-size: 15px; line-height: 1.3; }
+.coaching-copy p { margin-top: 5px; max-width: 760px; line-height: 1.5; }
+.coaching-cta { justify-self: end; }
+
+/* « J'y vais » reste à droite de sa ligne sur les formats intermédiaires,
+   au lieu d'être repoussé au milieu par une largeur arbitraire. */
+@media (min-width: 768px) and (max-width: 1180px),
+       (orientation: landscape) and (max-height: 520px) {
+  .cp-next > .row {
+    display: flex;
+    width: 100%;
+    max-width: none;
+    align-items: center;
+    flex-wrap: nowrap;
+  }
+  .cp-next > .row > .wrap { min-width: 0; overflow-wrap: anywhere; }
+  .cp-next .btn { margin: 0 0 0 auto; }
+}
+
+@media (max-width: 767px) {
+  .coaching-card {
+    grid-template-columns: 42px minmax(0,1fr);
+    gap: 12px;
+    padding: 14px;
+  }
+  .coaching-icon { width: 42px; height: 42px; }
+  .coaching-copy b { font-size: 14px; }
+  .coaching-copy p { font-size: 12px; }
+  .coaching-cta {
+    grid-column: 2;
+    justify-self: stretch;
+    width: 100%;
+  }
+  .cp-next > .row {
+    display: flex;
+    width: 100%;
+    max-width: none;
+    align-items: flex-start;
+    flex-wrap: nowrap;
+    gap: 10px;
+  }
+  .cp-next > .row > .wrap { min-width: 0; overflow-wrap: anywhere; }
+  .cp-next .btn {
+    margin: 0 0 0 auto;
+    flex: none;
+  }
+}
+
+/* Au téléphone paysage, deux colonnes courtes utilisent mieux les 390 px de
+   hauteur ; la barre de prochaine action garde son bouton à droite. */
+@media (orientation: landscape) and (max-height: 520px) and (max-width: 900px) {
+  .cp-app .cp-content { padding: 12px 16px 14px; }
+  .cp-app .cp-hero {
+    grid-template-columns: minmax(0,1.55fr) minmax(0,1fr);
+    gap: 12px;
+    margin-bottom: 12px;
+  }
+  .cp-app .cp-hello { padding: 14px 16px; }
+  .cp-app .cp-hello h1 { font-size: 20px; }
+  .cp-app .cp-hello p { margin: 6px 0 10px; }
+  .cp-app .cp-active { padding: 12px; }
+  .cp-app .cp-grid2 { grid-template-columns: minmax(0,1.4fr) minmax(0,1fr); gap: 14px; }
+  .cp-app .cp-next { margin-bottom: 12px; padding: 10px 12px; }
+}
+
+/* Animations d'ouverture : une hauteur courte ne doit pas recevoir un logo
+   calibré sur la largeur, tandis qu'une tablette portrait doit respirer. */
+@media (orientation: landscape) and (max-height: 520px) {
+  .splash-logo { width: min(300px, 58svh, 76vw); }
+  .splash-halo { width: min(330px, 68svh, 76vw); }
+  .login-glass .lg-anneau { width: clamp(64px, 18svh, 104px); }
+  .login-glass .gcard { margin-top: clamp(12px, 3vh, 26px); padding-block: 18px; }
+  .login-glass .lg-pied { margin-top: 14px; }
+}
+@media (orientation: portrait) and (min-width: 768px) and (max-width: 1020px) {
+  .splash-logo { width: min(500px, 52vw, 48svh); }
+  .splash-halo { width: min(560px, 58vw, 58svh); }
+  .login-glass .lg-anneau { width: min(220px, 32vw, 22svh); }
+  .login-glass .gcard { width: min(100%, 720px); }
+}
+
+/* L'emoji local suit la salutation tout en gardant une taille discrète dans
+   le titre : la teinte de main brun chaud vient de l'asset fourni et non de la
+   couleur du bouton. */
+.cp-hello .greeting-wave { width: 1.08em; height: 1.08em; }
+.admin-content .greeting-wave { width: 1.15em; height: 1.15em; }
+
+.ticker-admin-list { display: flex; flex-direction: column; gap: 10px; }
+.ticker-admin-item { padding: 14px; border: 1px solid var(--line); border-radius: 12px; background: color-mix(in srgb, var(--card) 92%, var(--violet-soft)); }
+.ticker-admin-item label { display: block; min-width: 0; }
+.ticker-admin-item .eyebrow { display: block; margin-bottom: 4px; }
+.ticker-admin-grid { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 12px; }
+.ticker-admin-message { margin-top: 12px; }
+.ticker-admin-message textarea { resize: vertical; min-height: 58px; }
+.ticker-admin-active { align-self: end; min-height: 42px; }
+.ticker-admin-empty { padding: 12px; border: 1px dashed var(--line2); border-radius: 10px; }
+@media (max-width: 640px) {
+  .ticker-admin-grid { grid-template-columns: minmax(0,1fr); }
+  .ticker-admin-active { align-self: start; }
 }

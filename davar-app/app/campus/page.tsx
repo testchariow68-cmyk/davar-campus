@@ -7,7 +7,7 @@ import { formationActivePour, getTrainingForUser, listTrainingsApercu, listUserT
 import { certificatsDeEtudiant } from '@/lib/server/certificats';
 import { listerNotifications } from '@/lib/server/notifications';
 import { ressourcesDeEtudiant } from '@/lib/server/ressources';
-import { salutation } from '@/lib/server/campus-recents';
+import { emojiSalutation, salutation } from '@/lib/server/campus-recents';
 import { badgesDeEtudiant } from '@/lib/server/recompenses';
 import { lirePreferences } from '@/lib/server/profil';
 import { urlLecture } from '@/lib/server/stockage';
@@ -65,6 +65,7 @@ export default async function CampusDashboard() {
   ]);
   const distinction = (distinctions as unknown[]).length > 0 ? distinctions[0] : null;
   const estRecente = distinction ? maintenant - distinction.obtenuLeMs < 7 * 24 * 60 * 60 * 1000 : false;
+  const bibliotheque = ressources.filter((ressource) => ressource.kind === 'book' || ressource.kind === 'audio');
 
   const detailActif = active && !session.vueTest ? await getTrainingForUser(db, user.id, active.formation.id) : null;
   /**
@@ -129,7 +130,7 @@ export default async function CampusDashboard() {
           </div>
           <h1>
             {salutation()}, {prenom}{' '}
-            <Emoji value="👋" label="Salutation" className="greeting-wave emoji-unicode" />
+            <Emoji value={emojiSalutation()} label="Salutation" className="greeting-wave" />
           </h1>
           <p>{phrase}</p>
           {active ? (
@@ -338,13 +339,13 @@ export default async function CampusDashboard() {
               <Link
                 className="cp-stat-link"
                 href="/campus/ressources"
-                aria-label={`Ouvrir votre bibliothèque (${ressources.length} élément${ressources.length > 1 ? 's' : ''})`}
+                aria-label={`Ouvrir votre bibliothèque (${bibliotheque.length} élément${bibliotheque.length > 1 ? 's' : ''})`}
               >
-                <b>{ressources.length}</b>
-                <span title="Livres, audios et fichiers multimédias attribués à votre compte">
+                <b>{bibliotheque.length}</b>
+                <span title="Livres et audios attribués à votre compte">
                   Bibliothèque
                 </span>
-                <small>livres + audios + multimédia</small>
+                <small>livres + audios</small>
               </Link>
             </div>
             <Link className="btn" style={{ width: '100%', marginTop: 14 }} href="/campus/certificats">

@@ -124,22 +124,94 @@ export async function totalParPlateforme(db: Db): Promise<Array<{ plateforme: st
 }
 
 /**
- * Le bandeau d'annonce : un texte, une audience.
- * « all » tout le monde, « students » les étudiants seuls, « staff » l'équipe seule.
+ * Le bandeau d'annonce : plusieurs messages, une audience et une expiration.
+ * « all » tout le monde, « students » les étudiants seuls, « staff » l'équipe
+ * seule. Le texte historique unique reste lu pour ne pas casser une base déjà
+ * configurée avant l'arrivée de la liste.
  */
-export type Annonce = { texte: string; audience: 'all' | 'students' | 'staff' };
+export type AudienceAnnonce = 'all' | 'students' | 'staff';
+export type TypeAnnonce = 'info' | 'nouveaute' | 'evenement' | 'rappel';
+export type Annonce = { texte: string; audience: AudienceAnnonce };
+export type AnnonceBandeau = Annonce & {
+  id: string;
+  type: TypeAnnonce;
+  active: boolean;
+  expirationMs: number | null;
+};
 
-export function annonceDepuisReglages(reglages: Record<string, string>): Annonce | null {
-  const texteBrut = texte(reglages['announce.text']).trim();
-  if (texteBrut.length === 0 || reglages['announce.active'] !== '1') return null;
-  const audience = reglages['announce.audience'];
-  return {
-    texte: texteBrut.slice(0, 300),
-    audience: audience === 'students' || audience === 'staff' ? audience : 'all',
-  };
+function audienceAnnonce(valeur: unknown): AudienceAnnonce {
+  return valeur === 'students' || valeur === 'staff' ? valeur : 'all';
 }
 
-export function annonceViseLUtilisateur(annonce: Annonce | null, role: 'student' | 'staff' | 'admin'): boolean {
+function typeAnnonce(valeur: unknown): TypeAnnonce {
+  return valeur === 'nouveaute' || valeur === 'evenement' || valeur === 'rappel' ? valeur : 'info';
+}
+
+function dateAnnonce(valeur: unknown): number | null {
+  if (typeof valeur === 'number' && Number.isFinite(valeur) && valeur > 0) return Math.trunc(valeur);
+  if (typeof valeur === 'string' && valeur.trim()) {
+    const date = Date.parse(valeur);
+    return Number.isFinite(date) ? date : null;
+  }
+  return null;
+}
+
+/** Lit les messages actifs et retire ceux qui ont dépassé leur expiration. */
+export function annoncesDepuisReglages(
+  reglages: Record<string, string>,
+  maintenant = Date.now()
+): AnnonceBandeau[] {
+  const listeBrute = texte(reglages['announce.items']).trim();
+  if (listeBrute) {
+    try {
+      const liste = JSON.parse(listeBrute);
+      if (Array.isArray(liste)) {
+        return liste
+          .map((entree, index): AnnonceBandeau | null => {
+            if (!entree || typeof entree !== 'object') return null;
+            const valeur = entree as Record<string, unknown>;
+            const contenu = texte(valeur.texte ?? valeur.text).trim().slice(0, 300);
+            const expirationMs = dateAnnonce(valeur.expirationMs ?? valeur.expiresAt ?? valeur.expiration);
+            if (!contenu || valeur.active === false || (expirationMs !== null && expirationMs <= maintenant)) return null;
+            return {
+              id: texte(valeur.id).trim() || `annonce-${index + 1}`,
+              texte: contenu,
+              audience: audienceAnnonce(valeur.audience),
+              type: typeAnnonce(valeur.type),
+              active: true,
+              expirationMs,
+            };
+          })
+          .filter((annonce): annonce is AnnonceBandeau => annonce !== null);
+      }
+    } catch {
+      // Une configuration mal formée ne doit jamais casser le campus.
+    }
+    return [];
+  }
+
+  const texteHistorique = texte(reglages['announce.text']).trim();
+  if (!texteHistorique || reglages['announce.active'] !== '1') return [];
+  return [{
+    id: 'annonce-historique',
+    texte: texteHistorique.slice(0, 300),
+    audience: audienceAnnonce(reglages['announce.audience']),
+    type: 'info',
+    active: true,
+    expirationMs: null,
+  }];
+}
+
+/** Compatibilité avec les tests et les intégrations qui lisaient un seul mot. */
+export function annonceDepuisReglages(reglages: Record<string, string>): Annonce | null {
+  const annonce = annoncesDepuisReglages(reglages)[0];
+  return annonce ? { texte: annonce.texte, audience: annonce.audience } : null;
+}
+
+export function annonceViseLUtilisateur(
+  annonce: Annonce | AnnonceBandeau | null,
+  role: 'student' | 'staff' | 'admin'
+): boolean {
   if (!annonce) return false;
   if (annonce.audience === 'all') return true;
   if (annonce.audience === 'staff') return role === 'staff' || role === 'admin';

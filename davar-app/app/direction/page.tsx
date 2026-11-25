@@ -7,6 +7,7 @@ import { sessionSection } from '@/lib/server/direction-access';
 import { vuePilotage, type Tache } from '@/lib/server/direction';
 import { listerFormations } from '@/lib/server/direction';
 import { libellesDesRoles, lireRoles } from '@/lib/server/equipe';
+import { emojiSalutation, salutation } from '@/lib/server/campus-recents';
 
 export const dynamic = 'force-dynamic';
 
@@ -49,14 +50,6 @@ function ilYa(atMs: number): string {
   if (heures < 24) return `il y a ${heures} h`;
   const jours = Math.round(heures / 24);
   return jours === 1 ? 'hier' : `il y a ${jours} jours`;
-}
-
-function salutation(): string {
-  const heure = new Date().getHours();
-  if (heure < 5) return 'Bonne nuit';
-  if (heure < 12) return 'Bonjour';
-  if (heure < 18) return 'Bon après-midi';
-  return 'Bonsoir';
 }
 
 /**
@@ -237,7 +230,7 @@ export default async function DirectionPage() {
           {!pilote && <div className="xs stamp">{new Date().toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' })} · {new Date().toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}</div>}
           <h1 style={{ fontSize: 19 }}>
             {salutation()} {prenom}{' '}
-            <Emoji value="👋" label="Salutation" className="greeting-wave emoji-unicode" />
+            <Emoji value={emojiSalutation()} label="Salutation" className="greeting-wave" />
           </h1>
           <p>{sousTitre}</p>
         </div>

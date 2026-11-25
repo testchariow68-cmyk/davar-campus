@@ -11,7 +11,7 @@
  */
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { salutation } from '../lib/server/campus-recents.ts';
+import { emojiSalutation, salutation } from '../lib/server/campus-recents.ts';
 
 /** Une heure locale précise, exprimée en millisecondes. */
 function a(heure, minute = 0) {
@@ -35,4 +35,11 @@ test('la salutation ne comporte que les quatre formules du prototype', () => {
   const dites = new Set();
   for (let heure = 0; heure < 24; heure += 1) dites.add(salutation(a(heure)));
   assert.deepEqual([...dites].sort(), ['Bon après-midi', 'Bonjour', 'Bonne nuit', 'Bonsoir']);
+});
+
+test('l’emoji de salutation suit les mêmes plages horaires', () => {
+  assert.equal(emojiSalutation(a(4, 59)), '🌙');
+  assert.equal(emojiSalutation(a(5)), '☀️');
+  assert.equal(emojiSalutation(a(12)), '🌤️');
+  assert.equal(emojiSalutation(a(18)), '🌇');
 });
