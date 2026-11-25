@@ -1999,21 +1999,53 @@ img, video, iframe, object { max-width: 100%; }
   .cp-resume-line > .wrap { overflow-wrap: anywhere; }
   .cp-resume .cp-sec-h > div { min-width: 0; overflow-wrap: anywhere; }
 
+  /* Les cours restent accessibles sur une seule ligne horizontale : on ne
+     consomme pas deux ou trois lignes avant même d'entrer dans la leçon. */
+  .course-lesson-switcher {
+    flex-wrap: nowrap !important;
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    scrollbar-width: none;
+    margin-top: 8px !important;
+    padding-bottom: 2px;
+  }
+  .course-lesson-switcher::-webkit-scrollbar { display: none; }
+  .course-lesson-switcher > * {
+    flex: 0 0 auto;
+    max-width: 72vw;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .course-lesson-switcher .btn-sm { padding: 5px 9px; font-size: 11px; }
+
   /* Le cours prend la place principale : le chapitre devient un petit repère,
-     le titre respire, et l'action reste compacte au lieu de devenir une
-     seconde grosse bannière. */
-  .course-player-card > .card-pad { padding: 11px 14px 14px; }
-  .course-player-card > .card-pad .eyebrow { font-size: 9.5px; line-height: 1.2; }
-  .course-player-card > .card-pad h2 { font-size: clamp(18px, 5.2vw, 22px) !important; line-height: 1.18; overflow-wrap: anywhere; }
-  .course-player-card > .card-pad .row.between { align-items: flex-start; gap: 7px; }
+     le titre déjà visible en haut reste discret, et l'action ne devient pas
+     une seconde grosse bannière. */
+  .course-player-card > .card-pad { padding: 9px 12px 11px; }
+  .course-player-card > .card-pad .eyebrow { font-size: 9px; line-height: 1.15; }
+  .course-player-card > .card-pad h2 { font-size: 16px !important; line-height: 1.18; overflow-wrap: anywhere; }
+  .course-player-card > .card-pad .row.between { align-items: flex-start; gap: 6px; }
   .course-player-card > .card-pad .row.between > div:first-child { min-width: 0; flex: 1 1 100%; }
-  .course-player-card > .card-pad .btn-sm { min-height: 32px; padding: 6px 9px; font-size: 11px; }
+  .course-player-card > .card-pad .btn-sm { min-height: 30px; padding: 5px 8px; font-size: 10.5px; }
+  .course-complete-button { gap: 5px; }
+  .course-complete-label-full, .course-complete-status .course-complete-label-full { display: none !important; }
+  .course-complete-label-short { display: inline !important; }
+  .course-complete-status { padding-inline: 7px; font-size: 10.5px; }
+  .react-row { padding: 6px 10px 0; gap: 4px; }
+  .react-main { min-width: 30px; min-height: 28px; font-size: 16px; padding: 4px 3px 4px 6px; }
+  .react-main b { font-size: 9px; margin-left: 3px; }
+  .react-plus { width: 18px; height: 18px; margin-right: 3px; font-size: 12px; }
+  .react-help { font-size: 10px; margin-left: auto; }
 }
 
 [data-theme="light"] .react-row { background: var(--card); border-top-color: var(--line); }
 [data-theme="dark"] .react-row { background: #0B0910; }
 .course-player-card { min-width: 0; }
+.course-complete-label-short { display: none; }
 .course-program-mobile, .course-question-mobile { display: none; }
+.course-lesson-switcher { min-width: 0; }
+.course-lesson-switcher > * { min-width: 0; }
 
 /* Sur téléphone et tablette portrait, Programme devient un panneau compact
    sous le titre du cours. Une question ? suit les ressources, au lieu de
@@ -2022,6 +2054,7 @@ img, video, iframe, object { max-width: 100%; }
 @media (max-width: 1020px) and (orientation: portrait) {
   .mod-grid { grid-template-columns: minmax(0, 1fr); }
   .course-program-mobile, .course-question-mobile { display: block; }
+  .course-program-mobile { margin-bottom: 10px; }
   .course-program-side, .course-question-side { display: none; }
   .course-program-toggle {
     width: 100%; display: flex; align-items: center; justify-content: space-between; gap: 10px;

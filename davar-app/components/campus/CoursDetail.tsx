@@ -204,9 +204,73 @@ function Lecteur({
   );
 }
 
+type PleinEcranElement = HTMLElement & {
+  requestFullscreen?: () => Promise<void>;
+  webkitRequestFullscreen?: () => void;
+};
+
+type PleinEcranDocument = Document & {
+  webkitFullscreenElement?: Element | null;
+  webkitExitFullscreen?: () => void;
+};
+
+function repliPleinEcran(actif: boolean) {
+  const stage = document.querySelector('.player-stage') as HTMLElement | null;
+  if (!stage) return;
+  stage.classList.toggle('fs-css', actif);
+  const sortie = stage.querySelector<HTMLButtonElement>('.fs-exit');
+  if (actif && !sortie) {
+    const bouton = document.createElement('button');
+    bouton.type = 'button';
+    bouton.className = 'fs-exit';
+    bouton.title = 'Quitter le plein écran';
+    bouton.setAttribute('aria-label', 'Quitter le plein écran');
+    bouton.textContent = '×';
+    bouton.addEventListener('click', () => repliPleinEcran(false), { once: true });
+    stage.appendChild(bouton);
+    document.addEventListener('keydown', echapperPleinEcran);
+  } else if (!actif) {
+    sortie?.remove();
+    document.removeEventListener('keydown', echapperPleinEcran);
+  }
+}
+
+function echapperPleinEcran(event: KeyboardEvent) {
+  if (event.key === 'Escape') repliPleinEcran(false);
+}
+
 function pleinEcran() {
-  const element = document.querySelector('.player-box') as (HTMLElement & { requestFullscreen?: () => Promise<void> }) | null;
-  if (element?.requestFullscreen) void element.requestFullscreen().catch(() => undefined);
+  const stage = document.querySelector('.player-stage') as HTMLElement | null;
+  const element = stage?.querySelector('.player-box') as PleinEcranElement | null;
+  if (!stage || !element) return;
+  const doc = document as PleinEcranDocument;
+  if (document.fullscreenElement || doc.webkitFullscreenElement) {
+    (document.exitFullscreen ?? doc.webkitExitFullscreen)?.call(document);
+    return;
+  }
+  if (stage.classList.contains('fs-css')) {
+    repliPleinEcran(false);
+    return;
+  }
+
+  const demande = element.requestFullscreen ?? element.webkitRequestFullscreen;
+  if (!demande) {
+    repliPleinEcran(true);
+    return;
+  }
+  try {
+    const resultat = demande.call(element);
+    if (resultat && typeof resultat.catch === 'function') {
+      resultat.catch(() => repliPleinEcran(true));
+    } else {
+      window.setTimeout(() => {
+        const doc = document as PleinEcranDocument;
+        if (!document.fullscreenElement && !doc.webkitFullscreenElement) repliPleinEcran(true);
+      }, 300);
+    }
+  } catch {
+    repliPleinEcran(true);
+  }
 }
 
 /** Contrôles visibles sous le lecteur, conservés même quand la vidéo est simulée. */
@@ -299,16 +363,22 @@ function PlayerUI({
           </button>
         ) : null}
         <span className="t">
-          {alternative ? `${titre} · hors progression` : url ? null : `${formatSecondes(temps)} / ${duree ?? '—'}`}
+          {alternative
+            ? `${titre} · hors progression`
+            : url
+              ? 'Lecture réelle — marquez le cours comme terminé après visionnage'
+              : `${formatSecondes(temps)} / ${duree ?? '—'}`}
         </span>
         <span className="p-tools">
           <button className="fs-btn" onClick={() => setReglages((ouvert) => !ouvert)} title="Réglages de lecture" aria-label="Réglages de lecture">
             <Icon nom="settings" taille={14} />
             {vitesse !== 1 && <em>{vitesse}×</em>}
           </button>
-          <button className="fs-btn" onClick={pleinEcran} title="Plein écran" aria-label="Plein écran">
-            <Icon nom="expand" taille={14} />
-          </button>
+          {!url && (
+            <button className="fs-btn" onClick={pleinEcran} title="Plein écran" aria-label="Plein écran">
+              <Icon nom="expand" taille={14} />
+            </button>
+          )}
         </span>
       </div>
       {reglages && (
@@ -416,6 +486,7 @@ export function CoursDetail({
   const racines = commentaires.filter((commentaire) => !commentaire.parentId).sort((a, b) => b.atMs - a.atMs);
   const commentairesVisibles = afficherTout ? racines : racines.slice(0, 3);
   const reactions = socialEtat?.reactions ?? EMOJIS.map((emoji) => ({ emoji, total: 0, parMoi: false }));
+  const totalReactions = socialEtat?.totalReactions ?? reactions.reduce((total, reaction) => total + reaction.total, 0);
   const pourcentage = Math.max(0, Math.min(100, Math.round(progressionPct)));
   const coursNecessiteVisionnage = lesson.kind === 'video' || Boolean(lesson.resourceUrl);
   const peutMarquer = !coursNecessiteVisionnage || visionnageTermine;
@@ -594,87 +665,6 @@ export function CoursDetail({
       <div className={`mod-grid ${onglet === 'comments' ? 'tab-comments' : ''}`}>
         <div>
           <div className="pane pane-lesson" style={{ display: onglet === 'lesson' ? undefined : 'none' }}>
-            <div className={`card course-player-card ${classeFormat}`} style={{ overflow: 'hidden' }}>
-              <Lecteur
-                key={`${lesson.id}-${alternative?.id ?? 'principal'}`}
-                utilisateurId={utilisateurId}
-                lessonId={lesson.id}
-                url={alternative ? alternative.url : lesson.resourceUrl}
-                ratio={ratioActuel}
-                titre={alternative ? alternative.title : lesson.title}
-                duree={alternative ? alternative.duration : dureePrincipale}
-                alternative={alternative !== null}
-                onVisionnageTermine={() => {
-                  if (!alternative) setVisionnageTermine(true);
-                }}
-              />
-              {!(alternative ? alternative.url : lesson.resourceUrl) && (
-                <PlayerUI
-                  url={null}
-                  titre={alternative ? alternative.title : lesson.title}
-                  duree={alternative ? alternative.duration : dureePrincipale}
-                  alternative={alternative !== null}
-                  onTermine={() => setVisionnageTermine(true)}
-                />
-              )}
-              <div className="react-row" aria-label="Réactions au cours">
-                {reactions.map((reaction) => (
-                  <span className={`react-bub ${reaction.parMoi ? 'on' : ''}`} key={reaction.emoji}>
-                    <button
-                      className="react-main"
-                      disabled={apercu || socialOccupe === `reaction-${reaction.emoji}`}
-                      onClick={() => void publierSocial({ action: 'reaction', lessonId: lesson.id, emoji: reaction.emoji }, `reaction-${reaction.emoji}`)}
-                      title={reaction.parMoi ? 'Retirer ma réaction' : 'Réagir au cours'}
-                      aria-label={reaction.parMoi ? `Retirer ${reaction.emoji}` : `Réagir avec ${reaction.emoji}`}
-                    >
-                      {reaction.emoji}{reaction.total ? <b>{reaction.total}</b> : null}
-                    </button>
-                  </span>
-                ))}
-              </div>
-              <div className="card-pad">
-                <div className="row between" style={{ flexWrap: 'wrap', gap: 10 }}>
-                  <div>
-                    <div className="eyebrow">
-                      {/chapitre\b/i.test(chapitreTitre.trim()) ? chapitreTitre : `Chapitre ${rangChapitre} — ${chapitreTitre}`}
-                    </div>
-                    <h2 style={{ fontSize: 18, marginTop: 3 }}>
-                      {alternative ? alternative.title : lesson.title}
-                      {alternative && <span className="badge b-grey" style={{ marginLeft: 8 }}>hors progression</span>}
-                    </h2>
-                  </div>
-                  {alternative ? (
-                    <span className="small muted">Revenez à la vidéo principale pour marquer le cours comme terminé.</span>
-                  ) : lesson.completed ? (
-                    <span className="badge b-green"><Icon nom="check" taille={12} /> Cours terminé ✓</span>
-                  ) : (
-                    <button
-                      className="btn btn-primary btn-sm"
-                      disabled={occupe || !peutMarquer}
-                      onClick={() => void marquer()}
-                      title={!peutMarquer ? 'Terminez la lecture du cours pour activer ce bouton.' : undefined}
-                    >
-                      <Icon nom="check" taille={14} /> {occupe ? '…' : 'Marquer comme terminé'}
-                    </button>
-                  )}
-                </div>
-
-                {erreur && <div className="banner err mt16" role="alert"><span>{erreur}</span></div>}
-
-                {chapitreSuivant && (
-                  <div className="banner info mt16">
-                    <Icon nom="check" taille={16} />
-                    <span>
-                      <b>Chapitre {rangChapitre} terminé !</b> Le chapitre {rangChapitre + 1} — {chapitreSuivant.titre} — est débloqué.
-                    </span>
-                    <Link className="btn btn-primary btn-sm" style={{ marginLeft: 'auto', flex: 'none' }} href={chapitreSuivant.href}>
-                      Ouvrir le chapitre {rangChapitre + 1}
-                    </Link>
-                  </div>
-                )}
-              </div>
-            </div>
-
             <div className="course-program-mobile">
               <button
                 className="course-program-toggle"
@@ -722,6 +712,106 @@ export function CoursDetail({
                   </div>
                 </div>
               )}
+            </div>
+
+            <div className={`card course-player-card ${classeFormat}`} style={{ overflow: 'hidden' }}>
+              <Lecteur
+                key={`${lesson.id}-${alternative?.id ?? 'principal'}`}
+                utilisateurId={utilisateurId}
+                lessonId={lesson.id}
+                url={alternative ? alternative.url : lesson.resourceUrl}
+                ratio={ratioActuel}
+                titre={alternative ? alternative.title : lesson.title}
+                duree={alternative ? alternative.duration : dureePrincipale}
+                alternative={alternative !== null}
+                onVisionnageTermine={() => {
+                  if (!alternative) setVisionnageTermine(true);
+                }}
+              />
+              <PlayerUI
+                url={alternative ? alternative.url : lesson.resourceUrl}
+                titre={alternative ? alternative.title : lesson.title}
+                duree={alternative ? alternative.duration : dureePrincipale}
+                alternative={alternative !== null}
+                onTermine={() => setVisionnageTermine(true)}
+              />
+              <div className="react-row" aria-label="Réactions au cours">
+                {reactions.map((reaction) => (
+                  <span className={`react-bub ${reaction.parMoi ? 'on' : ''}`} key={reaction.emoji}>
+                    <button
+                      className="react-main"
+                      disabled={apercu || socialOccupe === `reaction-${reaction.emoji}`}
+                      onClick={() => void publierSocial({ action: 'reaction', lessonId: lesson.id, emoji: reaction.emoji }, `reaction-${reaction.emoji}`)}
+                      title={reaction.parMoi ? 'Retirer ma réaction' : 'Réagir au cours'}
+                      aria-label={reaction.parMoi ? `Retirer ${reaction.emoji}` : `Réagir avec ${reaction.emoji}`}
+                    >
+                      {reaction.emoji}{reaction.total ? <b>{reaction.total}</b> : null}
+                    </button>
+                    <button
+                      className="react-plus"
+                      disabled={apercu || socialOccupe === `reaction-${reaction.emoji}`}
+                      onClick={() => void publierSocial({ action: 'reaction', lessonId: lesson.id, emoji: reaction.emoji }, `reaction-${reaction.emoji}`)}
+                      title={reaction.parMoi ? 'Retirer ma réaction' : 'Ajouter ma réaction'}
+                      aria-label={reaction.parMoi ? 'Retirer ma réaction' : 'Ajouter ma réaction'}
+                    >
+                      {reaction.parMoi ? '−' : '+'}
+                    </button>
+                  </span>
+                ))}
+                <span className="xs faint react-help">
+                  {totalReactions
+                    ? `${totalReactions} réaction${totalReactions > 1 ? 's' : ''} des étudiants`
+                    : 'Réagissez — visible par tous les étudiants'}
+                </span>
+              </div>
+              <div className="card-pad">
+                <div className="row between" style={{ flexWrap: 'wrap', gap: 10 }}>
+                  <div>
+                    <div className="eyebrow">
+                      {/chapitre\b/i.test(chapitreTitre.trim()) ? chapitreTitre : `Chapitre ${rangChapitre} — ${chapitreTitre}`}
+                    </div>
+                    <h2 style={{ fontSize: 18, marginTop: 3 }}>
+                      {alternative ? alternative.title : lesson.title}
+                      {alternative && <span className="badge b-grey" style={{ marginLeft: 8 }}>hors progression</span>}
+                    </h2>
+                  </div>
+                  {alternative ? (
+                    <span className="small muted">Revenez à la vidéo principale pour marquer le cours comme terminé.</span>
+                  ) : lesson.completed ? (
+                    <span className="badge b-green course-complete-status">
+                      <Icon nom="check" taille={12} />
+                      <span className="course-complete-label-full">Cours terminé ✓</span>
+                      <span className="course-complete-label-short">Terminé ✓</span>
+                    </span>
+                  ) : (
+                    <button
+                      className="btn btn-primary btn-sm course-complete-button"
+                      disabled={occupe || !peutMarquer}
+                      onClick={() => void marquer()}
+                      title={!peutMarquer ? 'Terminez la lecture du cours pour activer ce bouton.' : undefined}
+                      aria-label={peutMarquer ? 'Marquer le cours comme terminé' : 'Terminez la lecture du cours pour activer ce bouton'}
+                    >
+                      <Icon nom="check" taille={14} />
+                      <span className="course-complete-label-full">{occupe ? '…' : 'Marquer comme terminé'}</span>
+                      <span className="course-complete-label-short">{occupe ? '…' : 'Terminer'}</span>
+                    </button>
+                  )}
+                </div>
+
+                {erreur && <div className="banner err mt16" role="alert"><span>{erreur}</span></div>}
+
+                {chapitreSuivant && (
+                  <div className="banner info mt16">
+                    <Icon nom="check" taille={16} />
+                    <span>
+                      <b>Chapitre {rangChapitre} terminé !</b> Le chapitre {rangChapitre + 1} — {chapitreSuivant.titre} — est débloqué.
+                    </span>
+                    <Link className="btn btn-primary btn-sm" style={{ marginLeft: 'auto', flex: 'none' }} href={chapitreSuivant.href}>
+                      Ouvrir le chapitre {rangChapitre + 1}
+                    </Link>
+                  </div>
+                )}
+              </div>
             </div>
 
             {alternative && (

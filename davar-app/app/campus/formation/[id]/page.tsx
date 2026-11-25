@@ -147,7 +147,7 @@ export default async function FormationPage({
             {/* Plusieurs cours restent navigables, sans déplacer les blocs de ressources
                 et de vidéos complémentaires qui appartiennent au cours courant. */}
             {lecons.length > 1 && (
-              <div className="row mt16" style={{ gap: 8, flexWrap: 'wrap' }}>
+              <div className="row mt16 course-lesson-switcher" style={{ gap: 8, flexWrap: 'wrap' }}>
                 {lecons.map((lecon, index) => {
                   const ouvrable = lecon.completed || leconEstOuvrable(index);
                   return ouvrable ? (
