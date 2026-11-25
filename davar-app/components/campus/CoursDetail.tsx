@@ -402,6 +402,7 @@ export function CoursDetail({
   const [texteReponse, setTexteReponse] = useState('');
   const [repondA, setRepondA] = useState<string | null>(null);
   const [afficherTout, setAfficherTout] = useState(false);
+  const [programmeOuvert, setProgrammeOuvert] = useState(false);
   const [visionnageTermine, setVisionnageTermine] = useState(false);
 
   const illustrations = lesson.assets.filter((asset) => asset.kind === 'illustration');
@@ -425,6 +426,7 @@ export function CoursDetail({
     setIllustration(null);
     setVideoRessource(null);
     setAfficherTout(false);
+    setProgrammeOuvert(false);
     setRepondA(null);
     setVisionnageTermine(false);
   }, [lesson.id, social]);
@@ -673,6 +675,55 @@ export function CoursDetail({
               </div>
             </div>
 
+            <div className="course-program-mobile">
+              <button
+                className="course-program-toggle"
+                type="button"
+                aria-expanded={programmeOuvert}
+                aria-controls="course-program-mobile-panel"
+                onClick={() => setProgrammeOuvert((ouvert) => !ouvert)}
+              >
+                <span className="course-program-toggle-main">
+                  <span className="course-program-toggle-icon"><Icon nom="layers" taille={15} /></span>
+                  <span>
+                    <b>Programme</b>
+                    <small>{moduleTitre}</small>
+                  </span>
+                </span>
+                <span className="course-program-toggle-meta">{totalModules} modules <Icon nom="chevD" taille={13} /></span>
+              </button>
+              {programmeOuvert && (
+                <div className="course-program-panel" id="course-program-mobile-panel">
+                  <div className="course-program-panel-head">Parcours de la formation</div>
+                  <div className="course-program-scroll">
+                    {chapitres.map((chapitre, indexChapitre) => (
+                      <div key={chapitre.id}>
+                        <div className="course-program-chapter">Chapitre {indexChapitre + 1} · {chapitre.title}</div>
+                        {chapitre.modules.map((module) => {
+                          const ouvert = chapitre.visible && module.ouvrable;
+                          const courant = module.id === moduleId;
+                          const href = hrefModule(chapitre, module, courant ? lesson.id : undefined);
+                          return ouvert ? (
+                            <Link className={`course-program-item ${courant ? 'current' : ''}`} href={href} key={module.id}>
+                              <span className={`step-ico ${module.termine ? 's-done' : 's-cur'}`}><Icon nom={module.termine ? 'check' : 'play'} taille={11} /></span>
+                              <span className="wrap"><b>{module.title}</b><small>{module.lessons.length} cours</small></span>
+                              {courant ? <span className="badge b-violet">En cours</span> : module.termine ? <span className="xs faint">Terminé ✓</span> : null}
+                            </Link>
+                          ) : (
+                            <div className="course-program-item locked" aria-disabled="true" key={module.id}>
+                              <span className="step-ico s-lock"><Icon nom="lock" taille={11} /></span>
+                              <span className="wrap"><b>{module.title}</b><small>Verrouillé</small></span>
+                              <Icon nom="lock" taille={11} />
+                            </div>
+                          );
+                        })}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+
             {alternative && (
               <div className="alt-back">
                 <button className="btn btn-sm" onClick={() => { setIllustration(null); setVideoRessource(null); }}>
@@ -742,6 +793,24 @@ export function CoursDetail({
               </div>
             )}
 
+            <div className="course-question-mobile card mt16">
+              <div className="card-head"><h3>Une question ?</h3></div>
+              <div className="course-question-mobile-body col">
+                <AssistantPanel
+                  nom={assistantNom}
+                  hue={assistantHue}
+                  formationId={formationId}
+                  formationTitre={formationTitre}
+                  moduleId={moduleId}
+                  moduleTitre={moduleTitre}
+                  messagesIA={[]}
+                  messagesCoach={[]}
+                  apercu={apercu}
+                  compactActions
+                />
+              </div>
+            </div>
+
             <div className="row between mt16" style={{ flexWrap: 'wrap', gap: 10 }}>
               <Link className="btn" href={retourHref}><Icon nom="chevL" taille={14} /> Retour à la formation</Link>
               {lesson.completed && suivant && (
@@ -754,7 +823,7 @@ export function CoursDetail({
         <div className="mod-side">
           <div className="pane" style={{ display: onglet === 'comments' ? undefined : 'none' }}>
             <div className="card" style={{ overflow: 'hidden' }}>
-              <div className="card-head"><h3>Commentaires du cours</h3><span className="xs faint">{socialEtat?.totalCommentaires ?? 0} · visibles par tous les étudiants</span></div>
+              <div className="card-head"><h3>Commentaires du cours</h3><span className="xs faint">{socialEtat?.totalCommentaires ?? 0} commentaire{socialEtat?.totalCommentaires === 1 ? '' : 's'}</span></div>
               <div className="card-pad">
                 {!apercu && (
                   <div className="cmt-form">
@@ -781,7 +850,7 @@ export function CoursDetail({
           </div>
 
           <div className="side-extra">
-            <div className="card">
+            <div className="card course-question-side">
               <div className="card-head"><h3>Une question ?</h3></div>
               <div style={{ padding: '14px 16px' }} className="col">
                 <AssistantPanel
@@ -799,7 +868,7 @@ export function CoursDetail({
               </div>
             </div>
 
-            <div className="card mt16" style={{ overflow: 'hidden' }}>
+            <div className="card mt16 course-program-side" style={{ overflow: 'hidden' }}>
               <div className="card-head"><h3>Programme</h3><span className="xs faint">{totalModules} modules</span></div>
               {chapitres.map((chapitre, indexChapitre) => (
                 <div key={chapitre.id}>
