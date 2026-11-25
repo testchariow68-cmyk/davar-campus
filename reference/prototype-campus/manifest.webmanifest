@@ -1,0 +1,14 @@
+{
+  "name": "Davar Académie Campus — L'école de l'excellence oratoire",
+  "short_name": "Davar Campus",
+  "description": "Votre campus numérique personnel : formations, coach, assistant IA, certifications.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#070510",
+  "theme_color": "#6D28D9",
+  "lang": "fr",
+  "icons": [
+    { "src": "assets/pwa-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "assets/pwa-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable" }
+  ]
+}

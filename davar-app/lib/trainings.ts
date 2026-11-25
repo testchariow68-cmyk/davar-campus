@@ -1,7 +1,21 @@
 /**
- * Catalogue de démonstration (Phase 0).
- * En Phase 1 : remplacé par la table `trainings` de Supabase.
- * Paiement principal : Chariow (lien de checkout par formation + webhook de déblocage).
+ * Catalogue de référence : il est importé dans la table `trainings` de Turso
+ * (voir `scripts/production-ops.mjs catalog`), qui reste la source de vérité.
+ *
+ * Décision du propriétaire (6 octobre 2026) : une seule formation est ouverte à
+ * la vente — « Devenir un excellent orateur », dont le lien de checkout Chariow
+ * existe déjà. Les trois autres ont été retirées du catalogue faute de lien
+ * d'achat : une formation visible mais non achetable serait un mensonge.
+ *
+ * PRIX (propriétaire, 6 octobre 2026) : 39 900 FCFA. Ce prix sert à VOS DOSSIERS
+ * et à votre page de vente — il n'est JAMAIS affiché dans l'application : la
+ * personne achète sur votre page, puis entre ici avec son adresse d'achat.
+ *
+ * LIEN D'ACHAT VÉRIFIÉ : le propriétaire a confirmé le 6 octobre 2026 que
+ * `https://d-ueo.mychariow.co/prd_6wx1czzp/checkout` est bien le bon lien de
+ * checkout de cette formation, et que `prd_6wx1czzp` est bien le produit qui lui
+ * correspondra dans Chariow. Ne pas modifier l'un sans l'autre : c'est cet
+ * identifiant `prd_` qui rattachera automatiquement une vente à la formation.
  */
 export interface Training {
   id: string;
@@ -27,45 +41,9 @@ export const TRAININGS: Training[] = [
     mono: "OR",
     hue: 268,
     hours: 12,
-    price: 45000,
+    price: 39900,
     level: "Tous niveaux",
     chariowUrl: "https://d-ueo.mychariow.co/prd_6wx1czzp/checkout",
-  },
-  {
-    id: "t-marketing",
-    code: "MD-101",
-    abbr: "MKT",
-    title: "Marketing Digital — Fondamentaux",
-    desc: "Maîtrisez les canaux digitaux, construisez une stratégie de contenu et mesurez vos performances.",
-    mono: "MD",
-    hue: 268,
-    hours: 14,
-    price: 45000,
-    level: "Débutant → Intermédiaire",
-  },
-  {
-    id: "t-excel",
-    code: "EX-201",
-    abbr: "EXD",
-    title: "Excel & Analyse de données",
-    desc: "Des bases solides aux tableaux de bord : l'outil n°1 de l'analyse de données en entreprise.",
-    mono: "EX",
-    hue: 210,
-    hours: 10,
-    price: 35000,
-    level: "Tous niveaux",
-  },
-  {
-    id: "t-entreprendre",
-    code: "CE-301",
-    abbr: "CEC",
-    title: "Créer son entreprise en Côte d'Ivoire",
-    desc: "De l'idée au registre de commerce : formalités, financement, fiscalité et premiers clients.",
-    mono: "CE",
-    hue: 38,
-    hours: 12,
-    price: 55000,
-    level: "Débutant",
   },
 ];
 

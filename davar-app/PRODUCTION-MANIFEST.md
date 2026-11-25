@@ -55,7 +55,7 @@ Légende : ✅ déjà en prod · 🔶 partiel · ❌ à porter (obligatoire pour
 | **Enrichissement silencieux** (vidéos compl., ressources, chapitres, exos, évals — jamais de reset, jamais de notif) | ✅ | ❌ | Règle d'or à préserver |
 | Livres (lecteur paginé) & livres audio | ✅ | ❌ | R2 |
 | Mes ressources par étudiant | ✅ | ❌ | attribution tous/par-étudiant |
-| Assistant IA : nom/photo/langue configurables, isolation par formation, nom de l'étudiant | ✅ | ❌ | Fournisseurs gratuits (Groq/Gemini/OpenRouter/HF), supervision coach |
+| Assistant IA : nom/photo/langue configurables, isolation par formation, nom de l'étudiant | ✅ | ❌ | Fournisseurs activés (Groq/Gemini/HF), OpenRouter/DeepSeek en attente de validation, supervision coach |
 | Questions : IA immédiate + coach 48 h, panneau dédié | ✅ | ❌ | `threads/messages` |
 | Support flottant casque (jamais « Support »), WhatsApp wa.me, tel: | ✅ | ❌ | |
 | **Accueil flottant : 1 tap = retour, double tap = accueil + indice discret** | ✅ | ❌ | |
