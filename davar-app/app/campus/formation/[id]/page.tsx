@@ -76,28 +76,50 @@ export default async function FormationPage({
    * sa vidéo principale, ses vidéos complémentaires et ses ressources. S'il
    * reste plusieurs cours dans le module, un simple rang les relie entre eux. */
   const lecons = moduleOuvert?.lessons ?? [];
+  const leconEstOuvrable = (index: number) =>
+    index === 0 || lecons.slice(0, index).every((lecon) => lecon.completed);
+  const demandeCours = lecons.find((lecon) => lecon.id === coursDemande) ?? null;
+  const indexDemande = demandeCours ? lecons.findIndex((lecon) => lecon.id === demandeCours.id) : -1;
   const coursOuvert =
-    lecons.find((lecon) => lecon.id === coursDemande) ??
-    lecons.find((lecon) => !lecon.completed) ??
-    lecons[0] ??
-    null;
+    demandeCours && (demandeCours.completed || leconEstOuvrable(indexDemande))
+      ? demandeCours
+      : lecons.find((lecon, index) => !lecon.completed && leconEstOuvrable(index)) ?? lecons[0] ?? null;
 
   if (chapitreOuvert && moduleOuvert) {
     const hrefModule = `${base}?chapitre=${encodeURIComponent(chapitreOuvert.id)}&module=${encodeURIComponent(moduleOuvert.id)}`;
     const hrefCours = (id: string) => `${hrefModule}&cours=${encodeURIComponent(id)}`;
+    const hrefCoursDans = (chapitre: Chapitre, module: Module, id: string) =>
+      `${base}?chapitre=${encodeURIComponent(chapitre.id)}&module=${encodeURIComponent(module.id)}&cours=${encodeURIComponent(id)}`;
 
-    // Le cours suivant : d'abord dans le module, puis le premier cours du module
-    // suivant si celui-ci est achevé et que le suivant est ouvert.
+    // Le cours suivant : dans le module, puis dans le module suivant, puis au
+    // premier cours du chapitre suivant. Le lien est calculé dès maintenant :
+    // il sera donc prêt pour la redirection immédiate après validation du cours.
     let suivant: { titre: string; href: string } | null = null;
     if (coursOuvert) {
       const index = lecons.findIndex((lecon) => lecon.id === coursOuvert.id);
       const leconSuivante = lecons[index + 1];
-      if (leconSuivante) suivant = { titre: leconSuivante.title, href: hrefCours(leconSuivante.id) };
-      else if (moduleOuvert.termine) {
+      if (leconSuivante) {
+        suivant = { titre: leconSuivante.title, href: hrefCours(leconSuivante.id) };
+      } else {
         const rangModule = chapitreOuvert.modules.findIndex((m) => m.id === moduleOuvert.id);
         const moduleSuivant = chapitreOuvert.modules[rangModule + 1];
-        if (moduleSuivant?.ouvrable && moduleSuivant.lessons[0])
-          suivant = { titre: moduleSuivant.title, href: hrefCours(moduleSuivant.lessons[0].id) };
+        if (moduleSuivant?.lessons[0]) {
+          suivant = {
+            titre: moduleSuivant.lessons[0].title,
+            href: hrefCoursDans(chapitreOuvert, moduleSuivant, moduleSuivant.lessons[0].id),
+          };
+        } else {
+          const rangActuel = chapitres.findIndex((c) => c.id === chapitreOuvert.id);
+          const chapitreApres = chapitres[rangActuel + 1];
+          const moduleApres = chapitreApres?.modules[0];
+          const leconApres = moduleApres?.lessons[0];
+          if (chapitreApres && moduleApres && leconApres) {
+            suivant = {
+              titre: leconApres.title,
+              href: hrefCoursDans(chapitreApres, moduleApres, leconApres.id),
+            };
+          }
+        }
       }
     }
     // Le chapitre suivant n'est proposé que lorsqu'il est réellement débloqué.
@@ -126,23 +148,36 @@ export default async function FormationPage({
                 et de vidéos complémentaires qui appartiennent au cours courant. */}
             {lecons.length > 1 && (
               <div className="row mt16" style={{ gap: 8, flexWrap: 'wrap' }}>
-                {lecons.map((lecon) => (
-                  <Link
-                    key={lecon.id}
-                    href={hrefCours(lecon.id)}
-                    className={lecon.id === coursOuvert.id ? 'btn btn-primary btn-sm' : 'btn btn-ghost btn-sm'}
-                    title={lecon.title}
-                  >
-                    {lecon.completed ? '✓ ' : ''}
-                    {lecon.title}
-                  </Link>
-                ))}
+                {lecons.map((lecon, index) => {
+                  const ouvrable = lecon.completed || leconEstOuvrable(index);
+                  return ouvrable ? (
+                    <Link
+                      key={lecon.id}
+                      href={hrefCours(lecon.id)}
+                      className={lecon.id === coursOuvert.id ? 'btn btn-primary btn-sm' : 'btn btn-ghost btn-sm'}
+                      title={lecon.title}
+                    >
+                      {lecon.completed ? '✓ ' : ''}
+                      Cours {index + 1} · {lecon.title}
+                    </Link>
+                  ) : (
+                    <span
+                      key={lecon.id}
+                      className="btn btn-ghost btn-sm course-locked"
+                      aria-disabled="true"
+                      title="Terminez le cours précédent pour débloquer celui-ci."
+                    >
+                      <Icon nom="lock" taille={12} /> Cours {index + 1} · {lecon.title}
+                    </span>
+                  );
+                })}
               </div>
             )}
             <div className={lecons.length > 1 ? 'mt16' : undefined}>
               <CoursDetail
                 key={coursOuvert.id}
                 lesson={coursOuvert}
+                utilisateurId={session.user.id}
                 formationId={training.id}
                 formationTitre={training.title}
                 formationHref={base}

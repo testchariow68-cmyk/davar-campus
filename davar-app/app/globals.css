@@ -19,7 +19,17 @@
   --r: 14px; --r-sm: 10px;
 }
 * { box-sizing: border-box; margin: 0; padding: 0; }
-html { scroll-behavior: smooth; }
+html {
+  scroll-behavior: smooth;
+  overflow-x: clip;
+  --davar-scale: 1;
+}
+/* Le zoom visuel conserve toute la largeur physique : à 125 %, le corps
+   occupe 80 % de la largeur CSS avant agrandissement au lieu de déborder. */
+body { width: calc(100% / var(--davar-scale, 1)); max-width: none; overflow-x: clip; }
+/* Les emojis restent de vrais caractères Unicode : cette pile privilégie les
+   polices couleur natives du système au lieu de pictogrammes propriétaires. */
+.emoji-unicode, .react-main, .react-bub { font-family: "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", sans-serif; }
 body {
   font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
   background: var(--bg); color: var(--txt); font-size: 14px; line-height: 1.55;

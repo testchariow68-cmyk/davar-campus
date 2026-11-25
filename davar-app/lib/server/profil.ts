@@ -206,12 +206,22 @@ export type ResultatCode = { ok: true } | { ok: false; erreur: string };
  */
 export async function changerCodeSecret(
   db: Db,
-  options: { userId: string; tokenActuel: string; ancienVerifier: string; nouveauVerifier: string; maintenant?: number },
+  options: {
+    userId: string;
+    tokenActuel: string;
+    ancienVerifier: string;
+    nouveauVerifier: string;
+    confirmationVerifier?: string;
+    maintenant?: number;
+  },
   reglages: { verifierPepper?: string; verifierIterations?: number } = {}
 ): Promise<ResultatCode> {
   const maintenant = options.maintenant ?? Date.now();
   if (!isClientVerifier(options.ancienVerifier) || !isClientVerifier(options.nouveauVerifier)) {
     return { ok: false, erreur: 'code_invalide' };
+  }
+  if (options.confirmationVerifier !== undefined && options.nouveauVerifier !== options.confirmationVerifier) {
+    return { ok: false, erreur: 'code_confirmation_invalide' };
   }
   const resultat = await db.execute({
     sql: 'SELECT password_hash FROM users WHERE id = ?',

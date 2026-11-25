@@ -236,9 +236,7 @@ export default async function DirectionPage() {
           {!pilote && <div className="xs stamp">{new Date().toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' })} · {new Date().toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}</div>}
           <h1 style={{ fontSize: 19 }}>
             {salutation()} {prenom}{' '}
-            <span className="greeting-wave" role="img" aria-label="Salutation">
-              <Icon nom="hand" taille={17} />
-            </span>
+            <span className="greeting-wave emoji-unicode" role="img" aria-label="Salutation">👋</span>
           </h1>
           <p>{sousTitre}</p>
         </div>

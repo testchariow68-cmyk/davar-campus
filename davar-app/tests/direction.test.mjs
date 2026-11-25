@@ -38,6 +38,7 @@ import {
   vueEnsemble,
 } from '../lib/server/direction.ts';
 import { pathToFileURL } from 'node:url';
+import { setLessonCompletion } from '../lib/server/campus.ts';
 
 process.env.APP_ENV = 'development';
 
@@ -401,6 +402,46 @@ test('le parcours se débloque chapitre par chapitre, puis module par module', a
   assert.equal(etat[0].termine, true, 'le chapitre 1 est terminé');
   assert.deepEqual(etat.map((c) => c.visible), [true, true], 'le chapitre 2 apparaît');
   assert.deepEqual(etat[1].modules.map((m) => m.ouvrable), [true], 'son premier module est ouvert');
+});
+
+test('la progression serveur verrouille les cours suivants sans mélanger les formations', async () => {
+  const db = await baseVide();
+  const maintenant = Date.now();
+  await db.execute({
+    sql: `INSERT INTO users(id,email_normalized,display_name,password_hash,email_verified_at_ms,role,status,created_at_ms)
+          VALUES ('usr-parcours','parcours@davar.test','Étudiant','x',?,'student','active',?)`,
+    args: [maintenant, maintenant],
+  });
+  await db.execute({
+    sql: `INSERT INTO trainings(id,title,price_cfa,published) VALUES ('trn-parcours','Parcours',0,1),('trn-autre','Autre',0,1)`,
+  });
+  await db.execute({
+    sql: `INSERT INTO enrollments(user_id,training_id,source,acquired_at_ms)
+          VALUES ('usr-parcours','trn-parcours','staff_grant',?),('usr-parcours','trn-autre','staff_grant',?)`,
+    args: [maintenant, maintenant],
+  });
+  await db.execute({
+    sql: `INSERT INTO course_chapters(id,training_id,position,title)
+          VALUES ('chap-parcours','trn-parcours',1,'Chapitre'),('chap-autre','trn-autre',1,'Autre')`,
+  });
+  await db.execute({
+    sql: `INSERT INTO course_modules(id,training_id,chapter_id,position,title)
+          VALUES ('mod-parcours-1','trn-parcours','chap-parcours',1,'Premier'),
+                 ('mod-parcours-2','trn-parcours','chap-parcours',2,'Suivant'),
+                 ('mod-autre-1','trn-autre','chap-autre',1,'Autre')`,
+  });
+  await db.execute({
+    sql: `INSERT INTO course_lessons(id,module_id,position,title,kind)
+          VALUES ('lec-parcours-1','mod-parcours-1',1,'Premier','text'),
+                 ('lec-parcours-2','mod-parcours-2',1,'Suivant','text'),
+                 ('lec-autre-1','mod-autre-1',1,'Autre','text')`,
+  });
+
+  assert.equal(await setLessonCompletion(db, 'usr-parcours', 'lec-parcours-2', true), false, 'un accès direct ne contourne pas le verrou');
+  assert.equal(await setLessonCompletion(db, 'usr-parcours', 'lec-autre-1', true), true, 'une autre formation reste indépendante');
+  assert.equal(await setLessonCompletion(db, 'usr-parcours', 'lec-parcours-1', true), true);
+  assert.equal(await setLessonCompletion(db, 'usr-parcours', 'lec-parcours-2', true), true);
+  await db.close();
 });
 
 test('une formation se construit en chapitres, et chaque module reste dans le sien', async () => {

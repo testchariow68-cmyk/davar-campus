@@ -140,8 +140,15 @@ export async function POST(request: Request) {
     if (action === 'code') {
       const ancien = typeof body?.ancien === 'string' ? body.ancien : '';
       const nouveau = typeof body?.nouveau === 'string' ? body.nouveau : '';
-      if (!isClientVerifier(ancien) || !isClientVerifier(nouveau)) {
+      const confirmation = typeof body?.confirmation === 'string' ? body.confirmation : '';
+      if (!isClientVerifier(ancien) || !isClientVerifier(nouveau) || !isClientVerifier(confirmation)) {
         return jsonNoStore({ ok: false, erreur: 'code_invalide' }, 400);
+      }
+      if (nouveau !== confirmation) {
+        return jsonNoStore(
+          { ok: false, erreur: 'code_confirmation_invalide', message: 'La confirmation du nouveau code ne correspond pas.' },
+          400
+        );
       }
       if (ancien === nouveau) {
         return jsonNoStore(
@@ -154,6 +161,7 @@ export async function POST(request: Request) {
         tokenActuel: session.token,
         ancienVerifier: ancien,
         nouveauVerifier: nouveau,
+        confirmationVerifier: confirmation,
         maintenant,
       });
       if (!resultat.ok) {

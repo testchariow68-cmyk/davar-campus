@@ -5,6 +5,7 @@ import { Icon } from './Icon';
 import { BoutonAide, type Contacts } from './PanneauAide';
 import { abonner, desabonner } from '@/lib/client/push';
 import { SecuriteEmpreinte } from './SecuriteEmpreinte';
+import { appliquerEchelleAffichage } from './EchelleAffichage';
 
 /** Les échelles du prototype : 90, 100, 110 et 125 %. */
 const ECHELLES = [0.9, 1, 1.1, 1.25];
@@ -66,7 +67,7 @@ export function ParametresEcran({
 
   async function changerEchelle(valeur: number) {
     setEchelle(valeur);
-    document.documentElement.style.zoom = valeur === 1 ? '' : String(valeur);
+    appliquerEchelleAffichage(valeur);
     await appeler({ action: 'preference', cle: 'affichage.echelle', valeur: String(valeur) });
   }
 

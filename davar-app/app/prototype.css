@@ -1372,16 +1372,16 @@ body:has(.ticker) .container{padding-bottom:64px}
   .lg-pied { margin-top: 22px; gap: 10px; }
 }
 
-/* Dashboard fidelity: visible, font-independent greeting mark.  The
-   prototype's emoji fallback can be tofu in a headless capture browser; the
-   inline SVG icon remains a real, visible glyph at every viewport. */
+/* Salutation : vrai caractère Unicode, avec la pile de polices couleur du
+   système. Aucun pictogramme SVG ne remplace l’emoji. */
 .greeting-wave {
   display: inline-flex;
   align-items: center;
-  vertical-align: -0.16em;
-  color: var(--gold2);
+  vertical-align: -0.12em;
+  font-size: 1em;
+  line-height: 1;
+  color: inherit;
 }
-.greeting-wave .ic { display: block; }
 .metric-value-with-icon { display: inline-flex; align-items: center; gap: 5px; }
 .metric-value-with-icon .ic { color: var(--gold); }
 .empty-with-icon { display: inline-flex; align-items: center; justify-content: center; gap: 6px; }
@@ -1935,6 +1935,85 @@ img, video, iframe, object { max-width: 100%; }
   .cp-app .ticker { min-height: 38px; height: 38px; }
   .cp-app .ticker-track { height: 38px; }
 }
+
+/* Tableau de bord : une reprise reste lisible quand la largeur devient étroite.
+   Aucun titre, descriptif, type de média ou temps ne doit être tronqué. */
+.resume-title, .resume-description, .resume-position { display: block; min-width: 0; overflow-wrap: anywhere; }
+.resume-description, .resume-position { line-height: 1.4; }
+@media (min-width: 768px) and (max-width: 1020px) {
+  .cp-next { padding: 12px 14px; }
+  .cp-next > .row { width: 100%; max-width: none; align-items: flex-start; flex-wrap: wrap; }
+  .cp-next .wrap { flex: 1 1 min(100%, 420px); min-width: 0; overflow-wrap: anywhere; }
+  .cp-next .btn { margin-left: auto; }
+  .cp-resume-line { align-items: flex-start; flex-wrap: wrap; }
+  .cp-resume-line > .wrap { flex: 1 1 calc(100% - 66px); min-width: 0; overflow-wrap: anywhere; }
+  .cp-resume-line > .btn { margin-left: 54px; }
+  .cp-resume .cp-sec-h { align-items: flex-start; }
+  .cp-resume .cp-sec-h > div { min-width: 0; overflow-wrap: anywhere; }
+}
+
+/* ---------- Profil, progression et responsive ---------- */
+.profile-message-ok { color: #166534; font-weight: 600; }
+.profile-message-error { color: #991b1b; font-weight: 700; }
+[data-theme="dark"] .profile-message-ok { color: #86efac; }
+[data-theme="dark"] .profile-message-error { color: #fca5a5; }
+.profile-panel {
+  background: #050505;
+  color: #f7f7f7;
+  border: 1px solid #292929;
+  border-radius: var(--r);
+  padding: 20px;
+  box-shadow: 0 10px 28px rgba(0,0,0,.16);
+}
+.profile-panel .muted { color: #dedede; }
+.profile-panel .faint { color: #bdbdbd; }
+.profile-panel .divider { background: #383838; }
+.profile-panel .inp { background: #111; color: #fff; border-color: #555; }
+.profile-panel .hint { color: #c8c8c8; }
+.profile-panel .eyebrow { color: #d6bbff; }
+.profile-panel .btn:not(.btn-primary):not(.btn-danger) { background: #f2edfc; color: #3b176e; border-color: #d7c9ef; }
+.profile-panel .btn-danger { background: #7f1d1d; color: #fff; border-color: #ef4444; }
+.profile-panel .btn-primary { color: #fff; }
+.course-locked { opacity: .72; cursor: not-allowed; pointer-events: none; }
+.react-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; padding: 12px 20px 0; }
+.react-main { min-width: 48px; min-height: 40px; display: inline-flex; align-items: center; justify-content: center; gap: 5px; border: 1px solid var(--line2); border-radius: 99px; background: var(--card); font-size: 21px; line-height: 1; padding: 7px 10px; }
+.react-main:hover, .react-bub.on .react-main { border-color: var(--violet2); background: var(--violet-soft); }
+.react-main b { font-family: Inter, sans-serif; font-size: 11px; color: var(--muted); }
+
+@media (max-width: 900px) {
+  .profile-layout { gap: 12px; }
+  .profile-panel { padding: 16px; }
+  .mod-grid .card-pad { padding: 14px; }
+}
+@media (max-width: 640px) {
+  .profile-scale-row { align-items: flex-start; flex-direction: column; gap: 8px; }
+  .profile-scale-options { flex-wrap: wrap; }
+  .mod-grid h2 { font-size: 17px !important; }
+  .react-row { padding: 10px 14px 0; gap: 6px; }
+  .react-main { min-width: 42px; min-height: 36px; font-size: 19px; }
+}
+
+@media (max-width: 767px) {
+  .cp-next > .row { width: 100%; max-width: none; flex-wrap: wrap; align-items: flex-start; }
+  .cp-next .wrap { min-width: 0; overflow-wrap: anywhere; }
+  .cp-resume-line > .wrap { overflow-wrap: anywhere; }
+  .cp-resume .cp-sec-h > div { min-width: 0; overflow-wrap: anywhere; }
+
+  /* Le cours prend la place principale : le chapitre devient un petit repère,
+     le titre respire, et l'action reste compacte au lieu de devenir une
+     seconde grosse bannière. */
+  .course-player-card > .card-pad { padding: 11px 14px 14px; }
+  .course-player-card > .card-pad .eyebrow { font-size: 9.5px; line-height: 1.2; }
+  .course-player-card > .card-pad h2 { font-size: clamp(18px, 5.2vw, 22px) !important; line-height: 1.18; overflow-wrap: anywhere; }
+  .course-player-card > .card-pad .row.between { align-items: flex-start; gap: 7px; }
+  .course-player-card > .card-pad .row.between > div:first-child { min-width: 0; flex: 1 1 100%; }
+  .course-player-card > .card-pad .btn-sm { min-height: 32px; padding: 6px 9px; font-size: 11px; }
+}
+
+[data-theme="light"] .react-row { background: var(--card); border-top-color: var(--line); }
+[data-theme="dark"] .react-row { background: #0B0910; }
+.course-player-card { min-width: 0; }
+
 
 /* Fin propre du rail/ticker : aucune ligne blanche ou noire supplémentaire ne
    coupe la barre après le bandeau défilant. */

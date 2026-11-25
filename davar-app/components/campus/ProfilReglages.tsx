@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { deriveClientKey, fetchDerivationParameters } from '@/lib/client/derive';
 import { Icon } from './Icon';
+import { appliquerEchelleAffichage } from './EchelleAffichage';
 
 /**
  * PROFIL & PARAMÈTRES — la page du prototype, branchée sur la vraie base.
@@ -27,7 +28,11 @@ function messageErreur(erreur?: string): string {
     case 'code_actuel_incorrect':
       return 'Votre code secret actuel n’est pas correct : rien n’a été changé.';
     case 'code_invalide':
-      return 'Le nouveau code secret est trop court (6 caractères minimum).';
+      return 'Les trois champs du code secret doivent être remplis correctement.';
+    case 'code_confirmation_invalide':
+      return 'La confirmation du nouveau code ne correspond pas.';
+    case 'code_identique':
+      return 'Le nouveau code est identique à l’ancien.';
     case 'unavailable':
       return 'Impossible pour le moment : réessayez dans un instant.';
     default:
@@ -118,7 +123,7 @@ export function ProfilReglages({
 
   async function changerEchelle(valeur: number) {
     setPreferences((actuel) => ({ ...actuel, echelle: valeur }));
-    document.documentElement.style.zoom = valeur === 1 ? '' : String(valeur);
+    appliquerEchelleAffichage(valeur);
     const reponse = await appeler({ action: 'preference', cle: 'affichage.echelle', valeur: String(valeur) });
     if (!reponse.ok) annoncer(reponse.message ?? messageErreur(reponse.erreur), false);
   }
@@ -172,6 +177,18 @@ export function ProfilReglages({
   }
 
   async function changerCode() {
+    if (!ancien.trim()) {
+      annoncer('Saisissez votre code secret actuel.', false);
+      return;
+    }
+    if (!nouveau.trim()) {
+      annoncer('Saisissez un nouveau code secret.', false);
+      return;
+    }
+    if (!confirmation.trim()) {
+      annoncer('Confirmez le nouveau code secret.', false);
+      return;
+    }
     if (nouveau.trim().length < 6) {
       annoncer('Le nouveau code secret doit faire 6 caractères minimum.', false);
       return;
@@ -189,7 +206,13 @@ export function ProfilReglages({
     }
     const ancienVerifier = await deriveClientKey(ancien, parametres.parameters);
     const nouveauVerifier = await deriveClientKey(nouveau, parametres.parameters);
-    const reponse = await appeler({ action: 'code', ancien: ancienVerifier, nouveau: nouveauVerifier });
+    const confirmationVerifier = await deriveClientKey(confirmation, parametres.parameters);
+    const reponse = await appeler({
+      action: 'code',
+      ancien: ancienVerifier,
+      nouveau: nouveauVerifier,
+      confirmation: confirmationVerifier,
+    });
     setEnCours(null);
     if (reponse.ok) {
       setAncien('');
@@ -203,10 +226,14 @@ export function ProfilReglages({
 
   return (
     <>
-      {message && <p className={`small ${message.ok ? 'muted' : 'muted'} mb16`} role="status">{message.texte}</p>}
+      {message && (
+        <p className={`small mb16 ${message.ok ? 'profile-message-ok' : 'profile-message-error'}`} role="status" aria-live="polite">
+          {message.texte}
+        </p>
+      )}
 
-      <div className="grid g2" style={{ alignItems: 'start' }}>
-        <div className="card card-pad">
+      <div className="grid g2 profile-layout" style={{ alignItems: 'start' }}>
+        <div className="profile-panel">
           <div className="row">
             <span className="avatar lg" aria-hidden="true">
               {photo ? <img src={photo} alt="" style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover' }} /> : initiale}
@@ -298,7 +325,7 @@ export function ProfilReglages({
           </div>
         </div>
 
-        <div className="card card-pad">
+        <div className="profile-panel">
           <div className="eyebrow mb8">Notifications</div>
           <div className="row between">
             <span className="small muted">
@@ -373,7 +400,7 @@ export function ProfilReglages({
             doublon.
           </p>
           <form action="/api/auth/logout" method="post" className="mt16">
-            <button className="btn btn-sm" type="submit">
+            <button className="btn btn-danger btn-sm" type="submit">
               <Icon nom="logout" taille={15} /> Se déconnecter
             </button>
           </form>

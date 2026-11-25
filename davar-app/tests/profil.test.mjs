@@ -120,11 +120,23 @@ test('changer le code secret exige l’ancien, et déconnecte les autres apparei
   const inchange = await db.execute("SELECT password_hash FROM users WHERE id = 'usr_1'");
   assert.equal(String(inchange.rows[0].password_hash), ancien, 'un refus ne touche à rien');
 
+  const confirmationRefusee = await changerCodeSecret(db, {
+    userId: 'usr_1',
+    tokenActuel: 'jeton_courant',
+    ancienVerifier: CLE_A,
+    nouveauVerifier: CLE_B,
+    confirmationVerifier: CLE_A,
+    maintenant: MAINTENANT,
+  });
+  assert.equal(confirmationRefusee.ok, false);
+  assert.equal(confirmationRefusee.erreur, 'code_confirmation_invalide');
+
   const bon = await changerCodeSecret(db, {
     userId: 'usr_1',
     tokenActuel: 'jeton_courant',
     ancienVerifier: CLE_A,
     nouveauVerifier: CLE_B,
+    confirmationVerifier: CLE_B,
     maintenant: MAINTENANT,
   });
   assert.equal(bon.ok, true);

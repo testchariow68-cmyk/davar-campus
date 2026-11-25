@@ -491,6 +491,38 @@ export async function setLessonCompletion(
   });
   if (allowed.rows.length === 0) return false;
   if (completed) {
+    // Même si quelqu'un fabrique un appel API, un cours ne peut pas être
+    // validé avant tous les cours qui le précèdent dans le parcours.
+    const verrou = await db.execute({
+      sql: `SELECT COUNT(*) AS n
+            FROM course_lessons precedent
+            JOIN course_modules module_precedent ON module_precedent.id = precedent.module_id
+            LEFT JOIN course_chapters chapitre_precedent ON chapitre_precedent.id = module_precedent.chapter_id
+            JOIN course_lessons cible ON cible.id = ?
+            JOIN course_modules module_cible ON module_cible.id = cible.module_id
+            LEFT JOIN course_chapters chapitre_cible ON chapitre_cible.id = module_cible.chapter_id
+            JOIN enrollments inscription ON inscription.training_id = module_cible.training_id AND inscription.user_id = ?
+            WHERE module_precedent.training_id = module_cible.training_id
+              AND precedent.id <> cible.id
+              AND NOT EXISTS (
+                SELECT 1 FROM lesson_completions deja_fait
+                WHERE deja_fait.user_id = ? AND deja_fait.lesson_id = precedent.id
+              )
+              AND (
+                COALESCE(chapitre_precedent.position, 0) < COALESCE(chapitre_cible.position, 0)
+                OR (
+                  COALESCE(chapitre_precedent.position, 0) = COALESCE(chapitre_cible.position, 0)
+                  AND module_precedent.position < module_cible.position
+                )
+                OR (
+                  COALESCE(chapitre_precedent.position, 0) = COALESCE(chapitre_cible.position, 0)
+                  AND module_precedent.position = module_cible.position
+                  AND precedent.position < cible.position
+                )
+              )`,
+      args: [lessonId, userId, userId],
+    });
+    if (num(verrou.rows[0]?.n) > 0) return false;
     await db.execute({
       sql: `INSERT INTO lesson_completions(user_id, lesson_id, completed_at_ms) VALUES (?, ?, ?)
             ON CONFLICT(user_id, lesson_id) DO NOTHING`,

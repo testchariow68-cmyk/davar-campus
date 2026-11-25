@@ -70,23 +70,61 @@ function tempsRelatif(atMs: number): string {
  * lecture ; la production le montre avec le même texte, sans inventer une vidéo.
  */
 function Lecteur({
+  utilisateurId,
+  lessonId,
   url,
   ratio,
   titre,
   duree,
   alternative,
+  onVisionnageTermine,
 }: {
+  utilisateurId: string;
+  lessonId: string;
   url: string | null;
   ratio: string;
   titre: string;
   duree: string | null;
   alternative: boolean;
+  onVisionnageTermine: () => void;
 }) {
   const classe = RATIO_CLS[ratio] ?? 'r-169';
   const youtube = url ? idYouTube(url) : null;
+  const video = useRef<HTMLVideoElement | null>(null);
+  const maximumVu = useRef(0);
+  const dernierStockage = useRef(0);
+  const cleMemoire = `davar-cours-video-max:${encodeURIComponent(utilisateurId)}:${encodeURIComponent(lessonId)}`;
+
+  useEffect(() => {
+    maximumVu.current = 0;
+    dernierStockage.current = 0;
+    if (alternative || !url || typeof window === 'undefined') return;
+    try {
+      const memorise = Number(window.localStorage.getItem(cleMemoire));
+      if (Number.isFinite(memorise) && memorise > 0) maximumVu.current = memorise;
+    } catch {
+      // La progression reste fiable pendant cette session si le stockage est bloqué.
+    }
+  }, [alternative, cleMemoire, url]);
+
+  function sauter(secondes: number) {
+    const element = video.current;
+    if (!element || alternative) return;
+    const position = Math.min(element.currentTime, maximumVu.current);
+    const cible = Math.max(0, Math.min(element.duration || Number.MAX_SAFE_INTEGER, position + secondes));
+    element.currentTime = Math.min(cible, maximumVu.current);
+  }
+
+  function surDoubleClic(event: React.MouseEvent<HTMLDivElement>) {
+    if (!url || youtube || alternative) return;
+    event.preventDefault();
+    const rectangle = event.currentTarget.getBoundingClientRect();
+    sauter(event.clientX - rectangle.left <= rectangle.width / 2 ? -5 : 5);
+  }
+
   return (
     <div className="player-stage">
-      <div className={`player-box ${classe}`}>
+      <div className={`player-box ${classe}`} onDoubleClick={surDoubleClic}>
         {youtube ? (
           <iframe
             src={`https://www.youtube-nocookie.com/embed/${youtube}`}
@@ -98,8 +136,53 @@ function Lecteur({
         ) : url ? (
           /* eslint-disable-next-line jsx-a11y/media-has-caption */
           <video
+            ref={video}
             src={url}
             controls
+            controlsList="nodownload"
+            onLoadedMetadata={(event) => {
+              const element = event.currentTarget;
+              if (alternative) return;
+              const memorise = Math.min(
+                Number.isFinite(element.duration) ? element.duration : Number.MAX_SAFE_INTEGER,
+                maximumVu.current
+              );
+              maximumVu.current = Math.max(0, memorise);
+              if (maximumVu.current > 0 && maximumVu.current < element.duration) {
+                element.currentTime = maximumVu.current;
+              }
+            }}
+            onTimeUpdate={(event) => {
+              if (alternative) return;
+              const element = event.currentTarget;
+              const suivant = Math.max(maximumVu.current, element.currentTime);
+              if (suivant <= maximumVu.current) return;
+              maximumVu.current = suivant;
+              if (suivant - dernierStockage.current >= 1) {
+                dernierStockage.current = suivant;
+                try {
+                  window.localStorage.setItem(cleMemoire, String(suivant));
+                } catch {
+                  // La progression de la session reste disponible en mémoire.
+                }
+              }
+            }}
+            onSeeking={(event) => {
+              if (alternative) return;
+              const element = event.currentTarget;
+              if (element.currentTime > maximumVu.current + 0.05) element.currentTime = maximumVu.current;
+            }}
+            onEnded={(event) => {
+              if (alternative) return;
+              const dureeReelle = event.currentTarget.duration;
+              maximumVu.current = Number.isFinite(dureeReelle) ? dureeReelle : maximumVu.current;
+              try {
+                window.localStorage.setItem(cleMemoire, String(maximumVu.current));
+              } catch {
+                // Rien à faire : le bouton est tout de même activé pour la session.
+              }
+              onVisionnageTermine();
+            }}
             style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', background: '#000' }}
           />
         ) : (
@@ -142,6 +225,7 @@ function PlayerUI({
 }) {
   const total = secondesDuree(duree);
   const [pourcent, setPourcent] = useState(0);
+  const [maximumPourcent, setMaximumPourcent] = useState(0);
   const [lecture, setLecture] = useState(false);
   const [vitesse, setVitesse] = useState(1);
   const [audio, setAudio] = useState<'fr' | 'en'>('fr');
@@ -153,6 +237,7 @@ function PlayerUI({
     const timer = window.setInterval(() => {
       setPourcent((actuel) => {
         const suivant = Math.min(100, actuel + 1.6 * vitesse);
+        setMaximumPourcent((maximum) => Math.max(maximum, suivant));
         if (suivant >= 100) {
           window.clearInterval(timer);
           setLecture(false);
@@ -169,6 +254,7 @@ function PlayerUI({
 
   useEffect(() => {
     setPourcent(0);
+    setMaximumPourcent(0);
     setLecture(false);
     finEnvoyee.current = false;
   }, [titre]);
@@ -176,14 +262,23 @@ function PlayerUI({
   const simulable = !url;
   const temps = total > 0 ? (pourcent / 100) * total : 0;
   return (
-    <div className="player-ui">
+    <div
+      className="player-ui"
+      onDoubleClick={(event) => {
+        if (!simulable || alternative) return;
+        const rectangle = event.currentTarget.getBoundingClientRect();
+        const delta = event.clientX - rectangle.left <= rectangle.width / 2 ? -5 : 5;
+        setPourcent((actuel) => Math.max(0, Math.min(maximumPourcent, actuel + delta)));
+      }}
+    >
       {simulable && !alternative ? (
         <button
           className="p-seek"
           aria-label="Avancer dans la vidéo"
           onClick={(event) => {
             const rectangle = event.currentTarget.getBoundingClientRect();
-            setPourcent(Math.max(0, Math.min(100, ((event.clientX - rectangle.left) / rectangle.width) * 100)));
+            const demandee = ((event.clientX - rectangle.left) / rectangle.width) * 100;
+            setPourcent(Math.max(0, Math.min(maximumPourcent, demandee)));
           }}
         >
           <i style={{ width: `${pourcent}%` }} />
@@ -204,7 +299,7 @@ function PlayerUI({
           </button>
         ) : null}
         <span className="t">
-          {alternative ? `${titre} · hors progression` : url ? 'Lecture réelle — marquez le cours comme terminé après visionnage' : `${formatSecondes(temps)} / ${duree ?? '—'}`}
+          {alternative ? `${titre} · hors progression` : url ? null : `${formatSecondes(temps)} / ${duree ?? '—'}`}
         </span>
         <span className="p-tools">
           <button className="fs-btn" onClick={() => setReglages((ouvert) => !ouvert)} title="Réglages de lecture" aria-label="Réglages de lecture">
@@ -252,6 +347,7 @@ function commentaireEnfants(commentaire: CommentaireCours, tous: CommentaireCour
  */
 export function CoursDetail({
   lesson,
+  utilisateurId,
   formationId,
   formationTitre,
   formationHref,
@@ -272,6 +368,7 @@ export function CoursDetail({
   assistantHue,
 }: {
   lesson: Lesson;
+  utilisateurId: string;
   formationId: string;
   formationTitre: string;
   formationHref: string;
@@ -305,6 +402,7 @@ export function CoursDetail({
   const [texteReponse, setTexteReponse] = useState('');
   const [repondA, setRepondA] = useState<string | null>(null);
   const [afficherTout, setAfficherTout] = useState(false);
+  const [visionnageTermine, setVisionnageTermine] = useState(false);
 
   const illustrations = lesson.assets.filter((asset) => asset.kind === 'illustration');
   const ressources = lesson.assets.filter((asset) => asset.kind === 'ressource');
@@ -318,6 +416,8 @@ export function CoursDetail({
   const commentairesVisibles = afficherTout ? racines : racines.slice(0, 3);
   const reactions = socialEtat?.reactions ?? EMOJIS.map((emoji) => ({ emoji, total: 0, parMoi: false }));
   const pourcentage = Math.max(0, Math.min(100, Math.round(progressionPct)));
+  const coursNecessiteVisionnage = lesson.kind === 'video' || Boolean(lesson.resourceUrl);
+  const peutMarquer = !coursNecessiteVisionnage || visionnageTermine;
 
   useEffect(() => {
     setSocialEtat(social);
@@ -326,7 +426,12 @@ export function CoursDetail({
     setVideoRessource(null);
     setAfficherTout(false);
     setRepondA(null);
+    setVisionnageTermine(false);
   }, [lesson.id, social]);
+
+  useEffect(() => {
+    setVisionnageTermine(false);
+  }, [alternative?.id]);
 
   useEffect(() => {
     if (socialEtat || apercu) return undefined;
@@ -356,7 +461,15 @@ export function CoursDetail({
         setErreur(reponse.status === 403 ? 'Cours hors de vos formations autorisées.' : 'Mise à jour impossible.');
         return;
       }
-      router.refresh();
+      if (lesson.completed) {
+        router.refresh();
+      } else if (suivant) {
+        router.push(suivant.href);
+      } else if (chapitreSuivant) {
+        router.push(chapitreSuivant.href);
+      } else {
+        router.refresh();
+      }
     } catch {
       setErreur('Mise à jour impossible.');
     } finally {
@@ -479,21 +592,29 @@ export function CoursDetail({
       <div className={`mod-grid ${onglet === 'comments' ? 'tab-comments' : ''}`}>
         <div>
           <div className="pane pane-lesson" style={{ display: onglet === 'lesson' ? undefined : 'none' }}>
-            <div className={`card ${classeFormat}`} style={{ overflow: 'hidden' }}>
+            <div className={`card course-player-card ${classeFormat}`} style={{ overflow: 'hidden' }}>
               <Lecteur
+                key={`${lesson.id}-${alternative?.id ?? 'principal'}`}
+                utilisateurId={utilisateurId}
+                lessonId={lesson.id}
                 url={alternative ? alternative.url : lesson.resourceUrl}
                 ratio={ratioActuel}
                 titre={alternative ? alternative.title : lesson.title}
                 duree={alternative ? alternative.duration : dureePrincipale}
                 alternative={alternative !== null}
+                onVisionnageTermine={() => {
+                  if (!alternative) setVisionnageTermine(true);
+                }}
               />
-              <PlayerUI
-                url={alternative ? alternative.url : lesson.resourceUrl}
-                titre={alternative ? alternative.title : lesson.title}
-                duree={alternative ? alternative.duration : dureePrincipale}
-                alternative={alternative !== null}
-                onTermine={() => { if (!lesson.completed) void marquer(); }}
-              />
+              {!(alternative ? alternative.url : lesson.resourceUrl) && (
+                <PlayerUI
+                  url={null}
+                  titre={alternative ? alternative.title : lesson.title}
+                  duree={alternative ? alternative.duration : dureePrincipale}
+                  alternative={alternative !== null}
+                  onTermine={() => setVisionnageTermine(true)}
+                />
+              )}
               <div className="react-row" aria-label="Réactions au cours">
                 {reactions.map((reaction) => (
                   <span className={`react-bub ${reaction.parMoi ? 'on' : ''}`} key={reaction.emoji}>
@@ -506,22 +627,8 @@ export function CoursDetail({
                     >
                       {reaction.emoji}{reaction.total ? <b>{reaction.total}</b> : null}
                     </button>
-                    <button
-                      className="react-plus"
-                      disabled={apercu || socialOccupe === `reaction-${reaction.emoji}`}
-                      onClick={() => void publierSocial({ action: 'reaction', lessonId: lesson.id, emoji: reaction.emoji }, `reaction-${reaction.emoji}`)}
-                      title={reaction.parMoi ? 'Retirer ma réaction' : 'Ajouter ma réaction'}
-                      aria-label={reaction.parMoi ? 'Retirer ma réaction' : 'Ajouter ma réaction'}
-                    >
-                      {reaction.parMoi ? '−' : '+'}
-                    </button>
                   </span>
                 ))}
-                <span className="xs faint react-help">
-                  {socialEtat?.totalReactions
-                    ? `${socialEtat.totalReactions} réaction${socialEtat.totalReactions > 1 ? 's' : ''} des étudiants`
-                    : 'Réagissez — visible par tous les étudiants'}
-                </span>
               </div>
               <div className="card-pad">
                 <div className="row between" style={{ flexWrap: 'wrap', gap: 10 }}>
@@ -537,9 +644,14 @@ export function CoursDetail({
                   {alternative ? (
                     <span className="small muted">Revenez à la vidéo principale pour marquer le cours comme terminé.</span>
                   ) : lesson.completed ? (
-                    <span className="badge b-green"><Icon nom="check" taille={12} /> Module terminé ✓</span>
+                    <span className="badge b-green"><Icon nom="check" taille={12} /> Cours terminé ✓</span>
                   ) : (
-                    <button className="btn btn-primary btn-sm" disabled={occupe} onClick={() => void marquer()}>
+                    <button
+                      className="btn btn-primary btn-sm"
+                      disabled={occupe || !peutMarquer}
+                      onClick={() => void marquer()}
+                      title={!peutMarquer ? 'Terminez la lecture du cours pour activer ce bouton.' : undefined}
+                    >
                       <Icon nom="check" taille={14} /> {occupe ? '…' : 'Marquer comme terminé'}
                     </button>
                   )}

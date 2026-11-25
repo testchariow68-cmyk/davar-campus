@@ -23,6 +23,11 @@ function Progression({ pourcent }: { pourcent: number }) {
   );
 }
 
+function formatTempsAudio(secondes: number): string {
+  const total = Math.max(0, Math.floor(secondes));
+  return `${Math.floor(total / 60)}:${String(total % 60).padStart(2, '0')}`;
+}
+
 /**
  * TABLEAU DE BORD ÉTUDIANT — `vHome()` du prototype.
  *
@@ -135,9 +140,7 @@ export default async function CampusDashboard() {
           </div>
           <h1>
             {salutation()}, {prenom}{' '}
-            <span className="greeting-wave" role="img" aria-label="Salutation">
-              <Icon nom="hand" taille={19} />
-            </span>
+            <span className="greeting-wave emoji-unicode" role="img" aria-label="Salutation">👋</span>
           </h1>
           <p>{phrase}</p>
           {active ? (
@@ -237,11 +240,12 @@ export default async function CampusDashboard() {
               </span>
             )}
             <div className="wrap">
-              <b>{derniereLecture.title}</b>
-              <div className="xs muted">
+              <b className="resume-title">{derniereLecture.title}</b>
+              {derniereLecture.description ? <div className="xs muted resume-description">{derniereLecture.description}</div> : null}
+              <div className="xs muted resume-position">
                 {derniereLecture.kind === 'book'
-                  ? `Vous vous êtes arrêté(e) à la page ${derniereLecture.positionLecture}.`
-                  : 'Reprenez votre écoute là où vous vous êtes arrêté(e).'}
+                  ? `Livre · arrêté(e) à la page ${derniereLecture.positionLecture}.`
+                  : `Audio · reprise à ${formatTempsAudio(derniereLecture.positionLecture ?? 0)}${derniereLecture.durationMin ? ` / ${derniereLecture.durationMin} min` : ''}.`}
               </div>
             </div>
             <Link
