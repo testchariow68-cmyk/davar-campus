@@ -207,7 +207,7 @@ export default async function CampusDashboard() {
               <span className="eyebrow">Reprendre ma lecture</span>
               <p className="small muted mt4">Un raccourci vers votre dernière lecture commencée.</p>
             </div>
-            <Link className="xs link" href="/campus/ressources">Mes ressources →</Link>
+            <Link className="xs link" href="/campus/ressources">Ma bibliothèque →</Link>
           </div>
           <div className="cp-resume-line">
             {derniereLecture.kind === 'book' ? (
@@ -338,11 +338,11 @@ export default async function CampusDashboard() {
               <Link
                 className="cp-stat-link"
                 href="/campus/ressources"
-                aria-label={`Ouvrir vos ${ressources.length} ressources`}
+                aria-label={`Ouvrir votre bibliothèque (${ressources.length} ressource${ressources.length > 1 ? 's' : ''})`}
               >
                 <b>{ressources.length}</b>
                 <span title="Livres, audios et ressources multimédias attribués à votre compte">
-                  Ressource{ressources.length > 1 ? 's' : ''}
+                  Bibliothèque
                 </span>
                 <small>livres + audios + multimédia</small>
               </Link>

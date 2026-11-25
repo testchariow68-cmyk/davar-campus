@@ -46,7 +46,7 @@ export function FilAriane({ formations = [] }: { formations?: Array<{ id: string
       miettes.push({ label: 'Mes audios', href: '/campus/ressources/audio' });
       if (morceaux[2]) miettes.push({ label: 'Écoute' });
     } else {
-      miettes.push({ label: 'Mes ressources' });
+      miettes.push({ label: 'Ma bibliothèque' });
     }
   } else if (morceaux[0] === 'questions' && morceaux[1]) {
     miettes.push({ label: 'Mes questions', href: '/campus/questions' });

@@ -54,7 +54,7 @@ export function ListeRessources({
           <p>{sousTitre}</p>
         </div>
         <Link className="btn btn-sm" href={retour}>
-          <Icon nom="layers" taille={13} /> Toutes mes ressources
+          <Icon nom="layers" taille={13} /> Ma bibliothèque
         </Link>
       </div>
 

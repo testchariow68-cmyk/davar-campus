@@ -98,7 +98,7 @@ export function LecteurAudio({
           </div>
         </div>
         <Link className="btn btn-sm" href="/campus/ressources">
-          <Icon nom="back" taille={13} /> Mes ressources
+          <Icon nom="back" taille={13} /> Ma bibliothèque
         </Link>
       </div>
 

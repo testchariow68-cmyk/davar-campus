@@ -21,7 +21,7 @@ type PropsRessourcesCampus = {
 };
 
 const CATEGORIES: Array<{ id: Categorie; libelle: string; description: string; icone: NomIcone }> = [
-  { id: 'all', libelle: 'Toutes', description: 'Votre bibliothèque complète', icone: 'layers' },
+  { id: 'all', libelle: 'Toute la bibliothèque', description: 'Livres, audios et fichiers disponibles', icone: 'layers' },
   { id: 'book', libelle: 'Livres', description: 'Lecture paginée dans la plateforme', icone: 'book' },
   { id: 'audio', libelle: 'Audios', description: 'Écoute avec reprise automatique', icone: 'headset' },
   { id: 'file', libelle: 'Ressources multimédias', description: 'Documents, images et autres fichiers', icone: 'doc' },
@@ -139,12 +139,12 @@ export function RessourcesCampus({ ressources, contenance, categorie, couverture
     <>
       <div className="page-head resource-page-head">
         <div>
-          <h1>Mes ressources</h1>
+          <h1>Ma bibliothèque</h1>
           <p>Choisissez une catégorie pour retrouver vos livres, audios et ressources multimédias.</p>
         </div>
       </div>
 
-      <nav className="resource-categories" aria-label="Catégories de ressources">
+      <nav className="resource-categories" aria-label="Catégories de la bibliothèque">
         {CATEGORIES.map((item) => {
           const total = item.id === 'all' ? ressources.length : ressources.filter((ressource) => ressource.kind === item.id).length;
           return (
