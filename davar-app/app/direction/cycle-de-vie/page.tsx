@@ -46,7 +46,7 @@ export default async function CycleDeViePage() {
           </div>
         ))}
         <p className="xs faint mt16">
-          Durées appliquées : upload abandonné {CONFIG_CYCLE_DE_VIE.abandonedHours} h · conversations IA{' '}
+          Durées appliquées : upload abandonné {CONFIG_CYCLE_DE_VIE.abandonedHours} h · conversations de l’assistant{' '}
           {CONFIG_CYCLE_DE_VIE.aiConvDays} jours · coach {CONFIG_CYCLE_DE_VIE.coachConvMonths} mois · notifications lues{' '}
           {CONFIG_CYCLE_DE_VIE.notifReadHours} h (au plus {CONFIG_CYCLE_DE_VIE.notifMaxDays} jours) · journaux techniques{' '}
           {CONFIG_CYCLE_DE_VIE.techLogDays} jours · journaux de sécurité {CONFIG_CYCLE_DE_VIE.secLogMonths} mois · compte

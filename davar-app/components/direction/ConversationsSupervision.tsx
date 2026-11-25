@@ -19,8 +19,8 @@ export type FilAffiche = {
 
 /**
  * SUPERVISION DES CONVERSATIONS — « L'assistant répond en premier niveau. Les coachs
- * peuvent valider, corriger ou répondre à la place de l'IA — sans jamais être bloqués
- * par elle. » Répondre en coach valide la réponse de l'assistant du même geste.
+ * peuvent valider, corriger ou répondre à sa place — sans jamais être bloqués
+ * par lui. » Répondre en coach valide la réponse de l'assistant du même geste.
  */
 export function ConversationsSupervision({ fils }: { fils: FilAffiche[] }) {
   const [ouverts, setOuverts] = useState<Record<string, boolean>>({});
@@ -90,9 +90,9 @@ export function ConversationsSupervision({ fils }: { fils: FilAffiche[] }) {
                 ) : fil.mode === 'coach' ? (
                   <span className="badge b-gold">coach humain</span>
                 ) : fil.iaValidee ? (
-                  <span className="badge b-green">IA validée</span>
+                  <span className="badge b-green">Assistant validé</span>
                 ) : (
-                  <span className="badge b-violet">IA à superviser</span>
+                  <span className="badge b-violet">Assistant à superviser</span>
                 )}
                 {fil.resolue && <span className="badge b-green">close</span>}
               </span>

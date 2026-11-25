@@ -20,6 +20,8 @@ import { demandeEnCours } from '@/lib/server/avis';
 import { lireConfig as lireConfigAssistant } from '@/lib/server/assistant';
 import { moteurTranscription } from '@/lib/server/transcription';
 import { PortailAvis } from '@/components/campus/PortailAvis';
+import { PlatformGreeting } from '@/components/campus/PlatformGreeting';
+import { salutation } from '@/lib/server/campus-recents';
 
 export const dynamic = 'force-dynamic';
 
@@ -143,6 +145,8 @@ export default async function CampusLayout({ children }: { children: React.React
               <UserMenu nom={user.displayName} email={user.email} variante="avatar" />
             </div>
           </header>
+
+          <PlatformGreeting nom={user.displayName} texte={salutation()} />
 
           <main className="cp-content" id="cpPage">
             {children}

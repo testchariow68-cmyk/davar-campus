@@ -12,7 +12,7 @@
  *      ou un travail en attente (devoirs non corrigés) n'est JAMAIS purgé.
  *
  * Les durées sont celles du prototype (`data.js`, `settings.lifecycle`) :
- * fichiers abandonnés 24 h, conversations IA 90 jours, conversations coach
+ * fichiers abandonnés 24 h, conversations de l’assistant 90 jours, conversations coach
  * 12 mois, notifications lues 48 h (180 jours au plus), journaux techniques
  * 90 jours, journaux de sécurité 12 mois, compte terminé + 12 mois sans
  * nouvelle acquisition → quarantaine 7 jours → effacement de l'identité.
@@ -53,7 +53,7 @@ export const POLITIQUES: Array<[string, string]> = [
   ['Upload abandonné (non soumis)', 'Purge après 24 heures'],
   ['Fichier orphelin (sans référence valide)', 'Purge automatique'],
   ['Conversation coach', '12 mois maximum (exception : litige/obligation)'],
-  ['Conversation IA', '90 jours maximum (statistiques anonymisées conservées)'],
+  ['Conversation de l’assistant', '90 jours maximum (statistiques anonymisées conservées)'],
   ['Notifications lues', 'Disparaissent 48 heures après leur lecture'],
   ['Notifications anciennes', '180 jours maximum'],
   ['Sessions, codes et jetons', 'Purge après utilisation ou expiration'],
@@ -307,7 +307,7 @@ export async function executerCycleDeVie(
   if (notificationsLues + notificationsAnciennes > 0)
     await journaliser(db, 'NOTIFICATIONS', notificationsLues + notificationsAnciennes, 'supprimées', 'lues 48 h / 180 jours', maintenant);
 
-  // 4. Conversations IA : 90 jours, statistiques anonymisées conservées.
+  // 4. Conversations de l’assistant : 90 jours, statistiques anonymisées conservées.
   const conversationsIa = await db.execute({
     sql: `SELECT id FROM conversations WHERE mode = 'ai' AND purge_after_ms <= ?`,
     args: [maintenant],

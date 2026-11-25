@@ -1,0 +1,3832 @@
+{
+  "generatedAt": "2026-11-25T01:54:33.083Z",
+  "files": [
+    {
+      "file": "00-animation-ouverture-tablette-paysage.png",
+      "label": "Animation d’ouverture",
+      "device": "Tablette paysage",
+      "status": 200,
+      "errors": [],
+      "checks": {
+        "splash": true
+      }
+    },
+    {
+      "file": "00-animation-ouverture-ordinateur.png",
+      "label": "Animation d’ouverture",
+      "device": "Ordinateur",
+      "status": 200,
+      "errors": [],
+      "checks": {
+        "splash": true
+      }
+    },
+    {
+      "file": "00-animation-ouverture-telephone.png",
+      "label": "Animation d’ouverture",
+      "device": "Téléphone portrait",
+      "status": 200,
+      "errors": [],
+      "checks": {
+        "splash": true
+      }
+    },
+    {
+      "file": "00-animation-ouverture-tablette.png",
+      "label": "Animation d’ouverture",
+      "device": "Tablette portrait",
+      "status": 200,
+      "errors": [],
+      "checks": {
+        "splash": true
+      }
+    },
+    {
+      "file": "00-animation-ouverture-telephone-paysage.png",
+      "label": "Animation d’ouverture",
+      "device": "Téléphone paysage",
+      "status": 200,
+      "errors": [],
+      "checks": {
+        "splash": true
+      }
+    },
+    {
+      "file": "A01-connexion-tablette-paysage.png",
+      "label": "Connexion",
+      "device": "Tablette paysage",
+      "status": 200,
+      "errors": [],
+      "checks": {
+        "url": "/connexion",
+        "hasAssistantIA": false,
+        "hasOldPlayerCopy": false,
+        "hasProgram": false,
+        "programOpen": false,
+        "images": []
+      }
+    },
+    {
+      "file": "A01-connexion-ordinateur.png",
+      "label": "Connexion",
+      "device": "Ordinateur",
+      "status": 200,
+      "errors": [],
+      "checks": {
+        "url": "/connexion",
+        "hasAssistantIA": false,
+        "hasOldPlayerCopy": false,
+        "hasProgram": false,
+        "programOpen": false,
+        "images": []
+      }
+    },
+    {
+      "file": "A01-connexion-telephone.png",
+      "label": "Connexion",
+      "device": "Téléphone portrait",
+      "status": 200,
+      "errors": [],
+      "checks": {
+        "url": "/connexion",
+        "hasAssistantIA": false,
+        "hasOldPlayerCopy": false,
+        "hasProgram": false,
+        "programOpen": false,
+        "images": []
+      }
+    },
+    {
+      "file": "A01-connexion-tablette.png",
+      "label": "Connexion",
+      "device": "Tablette portrait",
+      "status": 200,
+      "errors": [],
+      "checks": {
+        "url": "/connexion",
+        "hasAssistantIA": false,
+        "hasOldPlayerCopy": false,
+        "hasProgram": false,
+        "programOpen": false,
+        "images": []
+      }
+    },
+    {
+      "file": "A01-connexion-telephone-paysage.png",
+      "label": "Connexion",
+      "device": "Téléphone paysage",
+      "status": 200,
+      "errors": [],
+      "checks": {
+        "url": "/connexion",
+        "hasAssistantIA": false,
+        "hasOldPlayerCopy": false,
+        "hasProgram": false,
+        "programOpen": false,
+        "images": []
+      }
+    },
+    {
+      "file": "A02-inscription-telephone.png",
+      "label": "Inscription",
+      "device": "Téléphone portrait",
+      "status": 200,
+      "errors": [],
+      "checks": {
+        "url": "/inscription",
+        "hasAssistantIA": false,
+        "hasOldPlayerCopy": false,
+        "hasProgram": false,
+        "programOpen": false,
+        "images": []
+      }
+    },
+    {
+      "file": "A02-inscription-telephone-paysage.png",
+      "label": "Inscription",
+      "device": "Téléphone paysage",
+      "status": 200,
+      "errors": [],
+      "checks": {
+        "url": "/inscription",
+        "hasAssistantIA": false,
+        "hasOldPlayerCopy": false,
+        "hasProgram": false,
+        "programOpen": false,
+        "images": []
+      }
+    },
+    {
+      "file": "A02-inscription-ordinateur.png",
+      "label": "Inscription",
+      "device": "Ordinateur",
+      "status": 200,
+      "errors": [],
+      "checks": {
+        "url": "/inscription",
+        "hasAssistantIA": false,
+        "hasOldPlayerCopy": false,
+        "hasProgram": false,
+        "programOpen": false,
+        "images": []
+      }
+    },
+    {
+      "file": "A02-inscription-tablette.png",
+      "label": "Inscription",
+      "device": "Tablette portrait",
+      "status": 200,
+      "errors": [],
+      "checks": {
+        "url": "/inscription",
+        "hasAssistantIA": false,
+        "hasOldPlayerCopy": false,
+        "hasProgram": false,
+        "programOpen": false,
+        "images": []
+      }
+    },
+    {
+      "file": "A02-inscription-tablette-paysage.png",
+      "label": "Inscription",
+      "device": "Tablette paysage",
+      "status": 200,
+      "errors": [],
+      "checks": {
+        "url": "/inscription",
+        "hasAssistantIA": false,
+        "hasOldPlayerCopy": false,
+        "hasProgram": false,
+        "programOpen": false,
+        "images": []
+      }
+    },
+    {
+      "file": "01-accueil-telephone-paysage.png",
+      "label": "Accueil",
+      "device": "Téléphone paysage",
+      "status": 200,
+      "errors": [],
+      "checks": {
+        "url": "/campus",
+        "hasAssistantIA": false,
+        "hasOldPlayerCopy": false,
+        "hasProgram": false,
+        "programOpen": false,
+        "images": [
+          "/emojis/1f44b-1f3fd.svg"
+        ]
+      }
+    },
+    {
+      "file": "01-accueil-ordinateur.png",
+      "label": "Accueil",
+      "device": "Ordinateur",
+      "status": 200,
+      "errors": [],
+      "checks": {
+        "url": "/campus",
+        "hasAssistantIA": false,
+        "hasOldPlayerCopy": false,
+        "hasProgram": false,
+        "programOpen": false,
+        "images": [
+          "/emojis/1f44b-1f3fd.svg"
+        ]
+      }
+    },
+    {
+      "file": "01-accueil-telephone.png",
+      "label": "Accueil",
+      "device": "Téléphone portrait",
+      "status": 200,
+      "errors": [],
+      "checks": {
+        "url": "/campus",
+        "hasAssistantIA": false,
+        "hasOldPlayerCopy": false,
+        "hasProgram": false,
+        "programOpen": false,
+        "images": [
+          "/emojis/1f44b-1f3fd.svg"
+        ]
+      }
+    },
+    {
+      "file": "01-accueil-tablette-paysage.png",
+      "label": "Accueil",
+      "device": "Tablette paysage",
+      "status": 200,
+      "errors": [],
+      "checks": {
+        "url": "/campus",
+        "hasAssistantIA": false,
+        "hasOldPlayerCopy": false,
+        "hasProgram": false,
+        "programOpen": false,
+        "images": [
+          "/emojis/1f44b-1f3fd.svg"
+        ]
+      }
+    },
+    {
+      "file": "01-accueil-tablette.png",
+      "label": "Accueil",
+      "device": "Tablette portrait",
+      "status": 200,
+      "errors": [],
+      "checks": {
+        "url": "/campus",
+        "hasAssistantIA": false,
+        "hasOldPlayerCopy": false,
+        "hasProgram": false,
+        "programOpen": false,
+        "images": [
+          "/emojis/1f44b-1f3fd.svg"
+        ]
+      }
+    },
+    {
+      "file": "02-formations-ordinateur.png",
+      "label": "Mes formations",
+      "device": "Ordinateur",
+      "status": 200,
+      "errors": [],
+      "checks": {
+        "url": "/campus/formations",
+        "hasAssistantIA": false,
+        "hasOldPlayerCopy": false,
+        "hasProgram": false,
+        "programOpen": false,
+        "images": [
+          "/emojis/1f44b-1f3fd.svg"
+        ]
+      }
+    },
+    {
+      "file": "02-formations-telephone-paysage.png",
+      "label": "Mes formations",
+      "device": "Téléphone paysage",
+      "status": 200,
+      "errors": [],
+      "checks": {
+        "url": "/campus/formations",
+        "hasAssistantIA": false,
+        "hasOldPlayerCopy": false,
+        "hasProgram": false,
+        "programOpen": false,
+        "images": [
+          "/emojis/1f44b-1f3fd.svg"
+        ]
+      }
+    },
+    {
+      "file": "02-formations-tablette.png",
+      "label": "Mes formations",
+      "device": "Tablette portrait",
+      "status": 200,
+      "errors": [],
+      "checks": {
+        "url": "/campus/formations",
+        "hasAssistantIA": false,
+        "hasOldPlayerCopy": false,
+        "hasProgram": false,
+        "programOpen": false,
+        "images": [
+          "/emojis/1f44b-1f3fd.svg"
+        ]
+      }
+    },
+    {
+      "file": "02-formations-tablette-paysage.png",
+      "label": "Mes formations",
+      "device": "Tablette paysage",
+      "status": 200,
+      "errors": [],
+      "checks": {
+        "url": "/campus/formations",
+        "hasAssistantIA": false,
+        "hasOldPlayerCopy": false,
+        "hasProgram": false,
+        "programOpen": false,
+        "images": [
+          "/emojis/1f44b-1f3fd.svg"
+        ]
+      }
+    },
+    {
+      "file": "02-formations-telephone.png",
+      "label": "Mes formations",
+      "device": "Téléphone portrait",
+      "status": 200,
+      "errors": [],
+      "checks": {
+        "url": "/campus/formations",
+        "hasAssistantIA": false,
+        "hasOldPlayerCopy": false,
+        "hasProgram": false,
+        "programOpen": false,
+        "images": [
+          "/emojis/1f44b-1f3fd.svg"
+        ]
+      }
+    },
+    {
+      "file": "03-catalogue-telephone.png",
+      "label": "Catalogue",
+      "device": "Téléphone portrait",
+      "status": 200,
+      "errors": [],
+      "checks": {
+        "url": "/campus/catalogue",
+        "hasAssistantIA": false,
+        "hasOldPlayerCopy": false,
+        "hasProgram": false,
+        "programOpen": false,
+        "images": [
+          "/emojis/1f44b-1f3fd.svg"
+        ]
+      }
+    },
+    {
+      "file": "03-catalogue-telephone-paysage.png",
+      "label": "Catalogue",
+      "device": "Téléphone paysage",
+      "status": 200,
+      "errors": [],
+      "checks": {
+        "url": "/campus/catalogue",
+        "hasAssistantIA": false,
+        "hasOldPlayerCopy": false,
+        "hasProgram": false,
+        "programOpen": false,
+        "images": [
+          "/emojis/1f44b-1f3fd.svg"
+        ]
+      }
+    },
+    {
+      "file": "03-catalogue-tablette-paysage.png",
+      "label": "Catalogue",
+      "device": "Tablette paysage",
+      "status": 200,
+      "errors": [],
+      "checks": {
+        "url": "/campus/catalogue",
+        "hasAssistantIA": false,
+        "hasOldPlayerCopy": false,
+        "hasProgram": false,
+        "programOpen": false,
+        "images": [
+          "/emojis/1f44b-1f3fd.svg"
+        ]
+      }
+    },
+    {
+      "file": "03-catalogue-tablette.png",
+      "label": "Catalogue",
+      "device": "Tablette portrait",
+      "status": 200,
+      "errors": [],
+      "checks": {
+        "url": "/campus/catalogue",
+        "hasAssistantIA": false,
+        "hasOldPlayerCopy": false,
+        "hasProgram": false,
+        "programOpen": false,
+        "images": [
+          "/emojis/1f44b-1f3fd.svg"
+        ]
+      }
+    },
+    {
+      "file": "03-catalogue-ordinateur.png",
+      "label": "Catalogue",
+      "device": "Ordinateur",
+      "status": 200,
+      "errors": [],
+      "checks": {
+        "url": "/campus/catalogue",
+        "hasAssistantIA": false,
+        "hasOldPlayerCopy": false,
+        "hasProgram": false,
+        "programOpen": false,
+        "images": [
+          "/emojis/1f44b-1f3fd.svg"
+        ]
+      }
+    },
+    {
+      "file": "04-exercices-telephone.png",
+      "label": "Mes exercices",
+      "device": "Téléphone portrait",
+      "status": 200,
+      "errors": [],
+      "checks": {
+        "url": "/campus/exercices",
+        "hasAssistantIA": false,
+        "hasOldPlayerCopy": false,
+        "hasProgram": false,
+        "programOpen": false,
+        "images": [
+          "/emojis/1f44b-1f3fd.svg"
+        ]
+      }
+    },
+    {
+      "file": "04-exercices-ordinateur.png",
+      "label": "Mes exercices",
+      "device": "Ordinateur",
+      "status": 200,
+      "errors": [],
+      "checks": {
+        "url": "/campus/exercices",
+        "hasAssistantIA": false,
+        "hasOldPlayerCopy": false,
+        "hasProgram": false,
+        "programOpen": false,
+        "images": [
+          "/emojis/1f44b-1f3fd.svg"
+        ]
+      }
+    },
+    {
+      "file": "04-exercices-tablette-paysage.png",
+      "label": "Mes exercices",
+      "device": "Tablette paysage",
+      "status": 200,
+      "errors": [],
+      "checks": {
+        "url": "/campus/exercices",
+        "hasAssistantIA": false,
+        "hasOldPlayerCopy": false,
+        "hasProgram": false,
+        "programOpen": false,
+        "images": [
+          "/emojis/1f44b-1f3fd.svg"
+        ]
+      }
+    },
+    {
+      "file": "04-exercices-telephone-paysage.png",
+      "label": "Mes exercices",
+      "device": "Téléphone paysage",
+      "status": 200,
+      "errors": [],
+      "checks": {
+        "url": "/campus/exercices",
+        "hasAssistantIA": false,
+        "hasOldPlayerCopy": false,
+        "hasProgram": false,
+        "programOpen": false,
+        "images": [
+          "/emojis/1f44b-1f3fd.svg"
+        ]
+      }
+    },
+    {
+      "file": "04-exercices-tablette.png",
+      "label": "Mes exercices",
+      "device": "Tablette portrait",
+      "status": 200,
+      "errors": [],
+      "checks": {
+        "url": "/campus/exercices",
+        "hasAssistantIA": false,
+        "hasOldPlayerCopy": false,
+        "hasProgram": false,
+        "programOpen": false,
+        "images": [
+          "/emojis/1f44b-1f3fd.svg"
+        ]
+      }
+    },
+    {
+      "file": "05-evaluations-telephone.png",
+      "label": "Mes évaluations",
+      "device": "Téléphone portrait",
+      "status": 200,
+      "errors": [],
+      "checks": {
+        "url": "/campus/evaluations",
+        "hasAssistantIA": false,
+        "hasOldPlayerCopy": false,
+        "hasProgram": false,
+        "programOpen": false,
+        "images": [
+          "/emojis/1f44b-1f3fd.svg"
+        ]
+      }
+    },
+    {
+      "file": "05-evaluations-tablette.png",
+      "label": "Mes évaluations",
+      "device": "Tablette portrait",
+      "status": 200,
+      "errors": [],
+      "checks": {
+        "url": "/campus/evaluations",
+        "hasAssistantIA": false,
+        "hasOldPlayerCopy": false,
+        "hasProgram": false,
+        "programOpen": false,
+        "images": [
+          "/emojis/1f44b-1f3fd.svg"
+        ]
+      }
+    },
+    {
+      "file": "05-evaluations-ordinateur.png",
+      "label": "Mes évaluations",
+      "device": "Ordinateur",
+      "status": 200,
+      "errors": [],
+      "checks": {
+        "url": "/campus/evaluations",
+        "hasAssistantIA": false,
+        "hasOldPlayerCopy": false,
+        "hasProgram": false,
+        "programOpen": false,
+        "images": [
+          "/emojis/1f44b-1f3fd.svg"
+        ]
+      }
+    },
+    {
+      "file": "05-evaluations-tablette-paysage.png",
+      "label": "Mes évaluations",
+      "device": "Tablette paysage",
+      "status": 200,
+      "errors": [],
+      "checks": {
+        "url": "/campus/evaluations",
+        "hasAssistantIA": false,
+        "hasOldPlayerCopy": false,
+        "hasProgram": false,
+        "programOpen": false,
+        "images": [
+          "/emojis/1f44b-1f3fd.svg"
+        ]
+      }
+    },
+    {
+      "file": "05-evaluations-telephone-paysage.png",
+      "label": "Mes évaluations",
+      "device": "Téléphone paysage",
+      "status": 200,
+      "errors": [],
+      "checks": {
+        "url": "/campus/evaluations",
+        "hasAssistantIA": false,
+        "hasOldPlayerCopy": false,
+        "hasProgram": false,
+        "programOpen": false,
+        "images": [
+          "/emojis/1f44b-1f3fd.svg"
+        ]
+      }
+    },
+    {
+      "file": "06-bibliotheque-tablette-paysage.png",
+      "label": "Ma bibliothèque",
+      "device": "Tablette paysage",
+      "status": 200,
+      "errors": [],
+      "checks": {
+        "url": "/campus/ressources",
+        "hasAssistantIA": false,
+        "hasOldPlayerCopy": false,
+        "hasProgram": false,
+        "programOpen": false,
+        "images": [
+          "/emojis/1f44b-1f3fd.svg"
+        ]
+      }
+    },
+    {
+      "file": "06-bibliotheque-telephone.png",
+      "label": "Ma bibliothèque",
+      "device": "Téléphone portrait",
+      "status": 200,
+      "errors": [],
+      "checks": {
+        "url": "/campus/ressources",
+        "hasAssistantIA": false,
+        "hasOldPlayerCopy": false,
+        "hasProgram": false,
+        "programOpen": false,
+        "images": [
+          "/emojis/1f44b-1f3fd.svg"
+        ]
+      }
+    },
+    {
+      "file": "06-bibliotheque-telephone-paysage.png",
+      "label": "Ma bibliothèque",
+      "device": "Téléphone paysage",
+      "status": 200,
+      "errors": [],
+      "checks": {
+        "url": "/campus/ressources",
+        "hasAssistantIA": false,
+        "hasOldPlayerCopy": false,
+        "hasProgram": false,
+        "programOpen": false,
+        "images": [
+          "/emojis/1f44b-1f3fd.svg"
+        ]
+      }
+    },
+    {
+      "file": "06-bibliotheque-tablette.png",
+      "label": "Ma bibliothèque",
+      "device": "Tablette portrait",
+      "status": 200,
+      "errors": [],
+      "checks": {
+        "url": "/campus/ressources",
+        "hasAssistantIA": false,
+        "hasOldPlayerCopy": false,
+        "hasProgram": false,
+        "programOpen": false,
+        "images": [
+          "/emojis/1f44b-1f3fd.svg"
+        ]
+      }
+    },
+    {
+      "file": "06-bibliotheque-ordinateur.png",
+      "label": "Ma bibliothèque",
+      "device": "Ordinateur",
+      "status": 200,
+      "errors": [],
+      "checks": {
+        "url": "/campus/ressources",
+        "hasAssistantIA": false,
+        "hasOldPlayerCopy": false,
+        "hasProgram": false,
+        "programOpen": false,
+        "images": [
+          "/emojis/1f44b-1f3fd.svg"
+        ]
+      }
+    },
+    {
+      "file": "07-livres-telephone.png",
+      "label": "Mes livres",
+      "device": "Téléphone portrait",
+      "status": 200,
+      "errors": [],
+      "checks": {
+        "url": "/campus/ressources/livre",
+        "hasAssistantIA": false,
+        "hasOldPlayerCopy": false,
+        "hasProgram": false,
+        "programOpen": false,
+        "images": [
+          "/emojis/1f44b-1f3fd.svg"
+        ]
+      }
+    },
+    {
+      "file": "07-livres-ordinateur.png",
+      "label": "Mes livres",
+      "device": "Ordinateur",
+      "status": 200,
+      "errors": [],
+      "checks": {
+        "url": "/campus/ressources/livre",
+        "hasAssistantIA": false,
+        "hasOldPlayerCopy": false,
+        "hasProgram": false,
+        "programOpen": false,
+        "images": [
+          "/emojis/1f44b-1f3fd.svg"
+        ]
+      }
+    },
+    {
+      "file": "07-livres-tablette-paysage.png",
+      "label": "Mes livres",
+      "device": "Tablette paysage",
+      "status": 200,
+      "errors": [],
+      "checks": {
+        "url": "/campus/ressources/livre",
+        "hasAssistantIA": false,
+        "hasOldPlayerCopy": false,
+        "hasProgram": false,
+        "programOpen": false,
+        "images": [
+          "/emojis/1f44b-1f3fd.svg"
+        ]
+      }
+    },
+    {
+      "file": "07-livres-telephone-paysage.png",
+      "label": "Mes livres",
+      "device": "Téléphone paysage",
+      "status": 200,
+      "errors": [],
+      "checks": {
+        "url": "/campus/ressources/livre",
+        "hasAssistantIA": false,
+        "hasOldPlayerCopy": false,
+        "hasProgram": false,
+        "programOpen": false,
+        "images": [
+          "/emojis/1f44b-1f3fd.svg"
+        ]
+      }
+    },
+    {
+      "file": "07-livres-tablette.png",
+      "label": "Mes livres",
+      "device": "Tablette portrait",
+      "status": 200,
+      "errors": [],
+      "checks": {
+        "url": "/campus/ressources/livre",
+        "hasAssistantIA": false,
+        "hasOldPlayerCopy": false,
+        "hasProgram": false,
+        "programOpen": false,
+        "images": [
+          "/emojis/1f44b-1f3fd.svg"
+        ]
+      }
+    },
+    {
+      "file": "08-audios-telephone.png",
+      "label": "Mes audios",
+      "device": "Téléphone portrait",
+      "status": 200,
+      "errors": [],
+      "checks": {
+        "url": "/campus/ressources/audio",
+        "hasAssistantIA": false,
+        "hasOldPlayerCopy": false,
+        "hasProgram": false,
+        "programOpen": false,
+        "images": [
+          "/emojis/1f44b-1f3fd.svg"
+        ]
+      }
+    },
+    {
+      "file": "08-audios-tablette-paysage.png",
+      "label": "Mes audios",
+      "device": "Tablette paysage",
+      "status": 200,
+      "errors": [],
+      "checks": {
+        "url": "/campus/ressources/audio",
+        "hasAssistantIA": false,
+        "hasOldPlayerCopy": false,
+        "hasProgram": false,
+        "programOpen": false,
+        "images": [
+          "/emojis/1f44b-1f3fd.svg"
+        ]
+      }
+    },
+    {
+      "file": "08-audios-ordinateur.png",
+      "label": "Mes audios",
+      "device": "Ordinateur",
+      "status": 200,
+      "errors": [],
+      "checks": {
+        "url": "/campus/ressources/audio",
+        "hasAssistantIA": false,
+        "hasOldPlayerCopy": false,
+        "hasProgram": false,
+        "programOpen": false,
+        "images": [
+          "/emojis/1f44b-1f3fd.svg"
+        ]
+      }
+    },
+    {
+      "file": "08-audios-telephone-paysage.png",
+      "label": "Mes audios",
+      "device": "Téléphone paysage",
+      "status": 200,
+      "errors": [],
+      "checks": {
+        "url": "/campus/ressources/audio",
+        "hasAssistantIA": false,
+        "hasOldPlayerCopy": false,
+        "hasProgram": false,
+        "programOpen": false,
+        "images": [
+          "/emojis/1f44b-1f3fd.svg"
+        ]
+      }
+    },
+    {
+      "file": "08-audios-tablette.png",
+      "label": "Mes audios",
+      "device": "Tablette portrait",
+      "status": 200,
+      "errors": [],
+      "checks": {
+        "url": "/campus/ressources/audio",
+        "hasAssistantIA": false,
+        "hasOldPlayerCopy": false,
+        "hasProgram": false,
+        "programOpen": false,
+        "images": [
+          "/emojis/1f44b-1f3fd.svg"
+        ]
+      }
+    },
+    {
+      "file": "09-certificats-tablette.png",
+      "label": "Mes certificats",
+      "device": "Tablette portrait",
+      "status": 200,
+      "errors": [],
+      "checks": {
+        "url": "/campus/certificats",
+        "hasAssistantIA": false,
+        "hasOldPlayerCopy": false,
+        "hasProgram": false,
+        "programOpen": false,
+        "images": [
+          "/emojis/1f44b-1f3fd.svg"
+        ]
+      }
+    },
+    {
+      "file": "09-certificats-telephone-paysage.png",
+      "label": "Mes certificats",
+      "device": "Téléphone paysage",
+      "status": 200,
+      "errors": [],
+      "checks": {
+        "url": "/campus/certificats",
+        "hasAssistantIA": false,
+        "hasOldPlayerCopy": false,
+        "hasProgram": false,
+        "programOpen": false,
+        "images": [
+          "/emojis/1f44b-1f3fd.svg"
+        ]
+      }
+    },
+    {
+      "file": "09-certificats-telephone.png",
+      "label": "Mes certificats",
+      "device": "Téléphone portrait",
+      "status": 200,
+      "errors": [],
+      "checks": {
+        "url": "/campus/certificats",
+        "hasAssistantIA": false,
+        "hasOldPlayerCopy": false,
+        "hasProgram": false,
+        "programOpen": false,
+        "images": [
+          "/emojis/1f44b-1f3fd.svg"
+        ]
+      }
+    },
+    {
+      "file": "09-certificats-ordinateur.png",
+      "label": "Mes certificats",
+      "device": "Ordinateur",
+      "status": 200,
+      "errors": [],
+      "checks": {
+        "url": "/campus/certificats",
+        "hasAssistantIA": false,
+        "hasOldPlayerCopy": false,
+        "hasProgram": false,
+        "programOpen": false,
+        "images": [
+          "/emojis/1f44b-1f3fd.svg"
+        ]
+      }
+    },
+    {
+      "file": "09-certificats-tablette-paysage.png",
+      "label": "Mes certificats",
+      "device": "Tablette paysage",
+      "status": 200,
+      "errors": [],
+      "checks": {
+        "url": "/campus/certificats",
+        "hasAssistantIA": false,
+        "hasOldPlayerCopy": false,
+        "hasProgram": false,
+        "programOpen": false,
+        "images": [
+          "/emojis/1f44b-1f3fd.svg"
+        ]
+      }
+    },
+    {
+      "file": "10-recompenses-telephone-paysage.png",
+      "label": "Mes récompenses",
+      "device": "Téléphone paysage",
+      "status": 200,
+      "errors": [
+        "console:Invalid DOM property `%s`. Did you mean `%s`? stroke-dasharray strokeDasharray"
+      ],
+      "checks": {
+        "url": "/campus/distinctions",
+        "hasAssistantIA": false,
+        "hasOldPlayerCopy": false,
+        "hasProgram": false,
+        "programOpen": false,
+        "images": [
+          "/emojis/1f44b-1f3fd.svg"
+        ]
+      }
+    },
+    {
+      "file": "10-recompenses-telephone.png",
+      "label": "Mes récompenses",
+      "device": "Téléphone portrait",
+      "status": 200,
+      "errors": [
+        "console:Invalid DOM property `%s`. Did you mean `%s`? stroke-dasharray strokeDasharray"
+      ],
+      "checks": {
+        "url": "/campus/distinctions",
+        "hasAssistantIA": false,
+        "hasOldPlayerCopy": false,
+        "hasProgram": false,
+        "programOpen": false,
+        "images": [
+          "/emojis/1f44b-1f3fd.svg"
+        ]
+      }
+    },
+    {
+      "file": "10-recompenses-ordinateur.png",
+      "label": "Mes récompenses",
+      "device": "Ordinateur",
+      "status": 200,
+      "errors": [
+        "console:Invalid DOM property `%s`. Did you mean `%s`? stroke-dasharray strokeDasharray"
+      ],
+      "checks": {
+        "url": "/campus/distinctions",
+        "hasAssistantIA": false,
+        "hasOldPlayerCopy": false,
+        "hasProgram": false,
+        "programOpen": false,
+        "images": [
+          "/emojis/1f44b-1f3fd.svg"
+        ]
+      }
+    },
+    {
+      "file": "10-recompenses-tablette-paysage.png",
+      "label": "Mes récompenses",
+      "device": "Tablette paysage",
+      "status": 200,
+      "errors": [
+        "console:Invalid DOM property `%s`. Did you mean `%s`? stroke-dasharray strokeDasharray"
+      ],
+      "checks": {
+        "url": "/campus/distinctions",
+        "hasAssistantIA": false,
+        "hasOldPlayerCopy": false,
+        "hasProgram": false,
+        "programOpen": false,
+        "images": [
+          "/emojis/1f44b-1f3fd.svg"
+        ]
+      }
+    },
+    {
+      "file": "10-recompenses-tablette.png",
+      "label": "Mes récompenses",
+      "device": "Tablette portrait",
+      "status": 200,
+      "errors": [
+        "console:Invalid DOM property `%s`. Did you mean `%s`? stroke-dasharray strokeDasharray"
+      ],
+      "checks": {
+        "url": "/campus/distinctions",
+        "hasAssistantIA": false,
+        "hasOldPlayerCopy": false,
+        "hasProgram": false,
+        "programOpen": false,
+        "images": [
+          "/emojis/1f44b-1f3fd.svg"
+        ]
+      }
+    },
+    {
+      "file": "11-questions-tablette.png",
+      "label": "Mes questions",
+      "device": "Tablette portrait",
+      "status": 200,
+      "errors": [],
+      "checks": {
+        "url": "/campus/questions",
+        "hasAssistantIA": false,
+        "hasOldPlayerCopy": false,
+        "hasProgram": false,
+        "programOpen": false,
+        "images": [
+          "/emojis/1f44b-1f3fd.svg"
+        ]
+      }
+    },
+    {
+      "file": "11-questions-ordinateur.png",
+      "label": "Mes questions",
+      "device": "Ordinateur",
+      "status": 200,
+      "errors": [],
+      "checks": {
+        "url": "/campus/questions",
+        "hasAssistantIA": false,
+        "hasOldPlayerCopy": false,
+        "hasProgram": false,
+        "programOpen": false,
+        "images": [
+          "/emojis/1f44b-1f3fd.svg"
+        ]
+      }
+    },
+    {
+      "file": "11-questions-telephone-paysage.png",
+      "label": "Mes questions",
+      "device": "Téléphone paysage",
+      "status": 200,
+      "errors": [],
+      "checks": {
+        "url": "/campus/questions",
+        "hasAssistantIA": false,
+        "hasOldPlayerCopy": false,
+        "hasProgram": false,
+        "programOpen": false,
+        "images": [
+          "/emojis/1f44b-1f3fd.svg"
+        ]
+      }
+    },
+    {
+      "file": "11-questions-telephone.png",
+      "label": "Mes questions",
+      "device": "Téléphone portrait",
+      "status": 200,
+      "errors": [],
+      "checks": {
+        "url": "/campus/questions",
+        "hasAssistantIA": false,
+        "hasOldPlayerCopy": false,
+        "hasProgram": false,
+        "programOpen": false,
+        "images": [
+          "/emojis/1f44b-1f3fd.svg"
+        ]
+      }
+    },
+    {
+      "file": "11-questions-tablette-paysage.png",
+      "label": "Mes questions",
+      "device": "Tablette paysage",
+      "status": 200,
+      "errors": [],
+      "checks": {
+        "url": "/campus/questions",
+        "hasAssistantIA": false,
+        "hasOldPlayerCopy": false,
+        "hasProgram": false,
+        "programOpen": false,
+        "images": [
+          "/emojis/1f44b-1f3fd.svg"
+        ]
+      }
+    },
+    {
+      "file": "12-notifications-ordinateur.png",
+      "label": "Notifications",
+      "device": "Ordinateur",
+      "status": 200,
+      "errors": [],
+      "checks": {
+        "url": "/campus/notifications",
+        "hasAssistantIA": false,
+        "hasOldPlayerCopy": false,
+        "hasProgram": false,
+        "programOpen": false,
+        "images": [
+          "/emojis/1f44b-1f3fd.svg"
+        ]
+      }
+    },
+    {
+      "file": "12-notifications-telephone.png",
+      "label": "Notifications",
+      "device": "Téléphone portrait",
+      "status": 200,
+      "errors": [],
+      "checks": {
+        "url": "/campus/notifications",
+        "hasAssistantIA": false,
+        "hasOldPlayerCopy": false,
+        "hasProgram": false,
+        "programOpen": false,
+        "images": [
+          "/emojis/1f44b-1f3fd.svg"
+        ]
+      }
+    },
+    {
+      "file": "12-notifications-tablette.png",
+      "label": "Notifications",
+      "device": "Tablette portrait",
+      "status": 200,
+      "errors": [],
+      "checks": {
+        "url": "/campus/notifications",
+        "hasAssistantIA": false,
+        "hasOldPlayerCopy": false,
+        "hasProgram": false,
+        "programOpen": false,
+        "images": [
+          "/emojis/1f44b-1f3fd.svg"
+        ]
+      }
+    },
+    {
+      "file": "12-notifications-telephone-paysage.png",
+      "label": "Notifications",
+      "device": "Téléphone paysage",
+      "status": 200,
+      "errors": [],
+      "checks": {
+        "url": "/campus/notifications",
+        "hasAssistantIA": false,
+        "hasOldPlayerCopy": false,
+        "hasProgram": false,
+        "programOpen": false,
+        "images": [
+          "/emojis/1f44b-1f3fd.svg"
+        ]
+      }
+    },
+    {
+      "file": "12-notifications-tablette-paysage.png",
+      "label": "Notifications",
+      "device": "Tablette paysage",
+      "status": 200,
+      "errors": [],
+      "checks": {
+        "url": "/campus/notifications",
+        "hasAssistantIA": false,
+        "hasOldPlayerCopy": false,
+        "hasProgram": false,
+        "programOpen": false,
+        "images": [
+          "/emojis/1f44b-1f3fd.svg"
+        ]
+      }
+    },
+    {
+      "file": "13-profil-tablette.png",
+      "label": "Mon profil",
+      "device": "Tablette portrait",
+      "status": 200,
+      "errors": [],
+      "checks": {
+        "url": "/campus/profil",
+        "hasAssistantIA": false,
+        "hasOldPlayerCopy": false,
+        "hasProgram": false,
+        "programOpen": false,
+        "images": [
+          "/emojis/1f44b-1f3fd.svg"
+        ]
+      }
+    },
+    {
+      "file": "13-profil-telephone.png",
+      "label": "Mon profil",
+      "device": "Téléphone portrait",
+      "status": 200,
+      "errors": [],
+      "checks": {
+        "url": "/campus/profil",
+        "hasAssistantIA": false,
+        "hasOldPlayerCopy": false,
+        "hasProgram": false,
+        "programOpen": false,
+        "images": [
+          "/emojis/1f44b-1f3fd.svg"
+        ]
+      }
+    },
+    {
+      "file": "13-profil-tablette-paysage.png",
+      "label": "Mon profil",
+      "device": "Tablette paysage",
+      "status": 200,
+      "errors": [],
+      "checks": {
+        "url": "/campus/profil",
+        "hasAssistantIA": false,
+        "hasOldPlayerCopy": false,
+        "hasProgram": false,
+        "programOpen": false,
+        "images": [
+          "/emojis/1f44b-1f3fd.svg"
+        ]
+      }
+    },
+    {
+      "file": "13-profil-telephone-paysage.png",
+      "label": "Mon profil",
+      "device": "Téléphone paysage",
+      "status": 200,
+      "errors": [],
+      "checks": {
+        "url": "/campus/profil",
+        "hasAssistantIA": false,
+        "hasOldPlayerCopy": false,
+        "hasProgram": false,
+        "programOpen": false,
+        "images": [
+          "/emojis/1f44b-1f3fd.svg"
+        ]
+      }
+    },
+    {
+      "file": "13-profil-ordinateur.png",
+      "label": "Mon profil",
+      "device": "Ordinateur",
+      "status": 200,
+      "errors": [],
+      "checks": {
+        "url": "/campus/profil",
+        "hasAssistantIA": false,
+        "hasOldPlayerCopy": false,
+        "hasProgram": false,
+        "programOpen": false,
+        "images": [
+          "/emojis/1f44b-1f3fd.svg"
+        ]
+      }
+    },
+    {
+      "file": "14-parametres-tablette-paysage.png",
+      "label": "Paramètres",
+      "device": "Tablette paysage",
+      "status": 200,
+      "errors": [],
+      "checks": {
+        "url": "/campus/parametres",
+        "hasAssistantIA": false,
+        "hasOldPlayerCopy": false,
+        "hasProgram": false,
+        "programOpen": false,
+        "images": [
+          "/emojis/1f44b-1f3fd.svg"
+        ]
+      }
+    },
+    {
+      "file": "14-parametres-telephone-paysage.png",
+      "label": "Paramètres",
+      "device": "Téléphone paysage",
+      "status": 200,
+      "errors": [],
+      "checks": {
+        "url": "/campus/parametres",
+        "hasAssistantIA": false,
+        "hasOldPlayerCopy": false,
+        "hasProgram": false,
+        "programOpen": false,
+        "images": [
+          "/emojis/1f44b-1f3fd.svg"
+        ]
+      }
+    },
+    {
+      "file": "14-parametres-telephone.png",
+      "label": "Paramètres",
+      "device": "Téléphone portrait",
+      "status": 200,
+      "errors": [],
+      "checks": {
+        "url": "/campus/parametres",
+        "hasAssistantIA": false,
+        "hasOldPlayerCopy": false,
+        "hasProgram": false,
+        "programOpen": false,
+        "images": [
+          "/emojis/1f44b-1f3fd.svg"
+        ]
+      }
+    },
+    {
+      "file": "14-parametres-ordinateur.png",
+      "label": "Paramètres",
+      "device": "Ordinateur",
+      "status": 200,
+      "errors": [],
+      "checks": {
+        "url": "/campus/parametres",
+        "hasAssistantIA": false,
+        "hasOldPlayerCopy": false,
+        "hasProgram": false,
+        "programOpen": false,
+        "images": [
+          "/emojis/1f44b-1f3fd.svg"
+        ]
+      }
+    },
+    {
+      "file": "14-parametres-tablette.png",
+      "label": "Paramètres",
+      "device": "Tablette portrait",
+      "status": 200,
+      "errors": [],
+      "checks": {
+        "url": "/campus/parametres",
+        "hasAssistantIA": false,
+        "hasOldPlayerCopy": false,
+        "hasProgram": false,
+        "programOpen": false,
+        "images": [
+          "/emojis/1f44b-1f3fd.svg"
+        ]
+      }
+    },
+    {
+      "file": "15-lecteur-cours-telephone.png",
+      "label": "Lecteur de cours",
+      "device": "Téléphone portrait",
+      "status": 200,
+      "errors": [],
+      "checks": {
+        "programOpen": false,
+        "assistantOpen": false,
+        "helpOpen": false,
+        "splash": false,
+        "hasAssistantIA": false,
+        "playerWidth": 388.8125,
+        "viewport": 390
+      }
+    },
+    {
+      "file": "15-lecteur-cours-tablette.png",
+      "label": "Lecteur de cours",
+      "device": "Tablette portrait",
+      "status": 200,
+      "errors": [],
+      "checks": {
+        "programOpen": false,
+        "assistantOpen": false,
+        "helpOpen": false,
+        "splash": false,
+        "hasAssistantIA": false,
+        "playerWidth": 695.375,
+        "viewport": 820
+      }
+    },
+    {
+      "file": "15-lecteur-cours-telephone-paysage.png",
+      "label": "Lecteur de cours",
+      "device": "Téléphone paysage",
+      "status": 200,
+      "errors": [],
+      "checks": {
+        "programOpen": false,
+        "assistantOpen": false,
+        "helpOpen": false,
+        "splash": false,
+        "hasAssistantIA": false,
+        "playerWidth": 478.125,
+        "viewport": 844
+      }
+    },
+    {
+      "file": "15-lecteur-cours-ordinateur.png",
+      "label": "Lecteur de cours",
+      "device": "Ordinateur",
+      "status": 200,
+      "errors": [],
+      "checks": {
+        "programOpen": false,
+        "assistantOpen": false,
+        "helpOpen": false,
+        "splash": false,
+        "hasAssistantIA": false,
+        "playerWidth": 943.125,
+        "viewport": 1440
+      }
+    },
+    {
+      "file": "15-lecteur-cours-tablette-paysage.png",
+      "label": "Lecteur de cours",
+      "device": "Tablette paysage",
+      "status": 200,
+      "errors": [],
+      "checks": {
+        "programOpen": false,
+        "assistantOpen": false,
+        "helpOpen": false,
+        "splash": false,
+        "hasAssistantIA": false,
+        "playerWidth": 696.65625,
+        "viewport": 1180
+      }
+    },
+    {
+      "file": "16-menu-campus-ouvert-tablette.png",
+      "label": "Menu campus ouvert",
+      "device": "Tablette portrait",
+      "status": 200,
+      "errors": [],
+      "checks": {
+        "url": "/campus",
+        "hasAssistantIA": false,
+        "hasOldPlayerCopy": false,
+        "hasProgram": false,
+        "programOpen": false,
+        "images": [
+          "/emojis/1f44b-1f3fd.svg"
+        ]
+      }
+    },
+    {
+      "file": "16-menu-campus-ouvert-telephone-paysage.png",
+      "label": "Menu campus ouvert",
+      "device": "Téléphone paysage",
+      "status": 200,
+      "errors": [],
+      "checks": {
+        "url": "/campus",
+        "hasAssistantIA": false,
+        "hasOldPlayerCopy": false,
+        "hasProgram": false,
+        "programOpen": false,
+        "images": [
+          "/emojis/1f44b-1f3fd.svg"
+        ]
+      }
+    },
+    {
+      "file": "16-menu-campus-ouvert-ordinateur.png",
+      "label": "Menu campus ouvert",
+      "device": "Ordinateur",
+      "status": 200,
+      "errors": [],
+      "checks": {
+        "url": "/campus",
+        "hasAssistantIA": false,
+        "hasOldPlayerCopy": false,
+        "hasProgram": false,
+        "programOpen": false,
+        "images": [
+          "/emojis/1f44b-1f3fd.svg"
+        ]
+      }
+    },
+    {
+      "file": "16-menu-campus-ouvert-telephone.png",
+      "label": "Menu campus ouvert",
+      "device": "Téléphone portrait",
+      "status": 200,
+      "errors": [],
+      "checks": {
+        "url": "/campus",
+        "hasAssistantIA": false,
+        "hasOldPlayerCopy": false,
+        "hasProgram": false,
+        "programOpen": false,
+        "images": [
+          "/emojis/1f44b-1f3fd.svg"
+        ]
+      }
+    },
+    {
+      "file": "16-menu-campus-ouvert-tablette-paysage.png",
+      "label": "Menu campus ouvert",
+      "device": "Tablette paysage",
+      "status": 200,
+      "errors": [],
+      "checks": {
+        "url": "/campus",
+        "hasAssistantIA": false,
+        "hasOldPlayerCopy": false,
+        "hasProgram": false,
+        "programOpen": false,
+        "images": [
+          "/emojis/1f44b-1f3fd.svg"
+        ]
+      }
+    },
+    {
+      "file": "17-programme-deroule-telephone.png",
+      "label": "Lecteur · Programme déroulé",
+      "device": "Téléphone portrait",
+      "status": 200,
+      "errors": [],
+      "checks": {
+        "programOpen": true,
+        "assistantOpen": false,
+        "helpOpen": false,
+        "splash": false,
+        "hasAssistantIA": false,
+        "playerWidth": 388.8125,
+        "viewport": 390
+      }
+    },
+    {
+      "file": "18-question-assistant-ouverte-telephone.png",
+      "label": "Lecteur · Une question ouverte",
+      "device": "Téléphone portrait",
+      "status": 200,
+      "errors": [],
+      "checks": {
+        "programOpen": false,
+        "assistantOpen": true,
+        "helpOpen": false,
+        "splash": false,
+        "hasAssistantIA": false,
+        "playerWidth": 388.8125,
+        "viewport": 390
+      }
+    },
+    {
+      "file": "19-aide-flottante-ouverte-telephone.png",
+      "label": "Lecteur · Aide flottante ouverte",
+      "device": "Téléphone portrait",
+      "status": 200,
+      "errors": [],
+      "checks": {
+        "programOpen": false,
+        "assistantOpen": false,
+        "helpOpen": true,
+        "splash": false,
+        "hasAssistantIA": false,
+        "playerWidth": 388.8125,
+        "viewport": 390
+      }
+    },
+    {
+      "file": "17-programme-deroule-telephone-paysage.png",
+      "label": "Lecteur · Programme déroulé",
+      "device": "Téléphone paysage",
+      "status": 200,
+      "errors": [],
+      "checks": {
+        "programOpen": true,
+        "assistantOpen": false,
+        "helpOpen": false,
+        "splash": false,
+        "hasAssistantIA": false,
+        "playerWidth": 478.125,
+        "viewport": 844
+      }
+    },
+    {
+      "file": "18-question-assistant-ouverte-telephone-paysage.png",
+      "label": "Lecteur · Une question ouverte",
+      "device": "Téléphone paysage",
+      "status": 200,
+      "errors": [],
+      "checks": {
+        "programOpen": false,
+        "assistantOpen": true,
+        "helpOpen": false,
+        "splash": false,
+        "hasAssistantIA": false,
+        "playerWidth": 478.125,
+        "viewport": 844
+      }
+    },
+    {
+      "file": "19-aide-flottante-ouverte-telephone-paysage.png",
+      "label": "Lecteur · Aide flottante ouverte",
+      "device": "Téléphone paysage",
+      "status": 200,
+      "errors": [],
+      "checks": {
+        "programOpen": false,
+        "assistantOpen": false,
+        "helpOpen": true,
+        "splash": false,
+        "hasAssistantIA": false,
+        "playerWidth": 478.125,
+        "viewport": 844
+      }
+    },
+    {
+      "file": "17-programme-deroule-tablette.png",
+      "label": "Lecteur · Programme déroulé",
+      "device": "Tablette portrait",
+      "status": 200,
+      "errors": [],
+      "checks": {
+        "programOpen": true,
+        "assistantOpen": false,
+        "helpOpen": false,
+        "splash": false,
+        "hasAssistantIA": false,
+        "playerWidth": 695.375,
+        "viewport": 820
+      }
+    },
+    {
+      "file": "18-question-assistant-ouverte-tablette.png",
+      "label": "Lecteur · Une question ouverte",
+      "device": "Tablette portrait",
+      "status": 200,
+      "errors": [],
+      "checks": {
+        "programOpen": false,
+        "assistantOpen": true,
+        "helpOpen": false,
+        "splash": false,
+        "hasAssistantIA": false,
+        "playerWidth": 695.375,
+        "viewport": 820
+      }
+    },
+    {
+      "file": "19-aide-flottante-ouverte-tablette.png",
+      "label": "Lecteur · Aide flottante ouverte",
+      "device": "Tablette portrait",
+      "status": 200,
+      "errors": [],
+      "checks": {
+        "programOpen": false,
+        "assistantOpen": false,
+        "helpOpen": true,
+        "splash": false,
+        "hasAssistantIA": false,
+        "playerWidth": 695.375,
+        "viewport": 820
+      }
+    },
+    {
+      "file": "17-programme-deroule-tablette-paysage.png",
+      "label": "Lecteur · Programme déroulé",
+      "device": "Tablette paysage",
+      "status": 200,
+      "errors": [],
+      "checks": {
+        "programOpen": true,
+        "assistantOpen": false,
+        "helpOpen": false,
+        "splash": false,
+        "hasAssistantIA": false,
+        "playerWidth": 696.65625,
+        "viewport": 1180
+      }
+    },
+    {
+      "file": "18-question-assistant-ouverte-tablette-paysage.png",
+      "label": "Lecteur · Une question ouverte",
+      "device": "Tablette paysage",
+      "status": 200,
+      "errors": [],
+      "checks": {
+        "programOpen": false,
+        "assistantOpen": true,
+        "helpOpen": false,
+        "splash": false,
+        "hasAssistantIA": false,
+        "playerWidth": 696.65625,
+        "viewport": 1180
+      }
+    },
+    {
+      "file": "19-aide-flottante-ouverte-tablette-paysage.png",
+      "label": "Lecteur · Aide flottante ouverte",
+      "device": "Tablette paysage",
+      "status": 200,
+      "errors": [],
+      "checks": {
+        "programOpen": false,
+        "assistantOpen": false,
+        "helpOpen": true,
+        "splash": false,
+        "hasAssistantIA": false,
+        "playerWidth": 696.65625,
+        "viewport": 1180
+      }
+    },
+    {
+      "file": "17-programme-deroule-ordinateur.png",
+      "label": "Lecteur · Programme déroulé",
+      "device": "Ordinateur",
+      "status": 200,
+      "errors": [],
+      "checks": {
+        "programOpen": true,
+        "assistantOpen": false,
+        "helpOpen": false,
+        "splash": false,
+        "hasAssistantIA": false,
+        "playerWidth": 943.125,
+        "viewport": 1440
+      }
+    },
+    {
+      "file": "18-question-assistant-ouverte-ordinateur.png",
+      "label": "Lecteur · Une question ouverte",
+      "device": "Ordinateur",
+      "status": 200,
+      "errors": [],
+      "checks": {
+        "programOpen": false,
+        "assistantOpen": true,
+        "helpOpen": false,
+        "splash": false,
+        "hasAssistantIA": false,
+        "playerWidth": 943.125,
+        "viewport": 1440
+      }
+    },
+    {
+      "file": "19-aide-flottante-ouverte-ordinateur.png",
+      "label": "Lecteur · Aide flottante ouverte",
+      "device": "Ordinateur",
+      "status": 200,
+      "errors": [],
+      "checks": {
+        "programOpen": false,
+        "assistantOpen": false,
+        "helpOpen": true,
+        "splash": false,
+        "hasAssistantIA": false,
+        "playerWidth": 943.125,
+        "viewport": 1440
+      }
+    },
+    {
+      "file": "D01-vue-ensemble-telephone.png",
+      "label": "Direction · Vue d’ensemble",
+      "device": "Téléphone portrait",
+      "status": 200,
+      "errors": [],
+      "checks": {
+        "url": "/direction",
+        "hasAssistantIA": false,
+        "hasOldPlayerCopy": false,
+        "hasProgram": false,
+        "programOpen": false,
+        "images": [
+          "/emojis/1f44b-1f3fd.svg"
+        ]
+      }
+    },
+    {
+      "file": "D01-vue-ensemble-telephone-paysage.png",
+      "label": "Direction · Vue d’ensemble",
+      "device": "Téléphone paysage",
+      "status": 200,
+      "errors": [],
+      "checks": {
+        "url": "/direction",
+        "hasAssistantIA": false,
+        "hasOldPlayerCopy": false,
+        "hasProgram": false,
+        "programOpen": false,
+        "images": [
+          "/emojis/1f44b-1f3fd.svg"
+        ]
+      }
+    },
+    {
+      "file": "D01-vue-ensemble-ordinateur.png",
+      "label": "Direction · Vue d’ensemble",
+      "device": "Ordinateur",
+      "status": 200,
+      "errors": [],
+      "checks": {
+        "url": "/direction",
+        "hasAssistantIA": false,
+        "hasOldPlayerCopy": false,
+        "hasProgram": false,
+        "programOpen": false,
+        "images": [
+          "/emojis/1f44b-1f3fd.svg"
+        ]
+      }
+    },
+    {
+      "file": "D01-vue-ensemble-tablette.png",
+      "label": "Direction · Vue d’ensemble",
+      "device": "Tablette portrait",
+      "status": 200,
+      "errors": [],
+      "checks": {
+        "url": "/direction",
+        "hasAssistantIA": false,
+        "hasOldPlayerCopy": false,
+        "hasProgram": false,
+        "programOpen": false,
+        "images": [
+          "/emojis/1f44b-1f3fd.svg"
+        ]
+      }
+    },
+    {
+      "file": "D01-vue-ensemble-tablette-paysage.png",
+      "label": "Direction · Vue d’ensemble",
+      "device": "Tablette paysage",
+      "status": 200,
+      "errors": [],
+      "checks": {
+        "url": "/direction",
+        "hasAssistantIA": false,
+        "hasOldPlayerCopy": false,
+        "hasProgram": false,
+        "programOpen": false,
+        "images": [
+          "/emojis/1f44b-1f3fd.svg"
+        ]
+      }
+    },
+    {
+      "file": "D02-analytics-telephone.png",
+      "label": "Direction · Analytics",
+      "device": "Téléphone portrait",
+      "status": 200,
+      "errors": [],
+      "checks": {
+        "url": "/direction/analytics",
+        "hasAssistantIA": false,
+        "hasOldPlayerCopy": false,
+        "hasProgram": false,
+        "programOpen": false,
+        "images": [
+          "/emojis/1f44b-1f3fd.svg"
+        ]
+      }
+    },
+    {
+      "file": "D02-analytics-ordinateur.png",
+      "label": "Direction · Analytics",
+      "device": "Ordinateur",
+      "status": 200,
+      "errors": [],
+      "checks": {
+        "url": "/direction/analytics",
+        "hasAssistantIA": false,
+        "hasOldPlayerCopy": false,
+        "hasProgram": false,
+        "programOpen": false,
+        "images": [
+          "/emojis/1f44b-1f3fd.svg"
+        ]
+      }
+    },
+    {
+      "file": "D02-analytics-tablette.png",
+      "label": "Direction · Analytics",
+      "device": "Tablette portrait",
+      "status": 200,
+      "errors": [],
+      "checks": {
+        "url": "/direction/analytics",
+        "hasAssistantIA": false,
+        "hasOldPlayerCopy": false,
+        "hasProgram": false,
+        "programOpen": false,
+        "images": [
+          "/emojis/1f44b-1f3fd.svg"
+        ]
+      }
+    },
+    {
+      "file": "D02-analytics-telephone-paysage.png",
+      "label": "Direction · Analytics",
+      "device": "Téléphone paysage",
+      "status": 200,
+      "errors": [],
+      "checks": {
+        "url": "/direction/analytics",
+        "hasAssistantIA": false,
+        "hasOldPlayerCopy": false,
+        "hasProgram": false,
+        "programOpen": false,
+        "images": [
+          "/emojis/1f44b-1f3fd.svg"
+        ]
+      }
+    },
+    {
+      "file": "D02-analytics-tablette-paysage.png",
+      "label": "Direction · Analytics",
+      "device": "Tablette paysage",
+      "status": 200,
+      "errors": [],
+      "checks": {
+        "url": "/direction/analytics",
+        "hasAssistantIA": false,
+        "hasOldPlayerCopy": false,
+        "hasProgram": false,
+        "programOpen": false,
+        "images": [
+          "/emojis/1f44b-1f3fd.svg"
+        ]
+      }
+    },
+    {
+      "file": "D03-sante-ordinateur.png",
+      "label": "Direction · Santé technique",
+      "device": "Ordinateur",
+      "status": 200,
+      "errors": [],
+      "checks": {
+        "url": "/direction/sante",
+        "hasAssistantIA": false,
+        "hasOldPlayerCopy": false,
+        "hasProgram": false,
+        "programOpen": false,
+        "images": [
+          "/emojis/1f44b-1f3fd.svg"
+        ]
+      }
+    },
+    {
+      "file": "D03-sante-tablette-paysage.png",
+      "label": "Direction · Santé technique",
+      "device": "Tablette paysage",
+      "status": 200,
+      "errors": [],
+      "checks": {
+        "url": "/direction/sante",
+        "hasAssistantIA": false,
+        "hasOldPlayerCopy": false,
+        "hasProgram": false,
+        "programOpen": false,
+        "images": [
+          "/emojis/1f44b-1f3fd.svg"
+        ]
+      }
+    },
+    {
+      "file": "D03-sante-tablette.png",
+      "label": "Direction · Santé technique",
+      "device": "Tablette portrait",
+      "status": 200,
+      "errors": [],
+      "checks": {
+        "url": "/direction/sante",
+        "hasAssistantIA": false,
+        "hasOldPlayerCopy": false,
+        "hasProgram": false,
+        "programOpen": false,
+        "images": [
+          "/emojis/1f44b-1f3fd.svg"
+        ]
+      }
+    },
+    {
+      "file": "D03-sante-telephone-paysage.png",
+      "label": "Direction · Santé technique",
+      "device": "Téléphone paysage",
+      "status": 200,
+      "errors": [],
+      "checks": {
+        "url": "/direction/sante",
+        "hasAssistantIA": false,
+        "hasOldPlayerCopy": false,
+        "hasProgram": false,
+        "programOpen": false,
+        "images": [
+          "/emojis/1f44b-1f3fd.svg"
+        ]
+      }
+    },
+    {
+      "file": "D03-sante-telephone.png",
+      "label": "Direction · Santé technique",
+      "device": "Téléphone portrait",
+      "status": 200,
+      "errors": [],
+      "checks": {
+        "url": "/direction/sante",
+        "hasAssistantIA": false,
+        "hasOldPlayerCopy": false,
+        "hasProgram": false,
+        "programOpen": false,
+        "images": [
+          "/emojis/1f44b-1f3fd.svg"
+        ]
+      }
+    },
+    {
+      "file": "D04-assistants-telephone.png",
+      "label": "Direction · Analyse assistants virtuels",
+      "device": "Téléphone portrait",
+      "status": 200,
+      "errors": [],
+      "checks": {
+        "url": "/direction/assistants",
+        "hasAssistantIA": false,
+        "hasOldPlayerCopy": false,
+        "hasProgram": false,
+        "programOpen": false,
+        "images": [
+          "/emojis/1f44b-1f3fd.svg"
+        ]
+      }
+    },
+    {
+      "file": "D04-assistants-telephone-paysage.png",
+      "label": "Direction · Analyse assistants virtuels",
+      "device": "Téléphone paysage",
+      "status": 200,
+      "errors": [],
+      "checks": {
+        "url": "/direction/assistants",
+        "hasAssistantIA": false,
+        "hasOldPlayerCopy": false,
+        "hasProgram": false,
+        "programOpen": false,
+        "images": [
+          "/emojis/1f44b-1f3fd.svg"
+        ]
+      }
+    },
+    {
+      "file": "D04-assistants-tablette-paysage.png",
+      "label": "Direction · Analyse assistants virtuels",
+      "device": "Tablette paysage",
+      "status": 200,
+      "errors": [],
+      "checks": {
+        "url": "/direction/assistants",
+        "hasAssistantIA": false,
+        "hasOldPlayerCopy": false,
+        "hasProgram": false,
+        "programOpen": false,
+        "images": [
+          "/emojis/1f44b-1f3fd.svg"
+        ]
+      }
+    },
+    {
+      "file": "D04-assistants-tablette.png",
+      "label": "Direction · Analyse assistants virtuels",
+      "device": "Tablette portrait",
+      "status": 200,
+      "errors": [],
+      "checks": {
+        "url": "/direction/assistants",
+        "hasAssistantIA": false,
+        "hasOldPlayerCopy": false,
+        "hasProgram": false,
+        "programOpen": false,
+        "images": [
+          "/emojis/1f44b-1f3fd.svg"
+        ]
+      }
+    },
+    {
+      "file": "D04-assistants-ordinateur.png",
+      "label": "Direction · Analyse assistants virtuels",
+      "device": "Ordinateur",
+      "status": 200,
+      "errors": [],
+      "checks": {
+        "url": "/direction/assistants",
+        "hasAssistantIA": false,
+        "hasOldPlayerCopy": false,
+        "hasProgram": false,
+        "programOpen": false,
+        "images": [
+          "/emojis/1f44b-1f3fd.svg"
+        ]
+      }
+    },
+    {
+      "file": "D05-badges-tablette-paysage.png",
+      "label": "Direction · Badges & distinctions",
+      "device": "Tablette paysage",
+      "status": 200,
+      "errors": [],
+      "checks": {
+        "url": "/direction/badges",
+        "hasAssistantIA": false,
+        "hasOldPlayerCopy": false,
+        "hasProgram": false,
+        "programOpen": false,
+        "images": [
+          "/emojis/1f44b-1f3fd.svg"
+        ]
+      }
+    },
+    {
+      "file": "D05-badges-telephone-paysage.png",
+      "label": "Direction · Badges & distinctions",
+      "device": "Téléphone paysage",
+      "status": 200,
+      "errors": [],
+      "checks": {
+        "url": "/direction/badges",
+        "hasAssistantIA": false,
+        "hasOldPlayerCopy": false,
+        "hasProgram": false,
+        "programOpen": false,
+        "images": [
+          "/emojis/1f44b-1f3fd.svg"
+        ]
+      }
+    },
+    {
+      "file": "D05-badges-ordinateur.png",
+      "label": "Direction · Badges & distinctions",
+      "device": "Ordinateur",
+      "status": 200,
+      "errors": [],
+      "checks": {
+        "url": "/direction/badges",
+        "hasAssistantIA": false,
+        "hasOldPlayerCopy": false,
+        "hasProgram": false,
+        "programOpen": false,
+        "images": [
+          "/emojis/1f44b-1f3fd.svg"
+        ]
+      }
+    },
+    {
+      "file": "D05-badges-tablette.png",
+      "label": "Direction · Badges & distinctions",
+      "device": "Tablette portrait",
+      "status": 200,
+      "errors": [],
+      "checks": {
+        "url": "/direction/badges",
+        "hasAssistantIA": false,
+        "hasOldPlayerCopy": false,
+        "hasProgram": false,
+        "programOpen": false,
+        "images": [
+          "/emojis/1f44b-1f3fd.svg"
+        ]
+      }
+    },
+    {
+      "file": "D05-badges-telephone.png",
+      "label": "Direction · Badges & distinctions",
+      "device": "Téléphone portrait",
+      "status": 200,
+      "errors": [],
+      "checks": {
+        "url": "/direction/badges",
+        "hasAssistantIA": false,
+        "hasOldPlayerCopy": false,
+        "hasProgram": false,
+        "programOpen": false,
+        "images": [
+          "/emojis/1f44b-1f3fd.svg"
+        ]
+      }
+    },
+    {
+      "file": "D06-activite-tablette-paysage.png",
+      "label": "Direction · Activité étudiants",
+      "device": "Tablette paysage",
+      "status": 200,
+      "errors": [],
+      "checks": {
+        "url": "/direction/activite",
+        "hasAssistantIA": false,
+        "hasOldPlayerCopy": false,
+        "hasProgram": false,
+        "programOpen": false,
+        "images": [
+          "/emojis/1f44b-1f3fd.svg"
+        ]
+      }
+    },
+    {
+      "file": "D06-activite-tablette.png",
+      "label": "Direction · Activité étudiants",
+      "device": "Tablette portrait",
+      "status": 200,
+      "errors": [],
+      "checks": {
+        "url": "/direction/activite",
+        "hasAssistantIA": false,
+        "hasOldPlayerCopy": false,
+        "hasProgram": false,
+        "programOpen": false,
+        "images": [
+          "/emojis/1f44b-1f3fd.svg"
+        ]
+      }
+    },
+    {
+      "file": "D06-activite-telephone.png",
+      "label": "Direction · Activité étudiants",
+      "device": "Téléphone portrait",
+      "status": 200,
+      "errors": [],
+      "checks": {
+        "url": "/direction/activite",
+        "hasAssistantIA": false,
+        "hasOldPlayerCopy": false,
+        "hasProgram": false,
+        "programOpen": false,
+        "images": [
+          "/emojis/1f44b-1f3fd.svg"
+        ]
+      }
+    },
+    {
+      "file": "D06-activite-ordinateur.png",
+      "label": "Direction · Activité étudiants",
+      "device": "Ordinateur",
+      "status": 200,
+      "errors": [],
+      "checks": {
+        "url": "/direction/activite",
+        "hasAssistantIA": false,
+        "hasOldPlayerCopy": false,
+        "hasProgram": false,
+        "programOpen": false,
+        "images": [
+          "/emojis/1f44b-1f3fd.svg"
+        ]
+      }
+    },
+    {
+      "file": "D06-activite-telephone-paysage.png",
+      "label": "Direction · Activité étudiants",
+      "device": "Téléphone paysage",
+      "status": 200,
+      "errors": [],
+      "checks": {
+        "url": "/direction/activite",
+        "hasAssistantIA": false,
+        "hasOldPlayerCopy": false,
+        "hasProgram": false,
+        "programOpen": false,
+        "images": [
+          "/emojis/1f44b-1f3fd.svg"
+        ]
+      }
+    },
+    {
+      "file": "D07-formations-telephone.png",
+      "label": "Direction · Formations",
+      "device": "Téléphone portrait",
+      "status": 200,
+      "errors": [],
+      "checks": {
+        "url": "/direction/formations",
+        "hasAssistantIA": false,
+        "hasOldPlayerCopy": false,
+        "hasProgram": false,
+        "programOpen": false,
+        "images": [
+          "/emojis/1f44b-1f3fd.svg"
+        ]
+      }
+    },
+    {
+      "file": "D07-formations-tablette.png",
+      "label": "Direction · Formations",
+      "device": "Tablette portrait",
+      "status": 200,
+      "errors": [],
+      "checks": {
+        "url": "/direction/formations",
+        "hasAssistantIA": false,
+        "hasOldPlayerCopy": false,
+        "hasProgram": false,
+        "programOpen": false,
+        "images": [
+          "/emojis/1f44b-1f3fd.svg"
+        ]
+      }
+    },
+    {
+      "file": "D07-formations-ordinateur.png",
+      "label": "Direction · Formations",
+      "device": "Ordinateur",
+      "status": 200,
+      "errors": [],
+      "checks": {
+        "url": "/direction/formations",
+        "hasAssistantIA": false,
+        "hasOldPlayerCopy": false,
+        "hasProgram": false,
+        "programOpen": false,
+        "images": [
+          "/emojis/1f44b-1f3fd.svg"
+        ]
+      }
+    },
+    {
+      "file": "D07-formations-telephone-paysage.png",
+      "label": "Direction · Formations",
+      "device": "Téléphone paysage",
+      "status": 200,
+      "errors": [],
+      "checks": {
+        "url": "/direction/formations",
+        "hasAssistantIA": false,
+        "hasOldPlayerCopy": false,
+        "hasProgram": false,
+        "programOpen": false,
+        "images": [
+          "/emojis/1f44b-1f3fd.svg"
+        ]
+      }
+    },
+    {
+      "file": "D07-formations-tablette-paysage.png",
+      "label": "Direction · Formations",
+      "device": "Tablette paysage",
+      "status": 200,
+      "errors": [],
+      "checks": {
+        "url": "/direction/formations",
+        "hasAssistantIA": false,
+        "hasOldPlayerCopy": false,
+        "hasProgram": false,
+        "programOpen": false,
+        "images": [
+          "/emojis/1f44b-1f3fd.svg"
+        ]
+      }
+    },
+    {
+      "file": "D08-ressources-telephone-paysage.png",
+      "label": "Direction · Ressources",
+      "device": "Téléphone paysage",
+      "status": 200,
+      "errors": [],
+      "checks": {
+        "url": "/direction/ressources",
+        "hasAssistantIA": false,
+        "hasOldPlayerCopy": false,
+        "hasProgram": false,
+        "programOpen": false,
+        "images": [
+          "/emojis/1f44b-1f3fd.svg"
+        ]
+      }
+    },
+    {
+      "file": "D08-ressources-telephone.png",
+      "label": "Direction · Ressources",
+      "device": "Téléphone portrait",
+      "status": 200,
+      "errors": [],
+      "checks": {
+        "url": "/direction/ressources",
+        "hasAssistantIA": false,
+        "hasOldPlayerCopy": false,
+        "hasProgram": false,
+        "programOpen": false,
+        "images": [
+          "/emojis/1f44b-1f3fd.svg"
+        ]
+      }
+    },
+    {
+      "file": "D08-ressources-tablette.png",
+      "label": "Direction · Ressources",
+      "device": "Tablette portrait",
+      "status": 200,
+      "errors": [],
+      "checks": {
+        "url": "/direction/ressources",
+        "hasAssistantIA": false,
+        "hasOldPlayerCopy": false,
+        "hasProgram": false,
+        "programOpen": false,
+        "images": [
+          "/emojis/1f44b-1f3fd.svg"
+        ]
+      }
+    },
+    {
+      "file": "D08-ressources-tablette-paysage.png",
+      "label": "Direction · Ressources",
+      "device": "Tablette paysage",
+      "status": 200,
+      "errors": [],
+      "checks": {
+        "url": "/direction/ressources",
+        "hasAssistantIA": false,
+        "hasOldPlayerCopy": false,
+        "hasProgram": false,
+        "programOpen": false,
+        "images": [
+          "/emojis/1f44b-1f3fd.svg"
+        ]
+      }
+    },
+    {
+      "file": "D08-ressources-ordinateur.png",
+      "label": "Direction · Ressources",
+      "device": "Ordinateur",
+      "status": 200,
+      "errors": [],
+      "checks": {
+        "url": "/direction/ressources",
+        "hasAssistantIA": false,
+        "hasOldPlayerCopy": false,
+        "hasProgram": false,
+        "programOpen": false,
+        "images": [
+          "/emojis/1f44b-1f3fd.svg"
+        ]
+      }
+    },
+    {
+      "file": "D09-exercices-telephone.png",
+      "label": "Direction · Exercices",
+      "device": "Téléphone portrait",
+      "status": 200,
+      "errors": [],
+      "checks": {
+        "url": "/direction/exercices",
+        "hasAssistantIA": false,
+        "hasOldPlayerCopy": false,
+        "hasProgram": false,
+        "programOpen": false,
+        "images": [
+          "/emojis/1f44b-1f3fd.svg"
+        ]
+      }
+    },
+    {
+      "file": "D09-exercices-tablette.png",
+      "label": "Direction · Exercices",
+      "device": "Tablette portrait",
+      "status": 200,
+      "errors": [],
+      "checks": {
+        "url": "/direction/exercices",
+        "hasAssistantIA": false,
+        "hasOldPlayerCopy": false,
+        "hasProgram": false,
+        "programOpen": false,
+        "images": [
+          "/emojis/1f44b-1f3fd.svg"
+        ]
+      }
+    },
+    {
+      "file": "D09-exercices-ordinateur.png",
+      "label": "Direction · Exercices",
+      "device": "Ordinateur",
+      "status": 200,
+      "errors": [],
+      "checks": {
+        "url": "/direction/exercices",
+        "hasAssistantIA": false,
+        "hasOldPlayerCopy": false,
+        "hasProgram": false,
+        "programOpen": false,
+        "images": [
+          "/emojis/1f44b-1f3fd.svg"
+        ]
+      }
+    },
+    {
+      "file": "D09-exercices-telephone-paysage.png",
+      "label": "Direction · Exercices",
+      "device": "Téléphone paysage",
+      "status": 200,
+      "errors": [],
+      "checks": {
+        "url": "/direction/exercices",
+        "hasAssistantIA": false,
+        "hasOldPlayerCopy": false,
+        "hasProgram": false,
+        "programOpen": false,
+        "images": [
+          "/emojis/1f44b-1f3fd.svg"
+        ]
+      }
+    },
+    {
+      "file": "D09-exercices-tablette-paysage.png",
+      "label": "Direction · Exercices",
+      "device": "Tablette paysage",
+      "status": 200,
+      "errors": [],
+      "checks": {
+        "url": "/direction/exercices",
+        "hasAssistantIA": false,
+        "hasOldPlayerCopy": false,
+        "hasProgram": false,
+        "programOpen": false,
+        "images": [
+          "/emojis/1f44b-1f3fd.svg"
+        ]
+      }
+    },
+    {
+      "file": "D10-evaluations-ordinateur.png",
+      "label": "Direction · Évaluations",
+      "device": "Ordinateur",
+      "status": 200,
+      "errors": [],
+      "checks": {
+        "url": "/direction/devoirs",
+        "hasAssistantIA": false,
+        "hasOldPlayerCopy": false,
+        "hasProgram": false,
+        "programOpen": false,
+        "images": [
+          "/emojis/1f44b-1f3fd.svg"
+        ]
+      }
+    },
+    {
+      "file": "D10-evaluations-telephone-paysage.png",
+      "label": "Direction · Évaluations",
+      "device": "Téléphone paysage",
+      "status": 200,
+      "errors": [],
+      "checks": {
+        "url": "/direction/devoirs",
+        "hasAssistantIA": false,
+        "hasOldPlayerCopy": false,
+        "hasProgram": false,
+        "programOpen": false,
+        "images": [
+          "/emojis/1f44b-1f3fd.svg"
+        ]
+      }
+    },
+    {
+      "file": "D10-evaluations-telephone.png",
+      "label": "Direction · Évaluations",
+      "device": "Téléphone portrait",
+      "status": 200,
+      "errors": [],
+      "checks": {
+        "url": "/direction/devoirs",
+        "hasAssistantIA": false,
+        "hasOldPlayerCopy": false,
+        "hasProgram": false,
+        "programOpen": false,
+        "images": [
+          "/emojis/1f44b-1f3fd.svg"
+        ]
+      }
+    },
+    {
+      "file": "D10-evaluations-tablette-paysage.png",
+      "label": "Direction · Évaluations",
+      "device": "Tablette paysage",
+      "status": 200,
+      "errors": [],
+      "checks": {
+        "url": "/direction/devoirs",
+        "hasAssistantIA": false,
+        "hasOldPlayerCopy": false,
+        "hasProgram": false,
+        "programOpen": false,
+        "images": [
+          "/emojis/1f44b-1f3fd.svg"
+        ]
+      }
+    },
+    {
+      "file": "D10-evaluations-tablette.png",
+      "label": "Direction · Évaluations",
+      "device": "Tablette portrait",
+      "status": 200,
+      "errors": [],
+      "checks": {
+        "url": "/direction/devoirs",
+        "hasAssistantIA": false,
+        "hasOldPlayerCopy": false,
+        "hasProgram": false,
+        "programOpen": false,
+        "images": [
+          "/emojis/1f44b-1f3fd.svg"
+        ]
+      }
+    },
+    {
+      "file": "D11-etudiants-tablette.png",
+      "label": "Direction · Étudiants",
+      "device": "Tablette portrait",
+      "status": 200,
+      "errors": [],
+      "checks": {
+        "url": "/direction/etudiants",
+        "hasAssistantIA": false,
+        "hasOldPlayerCopy": false,
+        "hasProgram": false,
+        "programOpen": false,
+        "images": [
+          "/emojis/1f44b-1f3fd.svg"
+        ]
+      }
+    },
+    {
+      "file": "D11-etudiants-telephone.png",
+      "label": "Direction · Étudiants",
+      "device": "Téléphone portrait",
+      "status": 200,
+      "errors": [],
+      "checks": {
+        "url": "/direction/etudiants",
+        "hasAssistantIA": false,
+        "hasOldPlayerCopy": false,
+        "hasProgram": false,
+        "programOpen": false,
+        "images": [
+          "/emojis/1f44b-1f3fd.svg"
+        ]
+      }
+    },
+    {
+      "file": "D11-etudiants-ordinateur.png",
+      "label": "Direction · Étudiants",
+      "device": "Ordinateur",
+      "status": 200,
+      "errors": [],
+      "checks": {
+        "url": "/direction/etudiants",
+        "hasAssistantIA": false,
+        "hasOldPlayerCopy": false,
+        "hasProgram": false,
+        "programOpen": false,
+        "images": [
+          "/emojis/1f44b-1f3fd.svg"
+        ]
+      }
+    },
+    {
+      "file": "D11-etudiants-telephone-paysage.png",
+      "label": "Direction · Étudiants",
+      "device": "Téléphone paysage",
+      "status": 200,
+      "errors": [],
+      "checks": {
+        "url": "/direction/etudiants",
+        "hasAssistantIA": false,
+        "hasOldPlayerCopy": false,
+        "hasProgram": false,
+        "programOpen": false,
+        "images": [
+          "/emojis/1f44b-1f3fd.svg"
+        ]
+      }
+    },
+    {
+      "file": "D11-etudiants-tablette-paysage.png",
+      "label": "Direction · Étudiants",
+      "device": "Tablette paysage",
+      "status": 200,
+      "errors": [],
+      "checks": {
+        "url": "/direction/etudiants",
+        "hasAssistantIA": false,
+        "hasOldPlayerCopy": false,
+        "hasProgram": false,
+        "programOpen": false,
+        "images": [
+          "/emojis/1f44b-1f3fd.svg"
+        ]
+      }
+    },
+    {
+      "file": "D12-conversations-telephone.png",
+      "label": "Direction · Conversations",
+      "device": "Téléphone portrait",
+      "status": 200,
+      "errors": [],
+      "checks": {
+        "url": "/direction/conversations",
+        "hasAssistantIA": false,
+        "hasOldPlayerCopy": false,
+        "hasProgram": false,
+        "programOpen": false,
+        "images": [
+          "/emojis/1f44b-1f3fd.svg"
+        ]
+      }
+    },
+    {
+      "file": "D12-conversations-telephone-paysage.png",
+      "label": "Direction · Conversations",
+      "device": "Téléphone paysage",
+      "status": 200,
+      "errors": [],
+      "checks": {
+        "url": "/direction/conversations",
+        "hasAssistantIA": false,
+        "hasOldPlayerCopy": false,
+        "hasProgram": false,
+        "programOpen": false,
+        "images": [
+          "/emojis/1f44b-1f3fd.svg"
+        ]
+      }
+    },
+    {
+      "file": "D12-conversations-tablette.png",
+      "label": "Direction · Conversations",
+      "device": "Tablette portrait",
+      "status": 200,
+      "errors": [],
+      "checks": {
+        "url": "/direction/conversations",
+        "hasAssistantIA": false,
+        "hasOldPlayerCopy": false,
+        "hasProgram": false,
+        "programOpen": false,
+        "images": [
+          "/emojis/1f44b-1f3fd.svg"
+        ]
+      }
+    },
+    {
+      "file": "D12-conversations-ordinateur.png",
+      "label": "Direction · Conversations",
+      "device": "Ordinateur",
+      "status": 200,
+      "errors": [],
+      "checks": {
+        "url": "/direction/conversations",
+        "hasAssistantIA": false,
+        "hasOldPlayerCopy": false,
+        "hasProgram": false,
+        "programOpen": false,
+        "images": [
+          "/emojis/1f44b-1f3fd.svg"
+        ]
+      }
+    },
+    {
+      "file": "D12-conversations-tablette-paysage.png",
+      "label": "Direction · Conversations",
+      "device": "Tablette paysage",
+      "status": 200,
+      "errors": [],
+      "checks": {
+        "url": "/direction/conversations",
+        "hasAssistantIA": false,
+        "hasOldPlayerCopy": false,
+        "hasProgram": false,
+        "programOpen": false,
+        "images": [
+          "/emojis/1f44b-1f3fd.svg"
+        ]
+      }
+    },
+    {
+      "file": "D13-avis-tablette-paysage.png",
+      "label": "Direction · Avis",
+      "device": "Tablette paysage",
+      "status": 200,
+      "errors": [],
+      "checks": {
+        "url": "/direction/avis",
+        "hasAssistantIA": false,
+        "hasOldPlayerCopy": false,
+        "hasProgram": false,
+        "programOpen": false,
+        "images": [
+          "/emojis/1f44b-1f3fd.svg"
+        ]
+      }
+    },
+    {
+      "file": "D13-avis-ordinateur.png",
+      "label": "Direction · Avis",
+      "device": "Ordinateur",
+      "status": 200,
+      "errors": [],
+      "checks": {
+        "url": "/direction/avis",
+        "hasAssistantIA": false,
+        "hasOldPlayerCopy": false,
+        "hasProgram": false,
+        "programOpen": false,
+        "images": [
+          "/emojis/1f44b-1f3fd.svg"
+        ]
+      }
+    },
+    {
+      "file": "D13-avis-telephone.png",
+      "label": "Direction · Avis",
+      "device": "Téléphone portrait",
+      "status": 200,
+      "errors": [],
+      "checks": {
+        "url": "/direction/avis",
+        "hasAssistantIA": false,
+        "hasOldPlayerCopy": false,
+        "hasProgram": false,
+        "programOpen": false,
+        "images": [
+          "/emojis/1f44b-1f3fd.svg"
+        ]
+      }
+    },
+    {
+      "file": "D13-avis-telephone-paysage.png",
+      "label": "Direction · Avis",
+      "device": "Téléphone paysage",
+      "status": 200,
+      "errors": [],
+      "checks": {
+        "url": "/direction/avis",
+        "hasAssistantIA": false,
+        "hasOldPlayerCopy": false,
+        "hasProgram": false,
+        "programOpen": false,
+        "images": [
+          "/emojis/1f44b-1f3fd.svg"
+        ]
+      }
+    },
+    {
+      "file": "D13-avis-tablette.png",
+      "label": "Direction · Avis",
+      "device": "Tablette portrait",
+      "status": 200,
+      "errors": [],
+      "checks": {
+        "url": "/direction/avis",
+        "hasAssistantIA": false,
+        "hasOldPlayerCopy": false,
+        "hasProgram": false,
+        "programOpen": false,
+        "images": [
+          "/emojis/1f44b-1f3fd.svg"
+        ]
+      }
+    },
+    {
+      "file": "D14-certifications-telephone.png",
+      "label": "Direction · Certifications",
+      "device": "Téléphone portrait",
+      "status": 200,
+      "errors": [],
+      "checks": {
+        "url": "/direction/certificats",
+        "hasAssistantIA": false,
+        "hasOldPlayerCopy": false,
+        "hasProgram": false,
+        "programOpen": false,
+        "images": [
+          "/emojis/1f44b-1f3fd.svg"
+        ]
+      }
+    },
+    {
+      "file": "D14-certifications-ordinateur.png",
+      "label": "Direction · Certifications",
+      "device": "Ordinateur",
+      "status": 200,
+      "errors": [],
+      "checks": {
+        "url": "/direction/certificats",
+        "hasAssistantIA": false,
+        "hasOldPlayerCopy": false,
+        "hasProgram": false,
+        "programOpen": false,
+        "images": [
+          "/emojis/1f44b-1f3fd.svg"
+        ]
+      }
+    },
+    {
+      "file": "D14-certifications-tablette-paysage.png",
+      "label": "Direction · Certifications",
+      "device": "Tablette paysage",
+      "status": 200,
+      "errors": [],
+      "checks": {
+        "url": "/direction/certificats",
+        "hasAssistantIA": false,
+        "hasOldPlayerCopy": false,
+        "hasProgram": false,
+        "programOpen": false,
+        "images": [
+          "/emojis/1f44b-1f3fd.svg"
+        ]
+      }
+    },
+    {
+      "file": "D14-certifications-tablette.png",
+      "label": "Direction · Certifications",
+      "device": "Tablette portrait",
+      "status": 200,
+      "errors": [],
+      "checks": {
+        "url": "/direction/certificats",
+        "hasAssistantIA": false,
+        "hasOldPlayerCopy": false,
+        "hasProgram": false,
+        "programOpen": false,
+        "images": [
+          "/emojis/1f44b-1f3fd.svg"
+        ]
+      }
+    },
+    {
+      "file": "D14-certifications-telephone-paysage.png",
+      "label": "Direction · Certifications",
+      "device": "Téléphone paysage",
+      "status": 200,
+      "errors": [],
+      "checks": {
+        "url": "/direction/certificats",
+        "hasAssistantIA": false,
+        "hasOldPlayerCopy": false,
+        "hasProgram": false,
+        "programOpen": false,
+        "images": [
+          "/emojis/1f44b-1f3fd.svg"
+        ]
+      }
+    },
+    {
+      "file": "D15-recompenses-ordinateur.png",
+      "label": "Direction · Récompenses",
+      "device": "Ordinateur",
+      "status": 200,
+      "errors": [],
+      "checks": {
+        "url": "/direction/recompenses",
+        "hasAssistantIA": false,
+        "hasOldPlayerCopy": false,
+        "hasProgram": false,
+        "programOpen": false,
+        "images": [
+          "/emojis/1f44b-1f3fd.svg"
+        ]
+      }
+    },
+    {
+      "file": "D15-recompenses-telephone-paysage.png",
+      "label": "Direction · Récompenses",
+      "device": "Téléphone paysage",
+      "status": 200,
+      "errors": [],
+      "checks": {
+        "url": "/direction/recompenses",
+        "hasAssistantIA": false,
+        "hasOldPlayerCopy": false,
+        "hasProgram": false,
+        "programOpen": false,
+        "images": [
+          "/emojis/1f44b-1f3fd.svg"
+        ]
+      }
+    },
+    {
+      "file": "D15-recompenses-telephone.png",
+      "label": "Direction · Récompenses",
+      "device": "Téléphone portrait",
+      "status": 200,
+      "errors": [],
+      "checks": {
+        "url": "/direction/recompenses",
+        "hasAssistantIA": false,
+        "hasOldPlayerCopy": false,
+        "hasProgram": false,
+        "programOpen": false,
+        "images": [
+          "/emojis/1f44b-1f3fd.svg"
+        ]
+      }
+    },
+    {
+      "file": "D15-recompenses-tablette-paysage.png",
+      "label": "Direction · Récompenses",
+      "device": "Tablette paysage",
+      "status": 200,
+      "errors": [],
+      "checks": {
+        "url": "/direction/recompenses",
+        "hasAssistantIA": false,
+        "hasOldPlayerCopy": false,
+        "hasProgram": false,
+        "programOpen": false,
+        "images": [
+          "/emojis/1f44b-1f3fd.svg"
+        ]
+      }
+    },
+    {
+      "file": "D15-recompenses-tablette.png",
+      "label": "Direction · Récompenses",
+      "device": "Tablette portrait",
+      "status": 200,
+      "errors": [],
+      "checks": {
+        "url": "/direction/recompenses",
+        "hasAssistantIA": false,
+        "hasOldPlayerCopy": false,
+        "hasProgram": false,
+        "programOpen": false,
+        "images": [
+          "/emojis/1f44b-1f3fd.svg"
+        ]
+      }
+    },
+    {
+      "file": "D16-ventes-telephone.png",
+      "label": "Direction · Ventes",
+      "device": "Téléphone portrait",
+      "status": 200,
+      "errors": [],
+      "checks": {
+        "url": "/direction/ventes",
+        "hasAssistantIA": false,
+        "hasOldPlayerCopy": false,
+        "hasProgram": false,
+        "programOpen": false,
+        "images": [
+          "/emojis/1f44b-1f3fd.svg"
+        ]
+      }
+    },
+    {
+      "file": "D16-ventes-telephone-paysage.png",
+      "label": "Direction · Ventes",
+      "device": "Téléphone paysage",
+      "status": 200,
+      "errors": [],
+      "checks": {
+        "url": "/direction/ventes",
+        "hasAssistantIA": false,
+        "hasOldPlayerCopy": false,
+        "hasProgram": false,
+        "programOpen": false,
+        "images": [
+          "/emojis/1f44b-1f3fd.svg"
+        ]
+      }
+    },
+    {
+      "file": "D16-ventes-tablette.png",
+      "label": "Direction · Ventes",
+      "device": "Tablette portrait",
+      "status": 200,
+      "errors": [],
+      "checks": {
+        "url": "/direction/ventes",
+        "hasAssistantIA": false,
+        "hasOldPlayerCopy": false,
+        "hasProgram": false,
+        "programOpen": false,
+        "images": [
+          "/emojis/1f44b-1f3fd.svg"
+        ]
+      }
+    },
+    {
+      "file": "D16-ventes-ordinateur.png",
+      "label": "Direction · Ventes",
+      "device": "Ordinateur",
+      "status": 200,
+      "errors": [],
+      "checks": {
+        "url": "/direction/ventes",
+        "hasAssistantIA": false,
+        "hasOldPlayerCopy": false,
+        "hasProgram": false,
+        "programOpen": false,
+        "images": [
+          "/emojis/1f44b-1f3fd.svg"
+        ]
+      }
+    },
+    {
+      "file": "D16-ventes-tablette-paysage.png",
+      "label": "Direction · Ventes",
+      "device": "Tablette paysage",
+      "status": 200,
+      "errors": [],
+      "checks": {
+        "url": "/direction/ventes",
+        "hasAssistantIA": false,
+        "hasOldPlayerCopy": false,
+        "hasProgram": false,
+        "programOpen": false,
+        "images": [
+          "/emojis/1f44b-1f3fd.svg"
+        ]
+      }
+    },
+    {
+      "file": "D17-exports-telephone.png",
+      "label": "Direction · Exports",
+      "device": "Téléphone portrait",
+      "status": 200,
+      "errors": [],
+      "checks": {
+        "url": "/direction/exports",
+        "hasAssistantIA": false,
+        "hasOldPlayerCopy": false,
+        "hasProgram": false,
+        "programOpen": false,
+        "images": [
+          "/emojis/1f44b-1f3fd.svg"
+        ]
+      }
+    },
+    {
+      "file": "D17-exports-ordinateur.png",
+      "label": "Direction · Exports",
+      "device": "Ordinateur",
+      "status": 200,
+      "errors": [],
+      "checks": {
+        "url": "/direction/exports",
+        "hasAssistantIA": false,
+        "hasOldPlayerCopy": false,
+        "hasProgram": false,
+        "programOpen": false,
+        "images": [
+          "/emojis/1f44b-1f3fd.svg"
+        ]
+      }
+    },
+    {
+      "file": "D17-exports-telephone-paysage.png",
+      "label": "Direction · Exports",
+      "device": "Téléphone paysage",
+      "status": 200,
+      "errors": [],
+      "checks": {
+        "url": "/direction/exports",
+        "hasAssistantIA": false,
+        "hasOldPlayerCopy": false,
+        "hasProgram": false,
+        "programOpen": false,
+        "images": [
+          "/emojis/1f44b-1f3fd.svg"
+        ]
+      }
+    },
+    {
+      "file": "D17-exports-tablette.png",
+      "label": "Direction · Exports",
+      "device": "Tablette portrait",
+      "status": 200,
+      "errors": [],
+      "checks": {
+        "url": "/direction/exports",
+        "hasAssistantIA": false,
+        "hasOldPlayerCopy": false,
+        "hasProgram": false,
+        "programOpen": false,
+        "images": [
+          "/emojis/1f44b-1f3fd.svg"
+        ]
+      }
+    },
+    {
+      "file": "D17-exports-tablette-paysage.png",
+      "label": "Direction · Exports",
+      "device": "Tablette paysage",
+      "status": 200,
+      "errors": [],
+      "checks": {
+        "url": "/direction/exports",
+        "hasAssistantIA": false,
+        "hasOldPlayerCopy": false,
+        "hasProgram": false,
+        "programOpen": false,
+        "images": [
+          "/emojis/1f44b-1f3fd.svg"
+        ]
+      }
+    },
+    {
+      "file": "D18-cycle-de-vie-tablette-paysage.png",
+      "label": "Direction · Cycle de vie",
+      "device": "Tablette paysage",
+      "status": 200,
+      "errors": [],
+      "checks": {
+        "url": "/direction/cycle-de-vie",
+        "hasAssistantIA": false,
+        "hasOldPlayerCopy": false,
+        "hasProgram": false,
+        "programOpen": false,
+        "images": [
+          "/emojis/1f44b-1f3fd.svg"
+        ]
+      }
+    },
+    {
+      "file": "D18-cycle-de-vie-telephone.png",
+      "label": "Direction · Cycle de vie",
+      "device": "Téléphone portrait",
+      "status": 200,
+      "errors": [],
+      "checks": {
+        "url": "/direction/cycle-de-vie",
+        "hasAssistantIA": false,
+        "hasOldPlayerCopy": false,
+        "hasProgram": false,
+        "programOpen": false,
+        "images": [
+          "/emojis/1f44b-1f3fd.svg"
+        ]
+      }
+    },
+    {
+      "file": "D18-cycle-de-vie-telephone-paysage.png",
+      "label": "Direction · Cycle de vie",
+      "device": "Téléphone paysage",
+      "status": 200,
+      "errors": [],
+      "checks": {
+        "url": "/direction/cycle-de-vie",
+        "hasAssistantIA": false,
+        "hasOldPlayerCopy": false,
+        "hasProgram": false,
+        "programOpen": false,
+        "images": [
+          "/emojis/1f44b-1f3fd.svg"
+        ]
+      }
+    },
+    {
+      "file": "D18-cycle-de-vie-tablette.png",
+      "label": "Direction · Cycle de vie",
+      "device": "Tablette portrait",
+      "status": 200,
+      "errors": [],
+      "checks": {
+        "url": "/direction/cycle-de-vie",
+        "hasAssistantIA": false,
+        "hasOldPlayerCopy": false,
+        "hasProgram": false,
+        "programOpen": false,
+        "images": [
+          "/emojis/1f44b-1f3fd.svg"
+        ]
+      }
+    },
+    {
+      "file": "D18-cycle-de-vie-ordinateur.png",
+      "label": "Direction · Cycle de vie",
+      "device": "Ordinateur",
+      "status": 200,
+      "errors": [],
+      "checks": {
+        "url": "/direction/cycle-de-vie",
+        "hasAssistantIA": false,
+        "hasOldPlayerCopy": false,
+        "hasProgram": false,
+        "programOpen": false,
+        "images": [
+          "/emojis/1f44b-1f3fd.svg"
+        ]
+      }
+    },
+    {
+      "file": "D19-assistant-telephone.png",
+      "label": "Direction · Assistant virtuel",
+      "device": "Téléphone portrait",
+      "status": 200,
+      "errors": [],
+      "checks": {
+        "url": "/direction/assistant",
+        "hasAssistantIA": false,
+        "hasOldPlayerCopy": false,
+        "hasProgram": false,
+        "programOpen": false,
+        "images": [
+          "/emojis/1f44b-1f3fd.svg"
+        ]
+      }
+    },
+    {
+      "file": "D19-assistant-tablette.png",
+      "label": "Direction · Assistant virtuel",
+      "device": "Tablette portrait",
+      "status": 200,
+      "errors": [],
+      "checks": {
+        "url": "/direction/assistant",
+        "hasAssistantIA": false,
+        "hasOldPlayerCopy": false,
+        "hasProgram": false,
+        "programOpen": false,
+        "images": [
+          "/emojis/1f44b-1f3fd.svg"
+        ]
+      }
+    },
+    {
+      "file": "D19-assistant-tablette-paysage.png",
+      "label": "Direction · Assistant virtuel",
+      "device": "Tablette paysage",
+      "status": 200,
+      "errors": [],
+      "checks": {
+        "url": "/direction/assistant",
+        "hasAssistantIA": false,
+        "hasOldPlayerCopy": false,
+        "hasProgram": false,
+        "programOpen": false,
+        "images": [
+          "/emojis/1f44b-1f3fd.svg"
+        ]
+      }
+    },
+    {
+      "file": "D19-assistant-telephone-paysage.png",
+      "label": "Direction · Assistant virtuel",
+      "device": "Téléphone paysage",
+      "status": 200,
+      "errors": [],
+      "checks": {
+        "url": "/direction/assistant",
+        "hasAssistantIA": false,
+        "hasOldPlayerCopy": false,
+        "hasProgram": false,
+        "programOpen": false,
+        "images": [
+          "/emojis/1f44b-1f3fd.svg"
+        ]
+      }
+    },
+    {
+      "file": "D19-assistant-ordinateur.png",
+      "label": "Direction · Assistant virtuel",
+      "device": "Ordinateur",
+      "status": 200,
+      "errors": [],
+      "checks": {
+        "url": "/direction/assistant",
+        "hasAssistantIA": false,
+        "hasOldPlayerCopy": false,
+        "hasProgram": false,
+        "programOpen": false,
+        "images": [
+          "/emojis/1f44b-1f3fd.svg"
+        ]
+      }
+    },
+    {
+      "file": "D20-emails-tablette.png",
+      "label": "Direction · E-mails",
+      "device": "Tablette portrait",
+      "status": 200,
+      "errors": [],
+      "checks": {
+        "url": "/direction/emails",
+        "hasAssistantIA": false,
+        "hasOldPlayerCopy": false,
+        "hasProgram": false,
+        "programOpen": false,
+        "images": [
+          "/emojis/1f44b-1f3fd.svg"
+        ]
+      }
+    },
+    {
+      "file": "D20-emails-telephone.png",
+      "label": "Direction · E-mails",
+      "device": "Téléphone portrait",
+      "status": 200,
+      "errors": [],
+      "checks": {
+        "url": "/direction/emails",
+        "hasAssistantIA": false,
+        "hasOldPlayerCopy": false,
+        "hasProgram": false,
+        "programOpen": false,
+        "images": [
+          "/emojis/1f44b-1f3fd.svg"
+        ]
+      }
+    },
+    {
+      "file": "D20-emails-ordinateur.png",
+      "label": "Direction · E-mails",
+      "device": "Ordinateur",
+      "status": 200,
+      "errors": [],
+      "checks": {
+        "url": "/direction/emails",
+        "hasAssistantIA": false,
+        "hasOldPlayerCopy": false,
+        "hasProgram": false,
+        "programOpen": false,
+        "images": [
+          "/emojis/1f44b-1f3fd.svg"
+        ]
+      }
+    },
+    {
+      "file": "D20-emails-tablette-paysage.png",
+      "label": "Direction · E-mails",
+      "device": "Tablette paysage",
+      "status": 200,
+      "errors": [],
+      "checks": {
+        "url": "/direction/emails",
+        "hasAssistantIA": false,
+        "hasOldPlayerCopy": false,
+        "hasProgram": false,
+        "programOpen": false,
+        "images": [
+          "/emojis/1f44b-1f3fd.svg"
+        ]
+      }
+    },
+    {
+      "file": "D20-emails-telephone-paysage.png",
+      "label": "Direction · E-mails",
+      "device": "Téléphone paysage",
+      "status": 200,
+      "errors": [],
+      "checks": {
+        "url": "/direction/emails",
+        "hasAssistantIA": false,
+        "hasOldPlayerCopy": false,
+        "hasProgram": false,
+        "programOpen": false,
+        "images": [
+          "/emojis/1f44b-1f3fd.svg"
+        ]
+      }
+    },
+    {
+      "file": "D21-activites-telephone-paysage.png",
+      "label": "Direction · Activités",
+      "device": "Téléphone paysage",
+      "status": 200,
+      "errors": [],
+      "checks": {
+        "url": "/direction/activites",
+        "hasAssistantIA": false,
+        "hasOldPlayerCopy": false,
+        "hasProgram": false,
+        "programOpen": false,
+        "images": [
+          "/emojis/1f44b-1f3fd.svg"
+        ]
+      }
+    },
+    {
+      "file": "D21-activites-telephone.png",
+      "label": "Direction · Activités",
+      "device": "Téléphone portrait",
+      "status": 200,
+      "errors": [],
+      "checks": {
+        "url": "/direction/activites",
+        "hasAssistantIA": false,
+        "hasOldPlayerCopy": false,
+        "hasProgram": false,
+        "programOpen": false,
+        "images": [
+          "/emojis/1f44b-1f3fd.svg"
+        ]
+      }
+    },
+    {
+      "file": "D21-activites-ordinateur.png",
+      "label": "Direction · Activités",
+      "device": "Ordinateur",
+      "status": 200,
+      "errors": [],
+      "checks": {
+        "url": "/direction/activites",
+        "hasAssistantIA": false,
+        "hasOldPlayerCopy": false,
+        "hasProgram": false,
+        "programOpen": false,
+        "images": [
+          "/emojis/1f44b-1f3fd.svg"
+        ]
+      }
+    },
+    {
+      "file": "D21-activites-tablette.png",
+      "label": "Direction · Activités",
+      "device": "Tablette portrait",
+      "status": 200,
+      "errors": [],
+      "checks": {
+        "url": "/direction/activites",
+        "hasAssistantIA": false,
+        "hasOldPlayerCopy": false,
+        "hasProgram": false,
+        "programOpen": false,
+        "images": [
+          "/emojis/1f44b-1f3fd.svg"
+        ]
+      }
+    },
+    {
+      "file": "D21-activites-tablette-paysage.png",
+      "label": "Direction · Activités",
+      "device": "Tablette paysage",
+      "status": 200,
+      "errors": [],
+      "checks": {
+        "url": "/direction/activites",
+        "hasAssistantIA": false,
+        "hasOldPlayerCopy": false,
+        "hasProgram": false,
+        "programOpen": false,
+        "images": [
+          "/emojis/1f44b-1f3fd.svg"
+        ]
+      }
+    },
+    {
+      "file": "D22-equipe-tablette-paysage.png",
+      "label": "Direction · Équipe",
+      "device": "Tablette paysage",
+      "status": 200,
+      "errors": [],
+      "checks": {
+        "url": "/direction/equipe",
+        "hasAssistantIA": false,
+        "hasOldPlayerCopy": false,
+        "hasProgram": false,
+        "programOpen": false,
+        "images": [
+          "/emojis/1f44b-1f3fd.svg"
+        ]
+      }
+    },
+    {
+      "file": "D22-equipe-tablette.png",
+      "label": "Direction · Équipe",
+      "device": "Tablette portrait",
+      "status": 200,
+      "errors": [],
+      "checks": {
+        "url": "/direction/equipe",
+        "hasAssistantIA": false,
+        "hasOldPlayerCopy": false,
+        "hasProgram": false,
+        "programOpen": false,
+        "images": [
+          "/emojis/1f44b-1f3fd.svg"
+        ]
+      }
+    },
+    {
+      "file": "D22-equipe-telephone.png",
+      "label": "Direction · Équipe",
+      "device": "Téléphone portrait",
+      "status": 200,
+      "errors": [],
+      "checks": {
+        "url": "/direction/equipe",
+        "hasAssistantIA": false,
+        "hasOldPlayerCopy": false,
+        "hasProgram": false,
+        "programOpen": false,
+        "images": [
+          "/emojis/1f44b-1f3fd.svg"
+        ]
+      }
+    },
+    {
+      "file": "D22-equipe-ordinateur.png",
+      "label": "Direction · Équipe",
+      "device": "Ordinateur",
+      "status": 200,
+      "errors": [],
+      "checks": {
+        "url": "/direction/equipe",
+        "hasAssistantIA": false,
+        "hasOldPlayerCopy": false,
+        "hasProgram": false,
+        "programOpen": false,
+        "images": [
+          "/emojis/1f44b-1f3fd.svg"
+        ]
+      }
+    },
+    {
+      "file": "D22-equipe-telephone-paysage.png",
+      "label": "Direction · Équipe",
+      "device": "Téléphone paysage",
+      "status": 200,
+      "errors": [],
+      "checks": {
+        "url": "/direction/equipe",
+        "hasAssistantIA": false,
+        "hasOldPlayerCopy": false,
+        "hasProgram": false,
+        "programOpen": false,
+        "images": [
+          "/emojis/1f44b-1f3fd.svg"
+        ]
+      }
+    },
+    {
+      "file": "D23-configuration-telephone-paysage.png",
+      "label": "Direction · Configuration",
+      "device": "Téléphone paysage",
+      "status": 200,
+      "errors": [],
+      "checks": {
+        "url": "/direction/reglages",
+        "hasAssistantIA": false,
+        "hasOldPlayerCopy": false,
+        "hasProgram": false,
+        "programOpen": false,
+        "images": [
+          "/emojis/1f44b-1f3fd.svg"
+        ]
+      }
+    },
+    {
+      "file": "D23-configuration-telephone.png",
+      "label": "Direction · Configuration",
+      "device": "Téléphone portrait",
+      "status": 200,
+      "errors": [],
+      "checks": {
+        "url": "/direction/reglages",
+        "hasAssistantIA": false,
+        "hasOldPlayerCopy": false,
+        "hasProgram": false,
+        "programOpen": false,
+        "images": [
+          "/emojis/1f44b-1f3fd.svg"
+        ]
+      }
+    },
+    {
+      "file": "D23-configuration-tablette-paysage.png",
+      "label": "Direction · Configuration",
+      "device": "Tablette paysage",
+      "status": 200,
+      "errors": [],
+      "checks": {
+        "url": "/direction/reglages",
+        "hasAssistantIA": false,
+        "hasOldPlayerCopy": false,
+        "hasProgram": false,
+        "programOpen": false,
+        "images": [
+          "/emojis/1f44b-1f3fd.svg"
+        ]
+      }
+    },
+    {
+      "file": "D23-configuration-ordinateur.png",
+      "label": "Direction · Configuration",
+      "device": "Ordinateur",
+      "status": 200,
+      "errors": [],
+      "checks": {
+        "url": "/direction/reglages",
+        "hasAssistantIA": false,
+        "hasOldPlayerCopy": false,
+        "hasProgram": false,
+        "programOpen": false,
+        "images": [
+          "/emojis/1f44b-1f3fd.svg"
+        ]
+      }
+    },
+    {
+      "file": "D23-configuration-tablette.png",
+      "label": "Direction · Configuration",
+      "device": "Tablette portrait",
+      "status": 200,
+      "errors": [],
+      "checks": {
+        "url": "/direction/reglages",
+        "hasAssistantIA": false,
+        "hasOldPlayerCopy": false,
+        "hasProgram": false,
+        "programOpen": false,
+        "images": [
+          "/emojis/1f44b-1f3fd.svg"
+        ]
+      }
+    },
+    {
+      "file": "16-menu-campus-ouvert-bas-telephone.png",
+      "label": "Menu campus ouvert · bas",
+      "device": "Téléphone portrait",
+      "status": 200,
+      "errors": [],
+      "checks": {
+        "menuOpen": true,
+        "menuScrollBottom": true,
+        "hasLibrary": false,
+        "hasAccount": false
+      }
+    },
+    {
+      "file": "16-menu-campus-ouvert-bas-telephone-paysage.png",
+      "label": "Menu campus ouvert · bas",
+      "device": "Téléphone paysage",
+      "status": 200,
+      "errors": [],
+      "checks": {
+        "menuOpen": true,
+        "menuScrollBottom": true,
+        "hasLibrary": false,
+        "hasAccount": false
+      }
+    },
+    {
+      "file": "16-menu-campus-ouvert-bas-tablette.png",
+      "label": "Menu campus ouvert · bas",
+      "device": "Tablette portrait",
+      "status": 200,
+      "errors": [],
+      "checks": {
+        "menuOpen": true,
+        "menuScrollBottom": true,
+        "hasLibrary": false,
+        "hasAccount": false
+      }
+    },
+    {
+      "file": "16-menu-campus-ouvert-bas-tablette-paysage.png",
+      "label": "Menu campus ouvert · bas",
+      "device": "Tablette paysage",
+      "status": 200,
+      "errors": [],
+      "checks": {
+        "menuOpen": true,
+        "menuScrollBottom": true,
+        "hasLibrary": false,
+        "hasAccount": false
+      }
+    },
+    {
+      "file": "16-menu-campus-ouvert-bas-ordinateur.png",
+      "label": "Menu campus ouvert · bas",
+      "device": "Ordinateur",
+      "status": 200,
+      "errors": [],
+      "checks": {
+        "menuOpen": true,
+        "menuScrollBottom": true,
+        "hasLibrary": false,
+        "hasAccount": false
+      }
+    }
+  ],
+  "count": 230,
+  "source": "local Chromium via Puppeteer against http://localhost:3000"
+}

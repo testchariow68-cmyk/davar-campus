@@ -304,7 +304,7 @@ export default async function DirectionPage() {
               supportSeul && tache.genre === 'coach'
                 ? tache.titre.replace(/^Répondre\s*:\s*/, '')
                 : supportSeul && tache.genre === 'ia'
-                  ? tache.titre.replace(/^Superviser la réponse (?:IA|de l’assistant virtuel)\s*—\s*/, '')
+                  ? tache.titre.replace(/^Superviser la réponse\s+[^—]+—\s*/, '')
                   : tache.titre;
             const supportGenre = supportSeul && (tache.genre === 'coach' || tache.genre === 'ia');
             const icone = supportGenre ? 'message' : genre.icone;

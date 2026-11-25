@@ -226,7 +226,7 @@ export async function vuePilotage(db: Db, maintenant = Date.now()): Promise<VueP
     const dernierAuteur = texte(ligne.auteur);
     const nom = texte(ligne.display_name) ?? '';
     // Une conversation non résolue dont le dernier mot vient de l'étudiant
-    // attend une réponse ; celle dont le dernier mot vient de l'IA attend
+    // attend une réponse ; celle dont le dernier mot vient de l'assistant attend
     // d'être supervisée avant d'être montrée à l'étudiant.
     if (dernierAuteur === 'student')
       aTraiter.push({
@@ -323,7 +323,7 @@ export async function vuePilotage(db: Db, maintenant = Date.now()): Promise<VueP
     })),
     ...messagesRecents.rows.map((ligne) => ({
       genre: 'question' as const,
-      texte: `Question de ${texte(ligne.display_name) ?? ''} (${texte(ligne.mode) === 'coach' ? 'adressée au coach' : 'répondue par l’IA'})`,
+      texte: `Question de ${texte(ligne.display_name) ?? ''} (${texte(ligne.mode) === 'coach' ? 'adressée au coach' : 'répondue par l’assistant virtuel'})`,
       atMs: nombre(ligne.at_ms),
     })),
   ]

@@ -580,6 +580,8 @@ img.avatar{object-fit:cover}
 .cp-ava-btn{border:none;background:transparent;padding:2px;border-radius:50%;display:flex}
 .cp-ava-btn:hover{box-shadow:0 0 0 3px var(--violet-soft)}
 .cp-content{flex:1;width:100%;max-width:1080px;margin:0 auto;padding:24px 22px}
+.platform-greeting{width:min(1080px,100%);margin:0 auto;padding:8px 22px 0;display:flex;align-items:center;justify-content:flex-end;gap:5px;color:var(--muted);font-size:12px;font-weight:700;line-height:1.2}
+.platform-greeting .emoji-image{width:1.35em;height:1.35em}
 .d-lg-none{display:none}
 
 /* --- Cockpit --- */
@@ -2215,6 +2217,7 @@ img, video, iframe, object { max-width: 100%; }
 /* Le cours domine la page mobile ; les libellés secondaires restent présents
    mais ne mangent plus la hauteur du lecteur. */
 @media (max-width: 767px) {
+  .platform-greeting { padding: 7px 14px 0; justify-content: flex-start; font-size: 11.5px; }
   .course-player-card .player-ui { padding: 8px 10px; gap: 6px; }
   .course-player-card .player-ui .p-row { min-height: 28px; }
   .course-player-card .player-ui .p-tools { margin-left: auto; }
@@ -2222,6 +2225,14 @@ img, video, iframe, object { max-width: 100%; }
   .course-program-toggle-meta { font-size: 10px; }
   .course-program-toggle-main small { opacity: .84; }
   .course-player-card > .card-pad .eyebrow { letter-spacing: .08em; }
+
+  /* Sur téléphone, le média gagne presque toute la largeur utile du
+     viewport, sans toucher aux commandes, à la progression ni au titre. */
+  .course-player-card { overflow: visible !important; }
+  .course-player-card .player-stage { margin-inline: -1px; }
+  .course-player-card .player-box.r-169,
+  .course-player-card .player-box.r-43 { width: calc(100% + 32px); max-width: none; margin-inline: -16px; }
+  .course-player-card .player-box.r-169 { border-radius: 0; }
 }
 
 /* Auth : le formulaire utilise toute la largeur utile d'une tablette ou d'un

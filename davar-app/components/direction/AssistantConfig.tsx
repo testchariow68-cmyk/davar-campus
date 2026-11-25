@@ -181,7 +181,7 @@ export function AssistantConfig({
                 onBlur={() => void envoyer({ action: 'config', displayName: config.displayName }, 'Nom enregistré.')}
               />
               <div className="hint">
-                Par défaut, le nom fourni par le système IA est utilisé. Si vous définissez un nom
+                Par défaut, le nom fourni par le système de l’assistant est utilisé. Si vous définissez un nom
                 personnalisé, il devient le nom affiché partout dans le Campus.
               </div>
             </div>
@@ -281,7 +281,7 @@ export function AssistantConfig({
             </div>
             <p className="small mt8" style={{ color: '#D9D3E8' }}>
               L’assistant répond en premier niveau. Les coachs voient toutes les conversations et peuvent
-              valider, corriger ou répondre à la place de l’IA — sans jamais être bloqués par elle.
+              valider, corriger ou répondre à sa place — sans jamais être bloqués par lui.
             </p>
           </div>
         </div>

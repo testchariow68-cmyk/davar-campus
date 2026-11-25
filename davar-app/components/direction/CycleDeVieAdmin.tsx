@@ -141,7 +141,7 @@ export function CycleDeVieAdmin({
         {ligne('Codes et jetons', rapport.jetonsExpires, 'Utilisés ou expirés')}
         {ligne('Notifications lues', rapport.notificationsLues, 'Disparaissent 48 h après lecture')}
         {ligne('Notifications anciennes', rapport.notificationsAnciennes, '180 jours au plus')}
-        {ligne('Conversations IA', rapport.conversationsIa, '90 jours — statistiques anonymisées conservées')}
+        {ligne('Conversations de l’assistant', rapport.conversationsIa, '90 jours — statistiques anonymisées conservées')}
         {ligne('Conversations coach', rapport.conversationsCoach, '12 mois — les conversations résolues (litige) restent')}
         {ligne('Journaux techniques', rapport.journauxTechniques, '90 jours')}
         {ligne('Certificats hors politique', rapport.certificatsHorsPolitique, 'Au-delà de 30 ans')}

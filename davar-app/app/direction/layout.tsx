@@ -9,6 +9,8 @@ import { VueTestMenu } from '@/components/campus/VueTestMenu';
 import { Icon, type NomIcone } from '@/components/campus/Icon';
 import { SidebarDirection, type SidebarGroup, type SidebarItem } from '@/components/direction/SidebarDirection';
 import { DirectionHeading } from '@/components/direction/DirectionHeading';
+import { PlatformGreeting } from '@/components/campus/PlatformGreeting';
+import { salutation } from '@/lib/server/campus-recents';
 import { currentSession } from '@/lib/server/auth';
 import { lireRoles, sectionsPour } from '@/lib/server/equipe';
 import { listerComptesTest, peutTesterUneVue } from '@/lib/server/vue-test';
@@ -159,6 +161,8 @@ export default async function DirectionLayout({ children }: { children: React.Re
               <UserMenu nom={affiche.displayName} email={affiche.email} variante="avatar" couleur={couleur} />
             </div>
           </header>
+
+          <PlatformGreeting nom={affiche.displayName} texte={salutation()} />
 
           <main className="admin-content">{children}</main>
           {!estProprietaire && <BandeauDefilant annonce={null} reseaux={reseaux} />}
