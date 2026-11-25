@@ -488,7 +488,8 @@ export function CoursDetail({
   const totalReactions = socialEtat?.totalReactions ?? reactions.reduce((total, reaction) => total + reaction.total, 0);
   const pourcentage = Math.max(0, Math.min(100, Math.round(progressionPct)));
   const coursNecessiteVisionnage = lesson.kind === 'video' || Boolean(lesson.resourceUrl);
-  const peutMarquer = !coursNecessiteVisionnage || visionnageTermine;
+  const coursVisionnable = Boolean(lesson.resourceUrl);
+  const peutMarquer = !coursNecessiteVisionnage || (coursVisionnable && visionnageTermine);
 
   useEffect(() => {
     setSocialEtat(social);
@@ -787,8 +788,20 @@ export function CoursDetail({
                       className="btn btn-primary btn-sm course-complete-button"
                       disabled={occupe || !peutMarquer}
                       onClick={() => void marquer()}
-                      title={!peutMarquer ? 'Terminez la lecture du cours pour activer ce bouton.' : undefined}
-                      aria-label={peutMarquer ? 'Marquer le cours comme terminé' : 'Terminez la lecture du cours pour activer ce bouton'}
+                      title={
+                        !peutMarquer
+                          ? coursVisionnable
+                            ? 'Terminez la lecture du cours pour activer ce bouton.'
+                            : 'La vidéo principale n’est pas encore publiée.'
+                          : undefined
+                      }
+                      aria-label={
+                        peutMarquer
+                          ? 'Marquer le cours comme terminé'
+                          : coursVisionnable
+                            ? 'Terminez la lecture du cours pour activer ce bouton'
+                            : 'La vidéo principale n’est pas encore publiée'
+                      }
                     >
                       <Icon nom="check" taille={14} />
                       <span className="course-complete-label-full">{occupe ? '…' : 'Marquer comme terminé'}</span>
