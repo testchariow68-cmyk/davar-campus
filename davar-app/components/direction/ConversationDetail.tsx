@@ -217,7 +217,7 @@ export default function ConversationDetail({
 
         <div className="col" style={{ gap: 16 }}>
           <div className="card card-pad">
-            <div className="eyebrow mb8">Supervision IA</div>
+            <div className="eyebrow mb8">Supervision de l’assistant virtuel</div>
             {aUneReponseIA && !fil.iaValidee ? (
               <>
                 <p className="xs muted mb8">
@@ -229,7 +229,7 @@ export default function ConversationDetail({
                   disabled={occupe}
                   onClick={() => agir('valider')}
                 >
-                  <Icon nom="shieldCheck" taille={14} /> Valider la réponse IA
+                  <Icon nom="shieldCheck" taille={14} /> Valider la réponse de l’assistant virtuel
                 </button>
                 <button
                   type="button"
@@ -246,19 +246,19 @@ export default function ConversationDetail({
             ) : aUneReponseIA ? (
               <div className="banner ok" style={{ padding: '10px 12px' }}>
                 <Icon nom="checkCircle" taille={14} />
-                <span className="small">Réponse IA validée par l’équipe.</span>
+                <span className="small">Réponse de l’assistant virtuel validée par l’équipe.</span>
               </div>
             ) : (
-              <p className="xs muted">Aucune réponse IA dans cette conversation.</p>
+              <p className="xs muted">Aucune réponse de l’assistant virtuel dans cette conversation.</p>
             )}
           </div>
 
           <div className="card card-pad">
             <div className="eyebrow mb8">Règles d’accompagnement</div>
             <ul className="xs muted" style={{ marginLeft: 16, display: 'flex', flexDirection: 'column', gap: 6 }}>
-              <li>IA immédiatement, humain lorsque nécessaire.</li>
-              <li>Le coach voit la question, la réponse IA et l’historique.</li>
-              <li>Le coach peut valider, corriger ou se substituer à l’IA.</li>
+              <li>Assistant virtuel immédiatement, humain lorsque nécessaire.</li>
+              <li>Le coach voit la question, la réponse de l’assistant virtuel et l’historique.</li>
+              <li>Le coach peut valider, corriger ou se substituer à l’assistant virtuel.</li>
             </ul>
           </div>
 

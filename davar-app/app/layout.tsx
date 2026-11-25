@@ -9,7 +9,7 @@ import "./prototype.css";
 export const metadata: Metadata = {
   title: "Davar Académie Campus",
   description:
-    "Votre campus numérique personnel : formations, exercices, évaluations, coach et assistant IA.",
+    "Votre campus numérique personnel : formations, exercices, évaluations, coach et assistant virtuel.",
   icons: [{ rel: "icon", url: "/campus-icon.svg", type: "image/svg+xml" }],
   appleWebApp: { title: "Davar Campus" },
   manifest: "/manifest.webmanifest",

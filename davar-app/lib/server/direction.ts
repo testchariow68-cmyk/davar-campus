@@ -240,7 +240,7 @@ export async function vuePilotage(db: Db, maintenant = Date.now()): Promise<VueP
     else if (dernierAuteur === 'ai' && nombre(ligne.ai_validated) === 0)
       aTraiter.push({
         genre: 'ia',
-        titre: `Superviser la réponse IA — ${nom}`,
+        titre: `Superviser la réponse de l’assistant virtuel — ${nom}`,
         sousTitre: 'Valider, corriger ou compléter la réponse de Monsieur Koffi.',
         details: texte(ligne.dernier) ?? undefined,
         lien: `/direction/conversations/${texte(ligne.id) ?? ''}`,

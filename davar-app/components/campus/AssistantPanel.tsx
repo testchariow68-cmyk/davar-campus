@@ -103,7 +103,7 @@ export function AssistantPanel({
         </button>
       )}
       <div className="xs faint" style={{ textAlign: 'center' }}>
-        {nom} (IA) répond immédiatement · Coach humain sous 48 h
+        {nom} répond immédiatement · Coach humain sous 48 h
       </div>
 
       {ouvert && (
@@ -139,7 +139,7 @@ export function AssistantPanel({
               {fil.length === 0 && (
                 <div className="empty small">
                   {mode === 'ai'
-                    ? `Posez vos questions. ${nom} est le cerveau virtuel de votre coach. Il répond à partir des connaissances fournies par le coach principal. N’hésitez pas.`
+                    ? `Posez vos questions. ${nom} est l’assistant virtuel de votre coach. Il répond à partir des connaissances fournies par le coach principal. N’hésitez pas.`
                     : 'Votre question sera transmise à votre coach.'}
                 </div>
               )}

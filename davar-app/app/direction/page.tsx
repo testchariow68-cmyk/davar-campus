@@ -31,7 +31,7 @@ const GENRES: Record<Tache['genre'], { icone: NomIcone; badge: string; classe: s
   corriger: { icone: 'upload', badge: 'En attente', classe: 'b-amber', fond: 's-gold' },
   certificat: { icone: 'award', badge: 'Certificat', classe: 'b-gold', fond: 's-gold' },
   coach: { icone: 'message', badge: '48 h', classe: 'b-amber', fond: 's-gold' },
-  ia: { icone: 'sparkles', badge: 'IA', classe: 'b-violet', fond: 's-cur' },
+  ia: { icone: 'sparkles', badge: 'Assistant', classe: 'b-violet', fond: 's-cur' },
   brouillon: { icone: 'book', badge: 'Brouillon', classe: 'b-grey', fond: 's-cur' },
 };
 
@@ -288,7 +288,7 @@ export default async function DirectionPage() {
               {vue.aTraiter.length} action{vue.aTraiter.length > 1 ? 's' : ''} attendent votre équipe :
             </b>{' '}
             {aCorriger.length} soumission(s) à corriger, 0 paiement(s) manuel(s) à vérifier,{' '}
-            {enAttenteDeReponse.length} question(s) au coach, {aSuperviser.length} réponse(s) IA à superviser.
+            {enAttenteDeReponse.length} question(s) au coach, {aSuperviser.length} réponse(s) de l’assistant virtuel à superviser.
           </span>
         </div>
       )}
@@ -304,7 +304,7 @@ export default async function DirectionPage() {
               supportSeul && tache.genre === 'coach'
                 ? tache.titre.replace(/^Répondre\s*:\s*/, '')
                 : supportSeul && tache.genre === 'ia'
-                  ? tache.titre.replace(/^Superviser la réponse IA\s*—\s*/, '')
+                  ? tache.titre.replace(/^Superviser la réponse (?:IA|de l’assistant virtuel)\s*—\s*/, '')
                   : tache.titre;
             const supportGenre = supportSeul && (tache.genre === 'coach' || tache.genre === 'ia');
             const icone = supportGenre ? 'message' : genre.icone;

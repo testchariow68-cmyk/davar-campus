@@ -61,7 +61,7 @@ export default async function MesQuestionsPage() {
               <div className="row between" style={{ gap: 10, flexWrap: 'wrap' }}>
                 <span className="row" style={{ gap: 8 }}>
                   <Icon nom={conversation.mode === 'coach' ? 'message' : 'sparkles'} taille={15} />
-                  <b className="small">{conversation.mode === 'coach' ? 'Coach' : `${nom} (IA)`}</b>
+                  <b className="small">{conversation.mode === 'coach' ? 'Coach' : nom}</b>
                   <span className="xs faint">
                     {conversation.formation}
                     {conversation.module ? ` · ${conversation.module}` : ''}
