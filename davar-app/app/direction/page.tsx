@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import type { ReactNode } from 'react';
+import { Emoji } from '@/components/campus/Emoji';
 import { Icon } from '@/components/campus/Icon';
 import { sessionSection } from '@/lib/server/direction-access';
 import { vuePilotage, type Tache } from '@/lib/server/direction';
@@ -236,7 +237,7 @@ export default async function DirectionPage() {
           {!pilote && <div className="xs stamp">{new Date().toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' })} · {new Date().toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}</div>}
           <h1 style={{ fontSize: 19 }}>
             {salutation()} {prenom}{' '}
-            <span className="greeting-wave emoji-unicode" role="img" aria-label="Salutation">👋</span>
+            <Emoji value="👋" label="Salutation" className="greeting-wave emoji-unicode" />
           </h1>
           <p>{sousTitre}</p>
         </div>

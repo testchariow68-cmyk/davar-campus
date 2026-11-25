@@ -5,6 +5,7 @@ import type { JSX } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { AssistantPanel } from './AssistantPanel';
+import { Emoji } from './Emoji';
 import { Icon } from './Icon';
 import { VisionneuseFichier } from './VisionneuseFichier';
 import type { Chapitre, Lesson, RessourceCours } from '@/lib/server/campus';
@@ -745,7 +746,7 @@ export function CoursDetail({
                       title={reaction.parMoi ? 'Retirer ma réaction' : 'Réagir au cours'}
                       aria-label={reaction.parMoi ? `Retirer ${reaction.emoji}` : `Réagir avec ${reaction.emoji}`}
                     >
-                      {reaction.emoji}{reaction.total ? <b>{reaction.total}</b> : null}
+                      <Emoji value={reaction.emoji} label={reaction.emoji} />{reaction.total ? <b>{reaction.total}</b> : null}
                     </button>
                     <button
                       className="react-plus"

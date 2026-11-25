@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
+import { Emoji } from '@/components/campus/Emoji';
 import { Icon, type NomIcone } from '@/components/campus/Icon';
 import { currentSession } from '@/lib/server/auth';
 import { formationActivePour, getTrainingForUser, listTrainingsApercu, listUserTrainings, progressionFormation } from '@/lib/server/campus';
@@ -140,7 +141,7 @@ export default async function CampusDashboard() {
           </div>
           <h1>
             {salutation()}, {prenom}{' '}
-            <span className="greeting-wave emoji-unicode" role="img" aria-label="Salutation">👋</span>
+            <Emoji value="👋" label="Salutation" className="greeting-wave emoji-unicode" />
           </h1>
           <p>{phrase}</p>
           {active ? (
