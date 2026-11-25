@@ -2142,3 +2142,162 @@ img, video, iframe, object { max-width: 100%; }
   .resource-list-cover,
   .resource-list-cover-fallback { width: 60px; height: 80px; }
 }
+
+/* ============================================================
+   Revue en cours — lisibilité, navigation et écrans intermédiaires
+   ============================================================ */
+
+/* Le rail clair ne devient jamais blanc : il conserve exactement la teinte
+   violette profonde du rail sombre, avec les mêmes contrastes d'icônes. */
+.cp-app .rail,
+[data-theme="light"] .cp-app .rail,
+[data-theme="dark"] .cp-app .rail {
+  background: linear-gradient(180deg, #14101F 0%, #1D1330 58%, #241640 100%);
+  border-color: #33244E;
+  box-shadow: 8px 0 28px rgba(25, 12, 46, .16);
+}
+.cp-app .rail .brand-txt {
+  background: transparent;
+  color: #fff !important;
+}
+.cp-app .rail .brand-txt span { color: #E8D9B4 !important; }
+.cp-app .rail .rail-ico { color: #B9B0CC; }
+.cp-app .rail .rail-ico:hover,
+.cp-app .rail .rail-ico.on { background: rgba(139, 92, 246, .18); color: #fff; }
+
+/* Accueil et aide restent deux contrôles séparés sur le petit écran. */
+.fab-home,
+[data-theme="light"] .fab-home,
+[data-theme="dark"] .fab-home {
+  color: #B99AFB;
+  border-color: #6D4AC2;
+  background: rgba(22, 16, 38, .94);
+}
+.fab-home:hover,
+[data-theme="light"] .fab-home:hover,
+[data-theme="dark"] .fab-home:hover {
+  color: #D4C2FF;
+  border-color: #A78BFA;
+  background: rgba(43, 27, 75, .98);
+}
+@media (max-width: 767px) {
+  .fab-sup { bottom: 112px; }
+  .fab-home { bottom: 58px; }
+}
+
+/* « J'y vais » reste dans le flux : le décalage augmente avec l'espace
+   disponible et plafonne à environ trois centimètres, sans position fixe. */
+.cp-next .btn {
+  margin-left: auto;
+  margin-right: clamp(12px, 7vw, 112px);
+}
+@media (max-width: 767px) {
+  .cp-next .btn { margin-left: auto; margin-right: 12px; }
+}
+
+/* Sur une tablette, la reprise passe sous le texte plutôt que de le réduire
+   ou de faire disparaître le minutage audio. */
+@media (min-width: 768px) and (max-width: 1020px), (max-width: 767px) {
+  .cp-resume-line {
+    display: grid;
+    grid-template-columns: 42px minmax(0, 1fr);
+    align-items: start;
+    gap: 12px;
+  }
+  .cp-resume-line > .wrap { min-width: 0; width: auto; }
+  .cp-resume-line > .btn {
+    grid-column: 2;
+    justify-self: start;
+    margin: 8px 0 0;
+  }
+}
+
+/* Le cours domine la page mobile ; les libellés secondaires restent présents
+   mais ne mangent plus la hauteur du lecteur. */
+@media (max-width: 767px) {
+  .course-player-card .player-ui { padding: 8px 10px; gap: 6px; }
+  .course-player-card .player-ui .p-row { min-height: 28px; }
+  .course-player-card .player-ui .p-tools { margin-left: auto; }
+  .course-program-toggle-main small,
+  .course-program-toggle-meta { font-size: 10px; }
+  .course-program-toggle-main small { opacity: .84; }
+  .course-player-card > .card-pad .eyebrow { letter-spacing: .08em; }
+}
+
+/* Auth : le formulaire utilise toute la largeur utile d'une tablette ou d'un
+   écran pliable, tandis que la marque reste discrète sur tous les appareils. */
+.login-glass { padding-inline: clamp(12px, 3vw, 48px); }
+.lg-anneau { width: clamp(64px, 7vw, 92px); max-width: 20vw; }
+.gcard {
+  width: min(100%, 820px);
+  max-width: none;
+  padding-inline: clamp(20px, 4vw, 60px);
+}
+@media (max-width: 767px) {
+  .lg-anneau { width: clamp(60px, 18vw, 84px); max-width: 24vw; }
+  .gcard {
+    width: min(100%, calc(100vw - 24px));
+    padding: 22px clamp(18px, 5vw, 32px);
+  }
+}
+
+/* Profil : surfaces différenciées, texte à contraste élevé et zone de sortie
+   explicitement rouge. */
+.profile-panel {
+  background: var(--card);
+  color: var(--txt);
+  border: 1px solid var(--line2);
+}
+.profile-panel .muted { color: #4B4560; }
+.profile-panel .faint { color: #625A76; }
+.profile-panel .divider { background: var(--line2); }
+.profile-panel .inp { background: var(--bg); color: var(--txt); border-color: var(--line2); }
+.profile-panel .hint { color: #514A63; }
+.profile-panel .eyebrow { color: var(--violet-deep); }
+.profile-panel .btn:not(.btn-primary):not(.btn-danger) { background: var(--violet-soft); color: var(--violet-deep); border-color: var(--violet-line); }
+.profile-panel .btn-danger { background: #991B1B; color: #fff; border-color: #DC2626; }
+.profile-danger-zone {
+  padding: 14px;
+  border: 1px solid #E7A7A0;
+  border-radius: 12px;
+  background: #FFF1F0;
+}
+.profile-danger-zone .muted { color: #5F2420; }
+.profile-danger-zone .eyebrow { color: #8B1E1E; }
+[data-theme="dark"] .profile-panel {
+  background: linear-gradient(145deg, #171226 0%, #100D19 100%);
+  border-color: #3C3154;
+}
+[data-theme="dark"] .profile-panel .muted { color: #E3DDF0; }
+[data-theme="dark"] .profile-panel .faint { color: #C5BDD6; }
+[data-theme="dark"] .profile-panel .divider { background: #443957; }
+[data-theme="dark"] .profile-panel .inp { background: #0D0A16; color: #fff; border-color: #65577D; }
+[data-theme="dark"] .profile-panel .hint { color: #D8D0E5; }
+[data-theme="dark"] .profile-panel .eyebrow { color: #D8C2FF; }
+[data-theme="dark"] .profile-panel .btn:not(.btn-primary):not(.btn-danger) { background: #281B45; color: #F5EEFF; border-color: #6A5296; }
+[data-theme="dark"] .profile-danger-zone { background: #321719; border-color: #9F3F38; }
+[data-theme="dark"] .profile-danger-zone .muted { color: #FFE0DB; }
+[data-theme="dark"] .profile-danger-zone .eyebrow { color: #FFB4AC; }
+
+/* Menu et accueil parlent le même langage violet, dans les deux thèmes. */
+.menu-campus-trigger,
+.cp-top .menu-campus-trigger,
+[data-theme="light"] .cp-top .menu-campus-trigger,
+[data-theme="dark"] .cp-top .menu-campus-trigger {
+  color: #A78BFA;
+}
+.cp-top .menu-campus-trigger:hover,
+[data-theme="light"] .cp-top .menu-campus-trigger:hover,
+[data-theme="dark"] .cp-top .menu-campus-trigger:hover {
+  color: #C4B5FD;
+  background: var(--violet-soft);
+}
+.cp-app .rail .menu-campus-trigger,
+[data-theme="light"] .cp-app .rail .menu-campus-trigger,
+[data-theme="dark"] .cp-app .rail .menu-campus-trigger {
+  color: #B99AFB;
+}
+.cp-app .rail .menu-campus-trigger:hover,
+.cp-app .rail .menu-campus-trigger:focus-visible {
+  color: #D4C2FF;
+}

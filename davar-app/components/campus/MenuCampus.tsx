@@ -104,13 +104,13 @@ export function MenuCampus({
   return (
     <>
       {variante === 'rail' ? (
-        <button className="rail-ico" onClick={() => setOuvert(true)} title="Menu" aria-label="Menu">
+        <button className="menu-campus-trigger rail-ico" onClick={() => setOuvert(true)} title="Menu" aria-label="Menu">
           <Icon nom="menu" taille={18} />
           <span>Menu</span>
         </button>
       ) : (
         <button
-          className={variante === 'mobile' ? 'icon-btn d-lg-none' : 'icon-btn'}
+          className={`menu-campus-trigger ${variante === 'mobile' ? 'icon-btn d-lg-none' : 'icon-btn'}`}
           onClick={() => setOuvert(true)}
           title="Menu"
           aria-label="Menu"

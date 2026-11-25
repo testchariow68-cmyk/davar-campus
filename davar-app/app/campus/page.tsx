@@ -34,8 +34,8 @@ function formatTempsAudio(secondes: number): string {
  *
  * Deux décisions restent séparées :
  *  - la salutation et sa progression suivent la formation active choisie ;
- *  - « Prochaine action » suit le dernier geste réel, formation ou ressource.
- * La reprise d'un livre/audio n'est donc jamais rendue dans une seconde carte.
+ *  - « Prochaine action » pointe toujours vers le prochain cours ouvrable de
+ *    cette même formation. La reprise d'un livre/audio reste une carte séparée.
  */
 export default async function CampusDashboard() {
   const session = await currentSession();
@@ -69,27 +69,15 @@ export default async function CampusDashboard() {
   const detailActif = active && !session.vueTest ? await getTrainingForUser(db, user.id, active.formation.id) : null;
   /**
    * La prochaine action est toujours pédagogique : elle ne devient jamais un
-   * livre ou un audio. Sans activité de cours, on prend la première leçon
-   * réellement ouvrable de la formation active — le premier cours du premier
-   * chapitre est donc proposé naturellement à l'arrivée.
+   * livre ou un audio. Elle suit la formation active affichée au-dessus, afin
+   * que « Continuer » et « J’y vais » ouvrent exactement le même cours et la
+   * même page. Sans progression, le premier module réellement ouvrable fournit
+   * naturellement le premier cours proposé à l'arrivée.
    */
-  const derniereFormation = [...avecProgression]
-    .filter(({ formation }) => formation.derniereActiviteMs !== null)
-    .sort((a, b) => (b.formation.derniereActiviteMs ?? 0) - (a.formation.derniereActiviteMs ?? 0))[0] ?? null;
-  const formationDeLaProchaineAction = derniereFormation ?? active;
-  const detailProchaineAction =
-    formationDeLaProchaineAction && !session.vueTest && formationDeLaProchaineAction.formation.id !== active?.formation.id
-      ? await getTrainingForUser(db, user.id, formationDeLaProchaineAction.formation.id)
-      : detailActif;
+  const formationDeLaProchaineAction = active;
+  const detailProchaineAction = detailActif;
   const prochaineLeconModule =
-    detailProchaineAction?.modules.find((module, index) => {
-      const moduleOuvert =
-        index === 0 ||
-        detailProchaineAction.modules
-          .slice(0, index)
-          .every((precedent) => precedent.lessons.every((lecon) => lecon.completed));
-      return moduleOuvert && module.lessons.some((lecon) => !lecon.completed);
-    }) ?? null;
+    detailProchaineAction?.modules.find((module) => module.ouvrable && module.lessons.some((lecon) => !lecon.completed)) ?? null;
   const prochaineLecon = prochaineLeconModule?.lessons.find((lecon) => !lecon.completed) ?? null;
   const chapitreDeLaProchaineAction =
     detailProchaineAction?.chapitres.find((chapitre) => chapitre.modules.some((module) => module.id === prochaineLeconModule?.id)) ?? null;

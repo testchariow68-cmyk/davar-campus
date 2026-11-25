@@ -217,7 +217,11 @@ export async function changerCodeSecret(
   reglages: { verifierPepper?: string; verifierIterations?: number } = {}
 ): Promise<ResultatCode> {
   const maintenant = options.maintenant ?? Date.now();
-  if (!isClientVerifier(options.ancienVerifier) || !isClientVerifier(options.nouveauVerifier)) {
+  if (
+    !isClientVerifier(options.ancienVerifier) ||
+    !isClientVerifier(options.nouveauVerifier) ||
+    (options.confirmationVerifier !== undefined && !isClientVerifier(options.confirmationVerifier))
+  ) {
     return { ok: false, erreur: 'code_invalide' };
   }
   if (options.confirmationVerifier !== undefined && options.nouveauVerifier !== options.confirmationVerifier) {

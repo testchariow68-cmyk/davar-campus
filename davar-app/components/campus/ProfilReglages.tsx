@@ -204,23 +204,28 @@ export function ProfilReglages({
       annoncer('Dérivation impossible dans ce navigateur.', false);
       return;
     }
-    const ancienVerifier = await deriveClientKey(ancien, parametres.parameters);
-    const nouveauVerifier = await deriveClientKey(nouveau, parametres.parameters);
-    const confirmationVerifier = await deriveClientKey(confirmation, parametres.parameters);
-    const reponse = await appeler({
-      action: 'code',
-      ancien: ancienVerifier,
-      nouveau: nouveauVerifier,
-      confirmation: confirmationVerifier,
-    });
-    setEnCours(null);
-    if (reponse.ok) {
-      setAncien('');
-      setNouveau('');
-      setConfirmation('');
-      annoncer(reponse.message ?? 'Code secret changé.', true);
-    } else {
-      annoncer(reponse.message ?? messageErreur(reponse.erreur), false);
+    try {
+      const ancienVerifier = await deriveClientKey(ancien, parametres.parameters);
+      const nouveauVerifier = await deriveClientKey(nouveau, parametres.parameters);
+      const confirmationVerifier = await deriveClientKey(confirmation, parametres.parameters);
+      const reponse = await appeler({
+        action: 'code',
+        ancien: ancienVerifier,
+        nouveau: nouveauVerifier,
+        confirmation: confirmationVerifier,
+      });
+      setEnCours(null);
+      if (reponse.ok) {
+        setAncien('');
+        setNouveau('');
+        setConfirmation('');
+        annoncer(reponse.message ?? 'Code secret changé.', true);
+      } else {
+        annoncer(reponse.message ?? messageErreur(reponse.erreur), false);
+      }
+    } catch {
+      setEnCours(null);
+      annoncer('Dérivation impossible dans ce navigateur.', false);
     }
   }
 
@@ -316,6 +321,7 @@ export function ProfilReglages({
                   key={valeur}
                   className={`btn btn-sm ${preferences.echelle === valeur ? 'btn-primary' : ''}`}
                   style={{ padding: '4px 9px' }}
+                  aria-pressed={preferences.echelle === valeur}
                   onClick={() => changerEchelle(valeur)}
                 >
                   {Math.round(valeur * 100)} %
@@ -355,6 +361,7 @@ export function ProfilReglages({
               id="pfAncien"
               type="password"
               autoComplete="current-password"
+              required
               value={ancien}
               onChange={(evenement) => setAncien(evenement.target.value)}
             />
@@ -366,6 +373,8 @@ export function ProfilReglages({
               id="pfNouveau"
               type="password"
               autoComplete="new-password"
+              required
+              minLength={6}
               value={nouveau}
               onChange={(evenement) => setNouveau(evenement.target.value)}
             />
@@ -377,6 +386,8 @@ export function ProfilReglages({
               id="pfConfirme"
               type="password"
               autoComplete="new-password"
+              required
+              minLength={6}
               value={confirmation}
               onChange={(evenement) => setConfirmation(evenement.target.value)}
             />
@@ -394,16 +405,18 @@ export function ProfilReglages({
 
           <div className="divider" />
 
-          <div className="eyebrow mb8">Compte</div>
-          <p className="small muted">
-            Votre compte est unique : tous vos achats et toutes vos formations y sont rattachés, sans jamais créer de
-            doublon.
-          </p>
-          <form action="/api/auth/logout" method="post" className="mt16">
-            <button className="btn btn-danger btn-sm" type="submit">
-              <Icon nom="logout" taille={15} /> Se déconnecter
-            </button>
-          </form>
+          <div className="profile-danger-zone">
+            <div className="eyebrow mb8">Compte</div>
+            <p className="small muted">
+              Votre compte est unique : tous vos achats et toutes vos formations y sont rattachés, sans jamais créer de
+              doublon.
+            </p>
+            <form action="/api/auth/logout" method="post" className="mt16">
+              <button className="btn btn-danger btn-sm" type="submit">
+                <Icon nom="logout" taille={15} /> Se déconnecter
+              </button>
+            </form>
+          </div>
         </div>
       </div>
     </>

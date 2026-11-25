@@ -363,13 +363,11 @@ function PlayerUI({
             <Icon nom={lecture ? 'pause' : 'play'} taille={15} />
           </button>
         ) : null}
-        <span className="t">
-          {alternative
-            ? `${titre} · hors progression`
-            : url
-              ? 'Lecture réelle — marquez le cours comme terminé après visionnage'
-              : `${formatSecondes(temps)} / ${duree ?? '—'}`}
-        </span>
+        {(!url || alternative) && (
+          <span className="t">
+            {alternative ? `${titre} · hors progression` : `${formatSecondes(temps)} / ${duree ?? '—'}`}
+          </span>
+        )}
         <span className="p-tools">
           <button className="fs-btn" onClick={() => setReglages((ouvert) => !ouvert)} title="Réglages de lecture" aria-label="Réglages de lecture">
             <Icon nom="settings" taille={14} />
@@ -759,11 +757,11 @@ export function CoursDetail({
                     </button>
                   </span>
                 ))}
-                <span className="xs faint react-help">
-                  {totalReactions
-                    ? `${totalReactions} réaction${totalReactions > 1 ? 's' : ''} des étudiants`
-                    : 'Réagissez — visible par tous les étudiants'}
-                </span>
+                {totalReactions > 0 && (
+                  <span className="xs faint react-help">
+                    {`${totalReactions} réaction${totalReactions > 1 ? 's' : ''} des étudiants`}
+                  </span>
+                )}
               </div>
               <div className="card-pad">
                 <div className="row between" style={{ flexWrap: 'wrap', gap: 10 }}>
